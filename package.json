@@ -1,0 +1,23 @@
+{
+  "name": "nim-cli",
+  "version": "0.1.0",
+  "description": "A comprehensive CLI for the Nimbella stack",
+  "main": "main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com//nimbella-corp/nim-cli.git"
+  },
+  "bin": {
+    "nimb": "./lib/main.js"
+  },
+  "keywords": [],
+  "author": "Joshua Auerbach",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@adobe/aio-cli": "^2.1.0",
+    "@types/node": "^12.11.1"
+  },
+  "devDependencies": {
+    "typescript": "^3.6.4"
+  }
+}
