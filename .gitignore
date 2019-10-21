@@ -1,9 +1,12 @@
-bin/
-tmp/
-node_modules/
+/tmp
+node_modules
 package-lock.json
 .idea
 .project
 .settings/
 .vscode/
-lib/
+/dist
+/lib
+*-debug.log
+*-error.log
+/.nyc_output

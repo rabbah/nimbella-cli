@@ -2,22 +2,180 @@
   "name": "nim-cli",
   "version": "0.1.0",
   "description": "A comprehensive CLI for the Nimbella stack",
-  "main": "main.js",
+  "main": "lib/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com//nimbella-corp/nim-cli.git"
+    "url": "https://github.com//nimbella-corp/nimbella-cli.git"
   },
   "bin": {
-    "nimb": "./lib/main.js"
+    "nimb": "./bin/run"
   },
   "keywords": [],
   "author": "Joshua Auerbach",
   "license": "UNLICENSED",
   "dependencies": {
     "@adobe/aio-cli": "^2.1.0",
-    "@types/node": "^12.11.1"
+    "@oclif/command": "^1",
+    "@oclif/config": "^1",
+    "@oclif/plugin-autocomplete": "^0.1.2",
+    "@oclif/plugin-help": "^2.1.4",
+    "@oclif/plugin-not-found": "^1.2.0",
+    "tslib": "^1"
   },
   "devDependencies": {
-    "typescript": "^3.6.4"
-  }
+    "@oclif/dev-cli": "^1",
+    "@types/node": "^10",
+    "globby": "^10",
+    "ts-node": "^8",
+    "typescript": "^3.3"
+  },
+  "engines": {
+    "node": ">=10.0.0"
+  },
+  "files": [
+    "/bin",
+    "/lib",
+    "/oclif.manifest.json"
+  ],
+  "oclif": {
+    "commands": "./lib/commands",
+    "bin": "nimb",
+    "plugins": [
+      "@oclif/plugin-help",
+      "@oclif/plugin-autocomplete",
+      "@oclif/plugin-not-found"
+    ],
+    "topics": {
+      "action": {
+        "description": "work with actions"
+      },
+      "action:create": {
+        "description": "Creates an Action"
+      },
+      "action:delete": {
+        "description": "Deletes an Action"
+      },
+      "action:get": {
+        "description": "Retrieves an Action"
+      },
+      "action:invoke": {
+        "description": "Invokes an Action"
+      },
+      "action:list": {
+        "description": "Lists all the Actions"
+      },
+      "action:update": {
+        "description": "Updates an Action"
+      },
+      "activation": {
+        "description": "work with activations"
+      },
+      "activation:get": {
+        "description": "Retrieves an Activation"
+      },
+      "activation:list": {
+        "description": "Lists all the Activations"
+      },
+      "activation:logs": {
+        "description": "Retrieves the Logs for an Activation"
+      },
+      "activation:result": {
+        "description": "Retrieves the Results for an Activation"
+      },
+      "namespace": {
+        "description": "work with namespaces"
+      },
+      "package": {
+        "description": "work with packages"
+      },
+      "package:bind": {
+        "description": "Bind parameters to a package"
+      },
+      "package:create": {
+        "description": "Creates a Package"
+      },
+      "package:delete": {
+        "description": "Deletes a Package"
+      },
+      "package:get": {
+        "description": "Retrieves a Package"
+      },
+      "package:list": {
+        "description": "Lists all the Packages"
+      },
+      "package:update": {
+        "description": "Updates a Package"
+      },
+      "route": {
+        "description": "work with routes"
+      },
+      "route:create": {
+        "description": "create a new api route"
+      },
+      "route:delete": {
+        "description": "delete an API"
+      },
+      "route:get": {
+        "description": "get API details"
+      },
+      "route:list": {
+        "description": "list route/apis for Adobe I/O Runtime"
+      },
+      "rule": {
+        "description": "work with rules"
+      },
+      "rule:create": {
+        "description": "Create a Rule"
+      },
+      "rule:delete": {
+        "description": " Delete a Rule"
+      },
+      "rule:disable": {
+        "description": "Disable a Rule"
+      },
+      "rule:enable": {
+        "description": "Enable a Rule"
+      },
+      "rule:get": {
+        "description": "Retrieves a Rule"
+      },
+      "rule:list": {
+        "description": "Retrieves a list of Rules"
+      },
+      "rule:status": {
+        "description": "Gets the status of a rule"
+      },
+      "rule:update": {
+        "description": "Update a Rule"
+      },
+      "trigger": {
+        "description": "work with triggers"
+      },
+      "trigger:create": {
+        "description": "Create a trigger"
+      },
+      "trigger:delete": {
+        "description": "Get a trigger"
+      },
+      "trigger:fire": {
+        "description": "Fire a trigger"
+      },
+      "trigger:get": {
+        "description": "Get a trigger"
+      },
+      "trigger:list": {
+        "description": "Lists all of your triggers"
+      },
+      "trigger:update": {
+        "description": "Update or create a trigger"
+      }
+    }
+  },
+  "scripts": {
+    "postpack": "rm -f oclif.manifest.json",
+    "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
+    "test": "echo NO TESTS",
+    "version": "oclif-dev readme && git add README.md"
+  },
+  "types": "lib/index.d.ts"
 }

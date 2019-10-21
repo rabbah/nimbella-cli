@@ -18,7 +18,24 @@
  * is strictly forbidden unless prior written permission is obtained
  * from Nimbella Corp.
  */
-import * as aio from '@adobe/aio-cli/src'
 
-const argv = [ "runtime" ].concat(process.argv.slice(2))
-aio.run(argv)
+// List of commands to be delegated to aio runtime plugin
+const aioCommands = ['action', 'actions', 'activation', 'activations', 'namespace', 
+    'package', 'packages', 'route', 'routes', 'rule', 'rules', 'trigger', 'triggers' ]
+
+export async function run() {
+    // console.log("argv:", argv)
+    const cmd = process.argv[2]
+    if (aioCommands.includes(cmd)) {
+        if (cmd.endsWith('s')) {
+            process.argv[2] = cmd.slice(0, -1)
+        }
+        if (process.argv.length > 3) {
+            console.log("delgating to aio")
+            await require('@adobe/aio-cli/src').run(['runtime'].concat(process.argv.slice(2)))
+            return
+        }
+    }
+    console.log("not delegating", cmd)
+    await require('@oclif/command').run()
+}
