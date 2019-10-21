@@ -31,11 +31,11 @@ export async function run() {
             process.argv[2] = cmd.slice(0, -1)
         }
         if (process.argv.length > 3) {
-            console.log("delgating to aio")
+            // console.log("delgating to aio")
             await require('@adobe/aio-cli/src').run(['runtime'].concat(process.argv.slice(2)))
             return
         }
     }
-    console.log("not delegating", cmd)
+    // console.log("not delegating", cmd)
     await require('@oclif/command').run()
 }
