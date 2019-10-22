@@ -1,5 +1,5 @@
 {
-  "name": "nim-cli",
+  "name": "nimbella-cli",
   "version": "0.1.0",
   "description": "A comprehensive CLI for the Nimbella stack",
   "main": "lib/index.js",
@@ -20,6 +20,7 @@
     "@oclif/plugin-autocomplete": "^0.1.2",
     "@oclif/plugin-help": "^2.1.4",
     "@oclif/plugin-not-found": "^1.2.0",
+    "deployer": "file:../workbench/deployer.tgz",
     "tslib": "^1"
   },
   "devDependencies": {
@@ -46,8 +47,14 @@
       "@oclif/plugin-not-found"
     ],
     "topics": {
+      "auth": {
+        "description": "Manage Nimbella Namespace Credentials"
+      },
+      "project": {
+        "description": "Manage and Deploy Nimbella Projects"
+      },
       "action": {
-        "description": "work with actions"
+        "description": "Work with actions"
       },
       "action:create": {
         "description": "Creates an Action"
@@ -68,7 +75,7 @@
         "description": "Updates an Action"
       },
       "activation": {
-        "description": "work with activations"
+        "description": "Work with activations"
       },
       "activation:get": {
         "description": "Retrieves an Activation"
@@ -83,10 +90,10 @@
         "description": "Retrieves the Results for an Activation"
       },
       "namespace": {
-        "description": "work with namespaces"
+        "description": "Work with namespaces"
       },
       "package": {
-        "description": "work with packages"
+        "description": "Work with packages"
       },
       "package:bind": {
         "description": "Bind parameters to a package"
@@ -107,7 +114,7 @@
         "description": "Updates a Package"
       },
       "route": {
-        "description": "work with routes"
+        "description": "Work with routes"
       },
       "route:create": {
         "description": "create a new api route"
@@ -122,7 +129,7 @@
         "description": "list route/apis for Adobe I/O Runtime"
       },
       "rule": {
-        "description": "work with rules"
+        "description": "Work with rules"
       },
       "rule:create": {
         "description": "Create a Rule"
@@ -149,7 +156,7 @@
         "description": "Update a Rule"
       },
       "trigger": {
-        "description": "work with triggers"
+        "description": "Work with triggers"
       },
       "trigger:create": {
         "description": "Create a trigger"
