@@ -20,7 +20,7 @@
  */
 
 // List of commands to be delegated to aio runtime plugin
-const aioCommands = ['action', 'actions', 'activation', 'activations', 'namespace', 
+const aioCommands = ['action', 'actions', 'activation', 'activations', 'namespace',
     'package', 'packages', 'route', 'routes', 'rule', 'rules', 'trigger', 'triggers' ]
 
 export async function run() {
