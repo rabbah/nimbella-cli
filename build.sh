@@ -25,6 +25,16 @@ set -e
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SELFDIR
 
+HASH=$(git rev-parse HEAD)
+DIRTY=$(git status --porcelain)
+if [ -n "$DIRTY" ]; then
+    DIRTY="++"
+fi
+BUILDINFO=${HASH:0:8}${DIRTY}
+VERSION=$(jq -r .version package.json)
+echo '{ "version": "'$VERSION '('$BUILDINFO')" }' | jq . > version.json
+
+
 npm install
 npm install ../workbench/deployer.tgz
 npx tsc
