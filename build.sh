@@ -26,5 +26,6 @@ SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SELFDIR
 
 npm install
+npm install ../workbench/deployer.tgz
 npx tsc
 npm link
