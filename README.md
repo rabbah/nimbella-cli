@@ -20,5 +20,29 @@
 #
 -->
 
-# nim-cli
+# nimbella-cli
+
 A comprehensive CLI for the Nimbella stack
+
+This is a new effort and these instructions are subject to change.
+
+### Co-requisite repositories
+The following repositories must be cloned to have a common parent with this one.
+
+- `workbench`
+- `main`
+
+Neither needs to be built ahead of the following.
+
+### Building
+
+1. Build the deployer by issuing `./build.sh deploycmd` in the `main` repo.
+2. Then build the CLI by issuing `./build.sh` in this repo.
+
+The command `nimb` should now be in your path.
+
+### Usage
+
+`nimb`
+
+To get started.
