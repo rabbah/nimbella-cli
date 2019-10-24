@@ -25,15 +25,18 @@ export default class AuthSwitch extends Command {
   static description = 'Switch to a different Nimbella namespace'
 
   static flags = {
-    apihost: flags.string({ description: 'API host defining the namespace'})
+    apihost: flags.string({ description: 'API host serving the target namespace'})
   }
 
-  static args = [{name: 'namespace'}]
+  static args = [{name: 'namespace', description: 'the namespace you are switching to', required: true}]
 
   async run() {
     const {args, flags} = this.parse(AuthSwitch)
     const namespace = args.namespace
-    const creds = await switchNamespace(namespace, flags.apihost, fileSystemPersister)
+    const creds = await switchNamespace(namespace, flags.apihost, fileSystemPersister).catch(err => {
+      this.error(err, { exit: false })
+      return this.exit(1)
+    })
     this.log(`Successful logout from namespace '${namespace}' on API host '${creds.ow.apihost}'`)
   }
 }

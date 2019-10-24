@@ -56,38 +56,8 @@
       "action": {
         "description": "Work with actions"
       },
-      "action:create": {
-        "description": "Creates an Action"
-      },
-      "action:delete": {
-        "description": "Deletes an Action"
-      },
-      "action:get": {
-        "description": "Retrieves an Action"
-      },
-      "action:invoke": {
-        "description": "Invokes an Action"
-      },
-      "action:list": {
-        "description": "Lists all the Actions"
-      },
-      "action:update": {
-        "description": "Updates an Action"
-      },
       "activation": {
         "description": "Work with activations"
-      },
-      "activation:get": {
-        "description": "Retrieves an Activation"
-      },
-      "activation:list": {
-        "description": "Lists all the Activations"
-      },
-      "activation:logs": {
-        "description": "Retrieves the Logs for an Activation"
-      },
-      "activation:result": {
-        "description": "Retrieves the Results for an Activation"
       },
       "namespace": {
         "description": "Work with namespaces"
@@ -95,86 +65,14 @@
       "package": {
         "description": "Work with packages"
       },
-      "package:bind": {
-        "description": "Bind parameters to a package"
-      },
-      "package:create": {
-        "description": "Creates a Package"
-      },
-      "package:delete": {
-        "description": "Deletes a Package"
-      },
-      "package:get": {
-        "description": "Retrieves a Package"
-      },
-      "package:list": {
-        "description": "Lists all the Packages"
-      },
-      "package:update": {
-        "description": "Updates a Package"
-      },
       "route": {
         "description": "Work with routes"
-      },
-      "route:create": {
-        "description": "create a new api route"
-      },
-      "route:delete": {
-        "description": "delete an API"
-      },
-      "route:get": {
-        "description": "get API details"
-      },
-      "route:list": {
-        "description": "list route/apis for Adobe I/O Runtime"
       },
       "rule": {
         "description": "Work with rules"
       },
-      "rule:create": {
-        "description": "Create a Rule"
-      },
-      "rule:delete": {
-        "description": " Delete a Rule"
-      },
-      "rule:disable": {
-        "description": "Disable a Rule"
-      },
-      "rule:enable": {
-        "description": "Enable a Rule"
-      },
-      "rule:get": {
-        "description": "Retrieves a Rule"
-      },
-      "rule:list": {
-        "description": "Retrieves a list of Rules"
-      },
-      "rule:status": {
-        "description": "Gets the status of a rule"
-      },
-      "rule:update": {
-        "description": "Update a Rule"
-      },
       "trigger": {
         "description": "Work with triggers"
-      },
-      "trigger:create": {
-        "description": "Create a trigger"
-      },
-      "trigger:delete": {
-        "description": "Get a trigger"
-      },
-      "trigger:fire": {
-        "description": "Fire a trigger"
-      },
-      "trigger:get": {
-        "description": "Get a trigger"
-      },
-      "trigger:list": {
-        "description": "Lists all of your triggers"
-      },
-      "trigger:update": {
-        "description": "Update or create a trigger"
       }
     }
   },

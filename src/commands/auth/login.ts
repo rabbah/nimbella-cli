@@ -33,7 +33,7 @@ export default class AuthLogin extends Command {
   async run() {
     const {args, flags} = this.parse(AuthLogin)
     const apihost = flags.apihost || 'https://apigcp.nimbella.io'
-    const credentials = await doLogin(args.token, fileSystemPersister, apihost)
+    const credentials = await doLogin(args.token, fileSystemPersister, apihost).catch(err => this.error(err))
     this.log(`Successful login to namespace '${credentials.namespace}' on host '${apihost}'`)
   }
 }
