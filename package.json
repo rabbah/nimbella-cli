@@ -43,7 +43,6 @@
     "bin": "nimb",
     "plugins": [
       "@oclif/plugin-help",
-      "@oclif/plugin-autocomplete",
       "@oclif/plugin-not-found"
     ],
     "topics": {
