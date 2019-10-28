@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+		"target": "ES2016",
+		"outDir": ".",
+		"sourceMap": true,
+		"declaration": true,
+		"experimentalDecorators": true,
+		"resolveJsonModule": true
+	},
+    "files": [
+        "./src/deploy.ts",
+        "./src/deploy-struct.ts",
+        "./src/main.ts",
+        "./src/project-reader.ts",
+        "./src/util.ts",
+        "./src/finder-builder.ts",
+        "./src/deploy-to-bucket.ts"        
+    ]
+}

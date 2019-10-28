@@ -19,12 +19,16 @@
 # from Nimbella Corp.
 #
 
-# Builds the 'nim' CLI (temporarily called 'nimb')
+# Builds just the deployer
 
 set -e
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SELFDIR
 
+# Ensure there is no left over minified area
+rm -fr minified
+
+# Update the .version file
 HASH=$(git rev-parse HEAD)
 DIRTY=$(git status --porcelain)
 if [ -n "$DIRTY" ]; then
@@ -34,9 +38,25 @@ BUILDINFO=${HASH:0:8}${DIRTY}
 VERSION=$(jq -r .version package.json)
 echo '{ "version": "'$VERSION '('$BUILDINFO')" }' | jq . > version.json
 
-deployer/build.sh
+# Copy in the latest runtimes.json and productionProjects.json
+cp $SELFDIR/../../main/config/runtimes.json .
+cp $SELFDIR/../../main/config/productionProjects.json .
 
+# If pandoc is in the path, build the HTML form of the documentation.  If not, just give an informational message
+set +e
+PD=$(type -t pandoc)
+set -e
+if [ -z "$PD" ]; then
+		echo "Building for local use.  End-user document not included"
+else
+		pandoc -o deployer.html -f markdown -s -H deployer.css -t html < deployer.md
+fi
+
+# Build it
 npm install
-npm install deployer.tgz
 npx tsc
 npm link
+cd ..
+rm -f deployer-*.tgz
+npm pack ./deployer
+mv deployer-*.tgz deployer.tgz
