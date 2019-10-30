@@ -46,10 +46,16 @@ export default class AuthList extends Command {
     return credentialPromise.then(credentialList => {
         console.log(LIST_HEADER)
         for (const row of credentialList) {
-            const pad = ' '.repeat(NS_LEN - row.namespace.length)
+            let ns = row.namespace
+            let pad = ''
+            if (ns.length < NS_LEN) {
+              pad = ' '.repeat(NS_LEN - ns.length)
+            } else {
+              ns = ns.slice(0, NS_LEN - 3) + '...'
+            }
             const curr = row.current ? YES : NO
             const stor = row.storage ? YES : NO
-            this.log(row.namespace + pad + curr + stor + row.apihost)
+            this.log(ns + pad + curr + stor + row.apihost)
         }
     })
   }
