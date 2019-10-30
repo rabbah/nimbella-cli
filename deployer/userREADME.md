@@ -1,4 +1,4 @@
-#!/bin/bash
+<!--
 #
 # Nimbella CONFIDENTIAL
 # ---------------------
@@ -18,25 +18,26 @@
 # is strictly forbidden unless prior written permission is obtained
 # from Nimbella Corp.
 #
+-->
 
-# Builds the 'nim' CLI (temporarily called 'nimb')
+# The Nimbella Deployer
 
-set -e
-SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd $SELFDIR
 
-HASH=$(git rev-parse HEAD)
-DIRTY=$(git status --porcelain)
-if [ -n "$DIRTY" ]; then
-    DIRTY="++"
-fi
-BUILDINFO=${HASH:0:8}${DIRTY}
-VERSION=$(jq -r .version package.json)
-echo '{ "version": "'$VERSION '('$BUILDINFO')" }' | jq . > version.json
+The **Nimbella Deployer** consists of a
+command line tool called `deployProject`.
 
-deployer/build.sh
+Type `deployProject --doc` to get full instructions on using the deployer.
 
-npm install
-npm install deployer.tgz
-npx tsc
-npm link
+If the command isn't found, you need to install the deployer.
+
+You must have the `node` and `npm` commands installed on your
+machine. If you do not have them, consult [this
+link](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
+Note that the minimum required version of `node` is `10.0.0`.
+
+Install the deployer using
+
+```
+npm install -g https://api.nimbella.io/downloads/deployer.tgz
+
+```
