@@ -45,7 +45,7 @@ npm install deployer.tgz
 
 # Fix nit in the help command description
 TOFIX="node_modules/@oclif/plugin-help/oclif.manifest.json"
-FIXJSON=$(jq < "$TOFIX" | sed -e 's/display help/Display help/')
+FIXJSON=$(sed -e 's/display help/Display help/' < "$TOFIX")
 echo "$FIXJSON" > "$TOFIX"
 
 # Build
