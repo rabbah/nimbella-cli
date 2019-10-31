@@ -47,10 +47,10 @@
     ],
     "topics": {
       "auth": {
-        "description": "Manage Nimbella Namespace Credentials"
+        "description": "Manage Nimbella namespace Credentials"
       },
       "project": {
-        "description": "Manage and Deploy Nimbella Projects"
+        "description": "Manage and deploy Nimbella projects"
       },
       "action": {
         "description": "Work with actions"

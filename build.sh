@@ -21,10 +21,12 @@
 
 # Builds the 'nim' CLI (temporarily called 'nimb')
 
+# Orient
 set -e
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SELFDIR
 
+# Store version info (TODO: currently this is done in the deployer directory as well; eventually it should only be done in one place)
 HASH=$(git rev-parse HEAD)
 DIRTY=$(git status --porcelain)
 if [ -n "$DIRTY" ]; then
@@ -34,9 +36,18 @@ BUILDINFO=${HASH:0:8}${DIRTY}
 VERSION=$(jq -r .version package.json)
 echo '{ "version": "'$VERSION '('$BUILDINFO')" }' | jq . > version.json
 
+# Build the deployer
 deployer/build.sh
 
+# Install
 npm install
 npm install deployer.tgz
+
+# Fix nit in the help command description
+TOFIX="node_modules/@oclif/plugin-help/oclif.manifest.json"
+FIXJSON=$(jq < "$TOFIX" | sed -e 's/display help/Display help/')
+echo "$FIXJSON" > "$TOFIX"
+
+# Build
 npx tsc
 npm link
