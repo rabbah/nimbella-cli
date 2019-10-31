@@ -47,7 +47,7 @@
     ],
     "topics": {
       "auth": {
-        "description": "Manage Nimbella namespace Credentials"
+        "description": "Manage Nimbella namespace credentials"
       },
       "project": {
         "description": "Manage and deploy Nimbella projects"
