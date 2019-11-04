@@ -244,6 +244,10 @@ function  deployAction(action: ActionSpec, wsk: openwhisk.Client, prefix: string
         annotations['web-export'] = true
         annotations['final'] = true
         annotations['raw-http'] = true
+    } else if (action.web == false) {
+        annotations['web-export'] = false
+        annotations['final'] = false
+        annotations['raw-http'] = false
     }
     // Get the former annotations of the action if any
     let former: openwhisk.Action = undefined
