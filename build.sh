@@ -39,6 +39,9 @@ echo '{ "version": "'$VERSION '('$BUILDINFO')" }' | jq . > version.json
 # Build the deployer
 deployer/build.sh
 
+# Build the HTML form of the documentation
+pandoc -o nim.html -f markdown -s -t html < doc/nim.md
+
 # Install
 npm install
 npm install deployer.tgz

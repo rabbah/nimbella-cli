@@ -12,3 +12,4 @@ package-lock.json
 /.nyc_output
 version.json
 *.tgz
+nim.html

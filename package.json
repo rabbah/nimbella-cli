@@ -38,7 +38,8 @@
   "files": [
     "/bin",
     "/lib",
-    "/oclif.manifest.json"
+    "/oclif.manifest.json",
+    "/nim.html"
   ],
   "oclif": {
     "commands": "./lib/commands",
