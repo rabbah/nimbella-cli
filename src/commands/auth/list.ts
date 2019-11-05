@@ -18,7 +18,7 @@
  * from Nimbella Corp.
  */
 
-import {Command, flags} from '@oclif/command'
+import { NimBaseCommand } from '../../NimBaseCommand'
 import { getCredentialList, fileSystemPersister } from 'deployer/login'
 import { CredentialRow } from 'deployer/deploy-struct'
 
@@ -28,10 +28,11 @@ const NS_LEN = 21
 const YES = '   yes  '
 const NO = '    no  '
 
-export default class AuthList extends Command {
+export default class AuthList extends NimBaseCommand {
   static description = 'List all your Nimbella Namespaces'
 
   static flags = {
+    ...NimBaseCommand.flags
   }
 
   static args = []
@@ -57,6 +58,6 @@ export default class AuthList extends Command {
             const stor = row.storage ? YES : NO
             this.log(ns + pad + curr + stor + row.apihost)
         }
-    })
+    }).catch((err: Error) => this.handleError(err.message, err))
   }
 }

@@ -18,12 +18,13 @@
  * from Nimbella Corp.
  */
 
-import {Command, flags} from '@oclif/command'
+import { flags } from '@oclif/command'
+import { NimBaseCommand } from '../../NimBaseCommand'
 import { deployProject } from 'deployer/api'
 import { Flags, OWOptions, DeployResponse, Credentials } from 'deployer/deploy-struct'
 import { switchNamespace, fileSystemPersister } from 'deployer/login'
 
-export default class ProjectDeploy extends Command {
+export default class ProjectDeploy extends NimBaseCommand {
   static description = 'Deploy a Nimbella project'
 
   static flags = {
@@ -35,7 +36,8 @@ export default class ProjectDeploy extends Command {
     "verbose-build": flags.boolean({ description: 'Display build details' }),
     production: flags.boolean({ hidden: true }),
     yarn: flags.boolean({ description: 'Use yarn instead of npm for node builds' }),
-    incremental: flags.boolean({ description: 'Deploy only changes since last deploy' })
+    incremental: flags.boolean({ description: 'Deploy only changes since last deploy' }),
+    ...NimBaseCommand.flags
   }
 
   static args = [ { name: 'projects', description: 'one or more paths to projects'} ]
@@ -59,7 +61,7 @@ export default class ProjectDeploy extends Command {
     // Iff a namespace switch was requested, perform it.  It might fail if there are no credentials for the target
     let creds: Credentials|undefined = undefined
     if (target) {
-      creds = await switchNamespace(target, owOptions.apihost, fileSystemPersister).catch((err: Error) => this.error(err, { exit: 1 }))
+      creds = await switchNamespace(target, owOptions.apihost, fileSystemPersister).catch((err: Error) => this.handleError(err.message, err))
     } else if (apihost && auth) {
       // For backward compatibility with `wsk`, we accept the absence of target when both apihost and auth are
       // provided on the command line.  We synthesize credentials with (as yet) unknown namespace; if it later
@@ -88,7 +90,7 @@ export default class ProjectDeploy extends Command {
     return deployProject(project, owOptions, creds, fileSystemPersister, cmdFlags)
       .then((result: DeployResponse) => this.displayResult(result, project))
       .catch((err: Error) => {
-        this.error(err, { exit: false })
+        this.displayError(err.message, err)
         return false
       })
    }
@@ -115,9 +117,9 @@ export default class ProjectDeploy extends Command {
             success = false
             const context = (err as any)['context']
             if (context) {
-                this.error(`While deploying ${context}:`, { exit: false })
+                this.displayError(`While deploying ${context}:`, err)
             }
-            this.error(err, { exit: false })
+            this.displayError(err.message, err)
           }
     }
     return success

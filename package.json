@@ -20,6 +20,8 @@
     "@oclif/plugin-autocomplete": "^0.1.2",
     "@oclif/plugin-help": "^2.1.4",
     "@oclif/plugin-not-found": "^1.2.0",
+    "@types/debug": "^4.1.5",
+    "debug": "^4.1.1",
     "deployer": "file:deployer.tgz",
     "tslib": "^1"
   },
