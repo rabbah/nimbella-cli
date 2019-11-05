@@ -471,7 +471,8 @@ function autozipBuilder(pairs: string[][], action: ActionSpec, incremental: bool
         action.runtime = agreeOnRuntime(pairs.map(pair => pair[0]))
     }
     if (fs.existsSync(targetZip)) {
-        if (incremental && zipFileAppearsCurrent(targetZip, pairs.map(pair => pair[0]))) {
+        const metaFiles: string[] = [ path.join(action.file, '.include'), path.join(action.file, '.ignore') ].filter(fs.existsSync)
+        if (incremental && zipFileAppearsCurrent(targetZip, pairs.map(pair => pair[0]).concat(metaFiles))) {
             return singleFileBuilder(action, ZIP_TARGET)
         }
         fs.unlinkSync(targetZip)
