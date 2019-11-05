@@ -22,7 +22,7 @@
 # Builds a minified copy of the deployer.   Optionally makes into a new stable version
 
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-STABLEDIR=$SELFDIR/../workbench/stable
+STABLEDIR=$SELFDIR/../../workbench/stable
 cd $SELFDIR
 
 PD=$(type -t pandoc)
