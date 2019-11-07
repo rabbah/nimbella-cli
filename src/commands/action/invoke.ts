@@ -19,11 +19,11 @@
  */
 
 import { Command } from '@oclif/command'
-const AioCommand: typeof Command = require('@adobe/aio-cli-plugin-runtime/src/commands/runtime/action/invoke')
+const AioCommand = require('@adobe/aio-cli-plugin-runtime/src/commands/runtime/action/invoke')
 
 export default class ActionInvoke extends Command {
   async run () {
-      // This copy not intended to run
+    await AioCommand.run(this.argv)
   }
 
   static args = AioCommand.args

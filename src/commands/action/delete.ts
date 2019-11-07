@@ -23,8 +23,8 @@ const AioCommand: typeof Command = require('@adobe/aio-cli-plugin-runtime/src/co
 
 export default class ActionDelete extends Command {
   async run () {
-      // This copy not intended to run
-  }
+    await AioCommand.run(this.argv)
+   }
 
   static args = AioCommand.args
 
