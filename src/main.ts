@@ -55,11 +55,23 @@ function makeCanonical(): boolean {
     const oldargv = process.argv.slice(2)
     const cmdTokens: string[] = []
     let haveHelp = false
+    const lowerAlpha = /^[a-z]+$/
     for (const arg of oldargv) {
         if (isHelpToken(arg)) {
             haveHelp = true
         } else {
-            cmdTokens.push(...arg.split(':'))
+            const parts = arg.split(':')
+            let split = true
+            for (const part of parts) {
+                if (!part.match(lowerAlpha)) {
+                    split = false
+                }
+            }
+            if (split) {
+                cmdTokens.push(...parts)
+            } else {
+                cmdTokens.push(arg)
+            }
         }
     }
     if (haveHelp) {
