@@ -44,6 +44,9 @@
   "oclif": {
     "commands": "./lib/commands",
     "bin": "nimb",
+    "hooks": {
+      "prerun": "./lib/hooks/prerun"
+    },
     "plugins": [
       "@oclif/plugin-help",
       "@oclif/plugin-not-found"
