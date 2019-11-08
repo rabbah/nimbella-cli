@@ -72,7 +72,7 @@ export abstract class NimBaseCommand extends Command {
     return this.error(msg, { exit: false })
   }
 
-static flags = {
+  static flags = {
     debug: flags.string({ description: 'Debug level output' }),
     verbose: flags.boolean({ char: 'v', description: 'Verbose output' }),
     help: flags.boolean({ description: 'Show help' })
