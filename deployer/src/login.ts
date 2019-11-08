@@ -164,6 +164,9 @@ export async function forgetNamespace(namespace: string, apihost: string|undefin
         if (host == store.currentHost && store.currentNamespace == namespace) {
             store.currentNamespace = undefined
             undefinedWarning = true
+            try {
+                fs.unlinkSync(wskProps())
+            } catch {}
         }
         await persister.saveCredentialStore(store)
         console.log(`Ok.  Removed the namespace '${namespace}' on host '${host}' from the credential store`)
