@@ -63,16 +63,30 @@ function watch(project: string, cmdFlags: Flags, creds: Credentials|undefined, o
         logger.handleError(msg, new Error(msg))
     }
     logger.log(`Watching ${project}`)
-    try {
-        fs.readdirSync(project).forEach(member => {
-            if (member !== '.nimbella') {
-                fs.watch(path.join(project, member), { recursive: true, persistent: true},
-                    () => doDeploy(project, cmdFlags, creds, owOptions, logger))
-            }
-        })
-    } catch (err) {
-        logger.handleError(err.message, err)
+    let watcher: fs.FSWatcher|undefined = undefined
+    const reset = () => {
+        if (watcher) {
+            // logger.log("Closing watcher")
+            watcher.close()
+        }
     }
+    const watch = () => {
+        // logger.log("Opening new watcher")
+        watcher = fs.watch(project, { recursive: true, persistent: true}, async (_, filename) =>
+            await fireDeploy(project, filename, cmdFlags, creds, owOptions, logger, reset, watch))
+    }
+    watch()
+}
+
+// Fire a deploy cycle.  Suspends the watcher so that mods made to the project by the deployer won't cause a spurious re-trigger.
+// Displays an informative message before deploying.
+async function fireDeploy(project: string, filename: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions,
+        logger: NimBaseCommand, reset: ()=>void, watch: ()=>void) {
+    reset()
+    logger.log(`Deploying '${project}' due to change in '${filename}'`)
+    await doDeploy(project, cmdFlags, creds, owOptions, logger).catch(err => logger.handleError(err.message, err))
+    logger.log("Deployment complete.  Resuming watch.")
+    await delay().then(() => watch())
 }
 
 // Validate a project argument to ensure that it denotes an actual directory that "looks like a project".
@@ -90,6 +104,13 @@ function validateProject(project: string): string|undefined {
         return undefined
     }
     return `${project} is a directory but it doesn't appear to contain a project`
+}
+
+// Introduce small delay
+function delay(): Promise<undefined> {
+    return new Promise(function (resolve) {
+        setTimeout(() => resolve(undefined), 200)
+    })
 }
 
 // Check for typical things found in a project (part of validating that a directory is a project)
