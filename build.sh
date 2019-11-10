@@ -26,6 +26,21 @@ set -e
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SELFDIR
 
+# Check repo synchronization
+UPTODATE=$(./aioUpToDate.sh)
+if [ "$UPTODATE" == "false" ]; then
+    echo "Incompatible releases for 'aio-cli-plugin-runtime' and 'nimbella-cli'.  Bring both repos up to date, then run './makeAioPacks.sh' in nimbella-cli."
+    exit -1
+elif [ "$UPTODATE" != 'true' ]; then
+    echo $UPTODATE
+    exit -1
+fi
+TARBALL=$(grep -e '@adobe/aio-cli-plugin-runtime' package.json | sed -e 's/^.*file://' | sed 's/".*$//')
+if [ ! -f "$TARBALL" ]; then
+		echo "The required AIO  tarball is not present. './makeAioPacks.sh' needs to be run first."
+		exit -1
+fi
+
 # Store version info (TODO: currently this is done in the deployer directory as well; eventually it should only be done in one place)
 HASH=$(git rev-parse HEAD)
 DIRTY=$(git status --porcelain)

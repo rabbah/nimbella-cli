@@ -15,6 +15,7 @@
   "license": "UNLICENSED",
   "dependencies": {
     "@adobe/aio-cli": "^2.1.0",
+    "@adobe/aio-cli-plugin-runtime": "file:adobe-aio-cli-plugin-runtime-1.2.0.tgz",
     "@oclif/command": "^1",
     "@oclif/config": "^1",
     "@oclif/plugin-autocomplete": "^0.1.2",
