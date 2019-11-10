@@ -24,22 +24,31 @@
 
 A comprehensive CLI for the Nimbella stack
 
-This is a new effort and these instructions are subject to change.
+### Prerequisites
+ - **node**
+   * version 10 or later is required
+ - **npm**
+ - **pandoc**
+   * on mac you can use `brew install pandoc`.
+   * for other platforms, [look here](https://pandoc.org/installing.html)
+ - **jq**
+   * on mac you can use `brew install jq`.
+   * for other platforms, [look here](https://stedolan.github.io/jq/download/)
+ - **permissions in /usr/local**
+   * you will require write permission to at least `bin` and `lib` and the directories under them.
+   * Set up group membership and permissions to make this possible on your machine without the need to use `sudo` routinely.
 
 ### Co-requisite repositories
-The following repositories must be cloned to have a common parent with this one.
-
-- `workbench`
-- `main`
-
-Neither needs to be built ahead of the following.
+- **main** should be a sibling and should be up-to-date.
+  - It need not be built.
+  - **workbench** is needed only if you are building the stable deployer
 
 ### Building
 
-1. Build the deployer by issuing `./build.sh deploycmd` in the `main` repo.
-2. Then build the CLI by issuing `./build.sh` in this repo.
-
-The command `nimb` should now be in your path.
+```
+./build.sh
+```
+in this repo.  The command `nimb` should now be in your path.  For now, `deployProject` will also be in your path.
 
 ### Usage
 
