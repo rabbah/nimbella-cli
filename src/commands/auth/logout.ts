@@ -21,6 +21,7 @@
 import { flags } from '@oclif/command'
 import { NimBaseCommand } from '../../NimBaseCommand'
 import { forgetNamespace, fileSystemPersister } from 'deployer/login'
+import { disambiguateNamespace } from '../project/deploy'
 
 export default class AuthLogout extends NimBaseCommand {
   static description = 'Drop access to a Nimbella Namespace'
@@ -35,7 +36,7 @@ export default class AuthLogout extends NimBaseCommand {
   async run() {
     const {args, flags} = this.parse(AuthLogout)
 
-    const namespace = args.namespace
+    const namespace = await disambiguateNamespace(args.namespace, flags.apihost)
     const creds = await forgetNamespace(namespace, flags.apihost, fileSystemPersister).catch(err => this.handleError(err.message, err))
     this.log(`Successful logout from namespace '${namespace}' on API host '${creds.ow.apihost}'`)
   }

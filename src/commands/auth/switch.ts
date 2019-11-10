@@ -21,6 +21,7 @@
 import { flags } from '@oclif/command'
 import { NimBaseCommand } from '../../NimBaseCommand'
 import { switchNamespace, fileSystemPersister } from 'deployer/login'
+import { disambiguateNamespace } from '../project/deploy'
 
 export default class AuthSwitch extends NimBaseCommand {
   static description = 'Switch to a different Nimbella namespace'
@@ -34,7 +35,7 @@ export default class AuthSwitch extends NimBaseCommand {
 
   async run() {
     const {args, flags} = this.parse(AuthSwitch)
-    const namespace = args.namespace
+    const namespace = await disambiguateNamespace(args.namespace, flags.apihost)
     const creds = await switchNamespace(namespace, flags.apihost, fileSystemPersister).catch(err => this.handleError(err.message, err))
     this.log(`Successful switch to namespace '${namespace}' on API host '${creds.ow.apihost}'`)
   }

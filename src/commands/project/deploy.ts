@@ -21,8 +21,8 @@
 import { flags } from '@oclif/command'
 import { NimBaseCommand } from '../../NimBaseCommand'
 import { deployProject } from 'deployer/api'
-import { Flags, OWOptions, DeployResponse, Credentials } from 'deployer/deploy-struct'
-import { switchNamespace, fileSystemPersister } from 'deployer/login'
+import { Flags, OWOptions, DeployResponse, Credentials, CredentialRow } from 'deployer/deploy-struct'
+import { getCredentialList, switchNamespace, fileSystemPersister } from 'deployer/login'
 
 export class ProjectDeploy extends NimBaseCommand {
   static description = 'Deploy Nimbella projects'
@@ -82,6 +82,7 @@ export async function processCredentials(ignore_certs: boolean, apihost: string|
   // Iff a namespace switch was requested, perform it.  It might fail if there are no credentials for the target
   let creds: Credentials|undefined = undefined
   if (target) {
+    target = await disambiguateNamespace(target, owOptions.apihost)
     creds = await switchNamespace(target, owOptions.apihost, fileSystemPersister).catch((err: Error) => logger.handleError(err.message, err))
   } else if (apihost && auth) {
     // For backward compatibility with `wsk`, we accept the absence of target when both apihost and auth are
@@ -94,13 +95,29 @@ export async function processCredentials(ignore_certs: boolean, apihost: string|
 
 // Deploy one project
 export async function doDeploy(project: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions, logger: NimBaseCommand): Promise<boolean> {
-    return deployProject(project, owOptions, creds, fileSystemPersister, cmdFlags)
-      .then((result: DeployResponse) => displayResult(result, project, logger))
-      .catch((err: Error) => {
-        logger.displayError(err.message, err)
-        return false
-      })
-   }
+  return deployProject(project, owOptions, creds, fileSystemPersister, cmdFlags)
+    .then((result: DeployResponse) => displayResult(result, project, logger))
+    .catch((err: Error) => {
+      logger.displayError(err.message, err)
+      return false
+  })
+}
+
+// Disambiguate a namespace name when the user ends the name with a '-' character
+export async function disambiguateNamespace(namespace: string, apihost: string|undefined): Promise<string> {
+    if (namespace.endsWith('-')) {
+      const allCreds = await getCredentialList(fileSystemPersister)
+      namespace = namespace.slice(0, -1)
+      let matches = allCreds.filter(cred => cred.namespace.startsWith(namespace))
+      if (apihost) {
+        matches = matches.filter(match => match.apihost === apihost)
+      }
+      if (matches.length > 0 && matches.every(cred => cred.namespace === matches[0].namespace)) {
+        return matches[0].namespace
+      }
+    }
+    return namespace
+}
 
 // Display the result of a successful run
 function displayResult(result: DeployResponse, project: string, logger: NimBaseCommand): boolean {
