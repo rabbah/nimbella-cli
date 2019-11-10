@@ -76,7 +76,7 @@ To a first approximation, the command `nimb project deploy` is equivalent to the
 - the `--credentials` flag is not supported; use `nimb auth list`
 - the `--version` flag is not supported; use `nimb info`
 - the `--doc` flag is not supported; use `nimb doc` (which shows this document)
-- the `--verbose-errors flag is not supported; instead, all commands in `nim` accept a `--verbose` or `-v` flag, which has a similar effect
+- the `--verbose-errors` flag is not supported; instead, all commands in `nimb` accept a `--verbose` or `-v` flag, which has a similar effect
 
 The project structure is the same, however, and, to a very great extent both `deployProject` and `nimb project deploy` run the same code.
 
