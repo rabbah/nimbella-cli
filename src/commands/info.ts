@@ -21,7 +21,7 @@
 import { Command } from '@oclif/command'
 
 export default class Info extends Command {
-  static description = "Show information about this version of 'nimb'"
+  static description = "show information about this version of 'nim'"
 
   static flags = {}
 

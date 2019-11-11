@@ -71,11 +71,6 @@ pandoc -o nim.html -f markdown -s -t html < doc/nim.md
 npm install
 npm install deployer.tgz
 
-# Fix nit in the help command description
-TOFIX="node_modules/@oclif/plugin-help/oclif.manifest.json"
-FIXJSON=$(sed -e 's/display help/Display help/' < "$TOFIX")
-echo "$FIXJSON" > "$TOFIX"
-
 # Build
 npx tsc
 npm link

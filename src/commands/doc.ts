@@ -22,7 +22,7 @@ import { NimBaseCommand } from '../NimBaseCommand'
 import * as open from 'open'
 
 export default class Doc extends NimBaseCommand {
-  static description = "Display the full documentation of this CLI"
+  static description = "display the full documentation of this CLI"
 
   static flags = { ...NimBaseCommand.flags }
 
