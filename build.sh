@@ -19,10 +19,20 @@
 # from Nimbella Corp.
 #
 
-# Builds the 'nim' CLI (temporarily called 'nimb')
+# Builds the 'nim' CLI
+
+set -e
+
+# Parse
+if [ "$1" == "--pack" ]; then
+		PKG=true
+elif [ -n "$1" ]; then
+		echo "Illegal argument '$1'"
+		exit 1
+fi
+
 
 # Orient
-set -e
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SELFDIR
 
@@ -69,3 +79,11 @@ echo "$FIXJSON" > "$TOFIX"
 # Build
 npx tsc
 npm link
+
+# Optionally package
+if [ -n "$PKG" ]; then
+		rm -fr dist
+		npx oclif-dev pack
+		npx oclif-dev pack:macos
+		npx oclif-dev pack:win
+fi

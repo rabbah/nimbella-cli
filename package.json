@@ -8,7 +8,7 @@
     "url": "https://github.com//nimbella-corp/nimbella-cli.git"
   },
   "bin": {
-    "nimb": "./bin/run"
+    "nim": "./bin/run"
   },
   "keywords": [],
   "author": "Joshua Auerbach",
@@ -44,7 +44,7 @@
   ],
   "oclif": {
     "commands": "./lib/commands",
-    "bin": "nimb",
+    "bin": "nim",
     "hooks": {
       "prerun": "./lib/hooks/prerun"
     },
@@ -55,6 +55,11 @@
     ],
     "macos": {
       "identifier": "com.nimbella.cli"
+    },
+    "update": {
+      "s3": {
+        "host": "https://apijosh.nimbella.io/downloads/nim"
+      }
     },
     "topics": {
       "auth": {

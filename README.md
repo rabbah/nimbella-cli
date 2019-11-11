@@ -34,6 +34,12 @@ A comprehensive CLI for the Nimbella stack
  - **jq**
    * on mac you can use `brew install jq`.
    * for other platforms, [look here](https://stedolan.github.io/jq/download/)
+ - **p7zip**
+   * needed for windows packager only
+   * on mac you can use `brew install p7zip`
+ - **makensis**
+   * needed for windows packager only
+   * on mac you can use `brew install makensis`
  - **permissions in /usr/local**
    * you will require write permission to at least `bin` and `lib` and the directories under them.
    * Set up group membership and permissions to make this possible on your machine without the need to use `sudo` routinely.
@@ -64,7 +70,7 @@ The following suffices when there have been no changes to `aio-cli-plugin-runtim
 ```
 ./build.sh
 ```
-in this repo.  The command `nimb` should now be in your path.  For now, `deployProject` will also be in your path.
+in this repo.  The command `nim` should now be in your path.  For now, `deployProject` will also be in your path.
 
 ### If you make a change to `aio-cli-plugin-runtime`
 
@@ -75,8 +81,18 @@ in this repo.  The command `nimb` should now be in your path.  For now, `deployP
 - Then, in this repo, commit `aio.hash` and `package.json` (if it has changed)
 - Push at will
 
+### Packaging Builds
+
+This aspect is still under construction.
+
+```
+./build.sh --pack
+```
+
+This does a normal build, followed by packaging steps.  It produces an update image and installers for mac and windows (the linux installer can't be built except on linux and I don't yet understand how it's supposed to work).  The packaged material (in `dist`) needs to be copied to `config/nginx-content/downloads/nim` in `main`.  Further automation will follow.
+
 ### Usage
 
-`nimb`
+`nim`
 
 To get started.
