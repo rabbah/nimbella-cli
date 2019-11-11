@@ -18,9 +18,9 @@
     "@adobe/aio-cli-plugin-runtime": "file:adobe-aio-cli-plugin-runtime-1.2.0.tgz",
     "@oclif/command": "^1",
     "@oclif/config": "^1",
-    "@oclif/plugin-autocomplete": "^0.1.2",
     "@oclif/plugin-help": "^2.1.4",
     "@oclif/plugin-not-found": "^1.2.0",
+    "@oclif/plugin-update": "^1.3.9",
     "@types/debug": "^4.1.5",
     "debug": "^4.1.1",
     "deployer": "file:deployer.tgz",
@@ -50,8 +50,12 @@
     },
     "plugins": [
       "@oclif/plugin-help",
-      "@oclif/plugin-not-found"
+      "@oclif/plugin-not-found",
+      "@oclif/plugin-update"
     ],
+    "macos": {
+      "identifier": "com.nimbella.cli"
+    },
     "topics": {
       "auth": {
         "description": "Manage Nimbella namespace credentials"
