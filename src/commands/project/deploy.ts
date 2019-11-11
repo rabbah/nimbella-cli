@@ -82,7 +82,7 @@ export async function processCredentials(ignore_certs: boolean, apihost: string|
   // Iff a namespace switch was requested, perform it.  It might fail if there are no credentials for the target
   let creds: Credentials|undefined = undefined
   if (target) {
-    target = await disambiguateNamespace(target, owOptions.apihost)
+    target = await disambiguateNamespace(target, owOptions.apihost).catch((err: Error) => logger.handleError(err.message, err))
     creds = await switchNamespace(target, owOptions.apihost, fileSystemPersister).catch((err: Error) => logger.handleError(err.message, err))
   } else if (apihost && auth) {
     // For backward compatibility with `wsk`, we accept the absence of target when both apihost and auth are
@@ -104,6 +104,10 @@ export async function doDeploy(project: string, cmdFlags: Flags, creds: Credenti
 }
 
 // Disambiguate a namespace name when the user ends the name with a '-' character
+// If the namespace does not end with '-' just return it
+// If the match is unique up to the apihost, return the unique match (possibly still ambiguous if apihost not provided)
+// If there is no match, return the provided string sans '-'
+// If the match is not unique up to the apihost, throw error
 export async function disambiguateNamespace(namespace: string, apihost: string|undefined): Promise<string> {
     if (namespace.endsWith('-')) {
       const allCreds = await getCredentialList(fileSystemPersister)
@@ -112,10 +116,15 @@ export async function disambiguateNamespace(namespace: string, apihost: string|u
       if (apihost) {
         matches = matches.filter(match => match.apihost === apihost)
       }
-      if (matches.length > 0 && matches.every(cred => cred.namespace === matches[0].namespace)) {
-        return matches[0].namespace
+      if (matches.length > 0) {
+        if (matches.every(cred => cred.namespace === matches[0].namespace)) {
+          return matches[0].namespace
+        } else {
+          throw new Error(`Prefix '${namespace}' matches multiple namespaces`)
+        }
       }
     }
+    // No match or no '-' to begin with
     return namespace
 }
 
