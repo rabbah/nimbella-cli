@@ -26,6 +26,9 @@ set -e
 # Parse
 if [ "$1" == "--pack" ]; then
 		PKG=true
+elif [ "$1" == "--stable" ]; then
+		STABLE=true
+		PKG=true
 elif [ -n "$1" ]; then
 		echo "Illegal argument '$1'"
 		exit 1
@@ -34,7 +37,23 @@ fi
 
 # Orient
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+STABLEDIR=$SELFDIR/../workbench/stable
 cd $SELFDIR
+
+# Check prereqs for --stable
+if [ -n "$STABLE" ]; then
+    DIRTY=$(git status --porcelain)
+    if [ -n "$DIRTY" ]; then
+        echo "The nimbella-cli repo is not fully committed: a stable version cannot be declared"
+        exit 1
+    fi
+    LAST_VERSION=$(jq -r .nimcli < ../workbench/stable/versions.json)
+    NEW_VERSION=$(jq -r .version < package.json)
+    if [ "$LAST_VERSION" == "$NEW_VERSION" ]; then
+        echo "The nim CLI version number was not changed: a new stable version cannot be declared"
+        exit 1
+    fi
+fi
 
 # Check repo synchronization
 UPTODATE=$(./aioUpToDate.sh)
@@ -85,7 +104,15 @@ if [ -n "$PKG" ]; then
 		npx oclif-dev pack:win
 		mv README.md userREADME.md
 		mv devREADME.md README.md
-		cd dist
+		pushd dist
 		rm -f win/*x86*
 		tar czf ../nim-cli.tgz *
+		popd
+fi
+
+# Optionally make stable version
+if [ -n "$STABLE" ]; then
+    mv nim-cli.tgz $STABLEDIR
+    cd $STABLEDIR/..
+    ./setStableVersions.sh
 fi
