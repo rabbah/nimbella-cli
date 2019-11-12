@@ -62,14 +62,14 @@ VERSION=$(jq -r .version package.json)
 echo '{ "version": "'$VERSION '('$BUILDINFO')" }' | jq . > version.json
 
 # Build the deployer
-deployer/build.sh
+deployer/buildMinified.sh
 
 # Build the HTML form of the documentation
 pandoc -o nim.html -f markdown -s -t html < doc/nim.md
 
 # Install
 npm install
-npm install deployer.tgz
+npm install mindeployer.tgz
 
 # Build
 npx tsc
@@ -77,8 +77,15 @@ npm link
 
 # Optionally package
 if [ -n "$PKG" ]; then
-		rm -fr dist
-		npx oclif-dev pack
+		rm -fr dist tmp nim-cli.tgz
+		mv README.md devREADME.md
+		mv userREADME.md README.md
+		npx oclif-dev pack -t linux-x64,win32-x64,darwin-x64
 		npx oclif-dev pack:macos
 		npx oclif-dev pack:win
+		mv README.md userREADME.md
+		mv devREADME.md README.md
+		cd dist
+		rm -f win/*x86*
+		tar czf ../nim-cli.tgz *
 fi
