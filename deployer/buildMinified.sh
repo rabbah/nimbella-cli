@@ -56,7 +56,7 @@ mkdir minified minified/deployer
 
 # Stage needed material
 cp userREADME.md minified/deployer/README.md
-cp deployer.html package.json version.json runtimes.json *.js minified/deployer
+cp deployer.html package.json version.json runtimes.json *.js *.d.ts minified/deployer
 
 # Minify the js files
 cd minified/deployer
@@ -78,5 +78,5 @@ if [ -n "$STABLE" ]; then
     cd $STABLEDIR/..
     ./setStableVersions.sh
 else
-    mv $FILENAME ../../min$FILENAME
+    mv $FILENAME ../../mindeployer.tgz
 fi
