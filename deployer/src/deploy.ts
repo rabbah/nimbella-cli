@@ -20,7 +20,7 @@
 
 import * as fs from 'fs'
 import { DeployStructure, DeployResponse, ActionSpec, PackageSpec, WebResource, BucketSpec, DeployerAnnotation, VersionEntry } from './deploy-struct'
-import { combineResponses, wrapMessage, wrapError, keyVal, emptyResponse,
+import { combineResponses, wrapError, wrapSuccess, keyVal, emptyResponse,
     getDeployerAnnotation, straysToResponse, wipe, makeDict, generateSecret, digestPackage, digestAction, loadVersions } from './util'
 import * as openwhisk from 'openwhisk'
 import { Bucket } from '@google-cloud/storage'
@@ -162,7 +162,7 @@ export async function deployPackage(pkg: PackageSpec, wsk: openwhisk.Client,
     if (versions && versions.packageVersions && versions.packageVersions[pkg.name] && digest === versions.packageVersions[pkg.name].digest) {
             const packageVersions = {}
             packageVersions[pkg.name] = versions.packageVersions[pkg.name]
-            pkgResponse = { successes: [], failures: [], packageVersions, actionVersions: {}, namespace: undefined }
+            pkgResponse = { successes: [], failures: [], ignored: [], packageVersions, actionVersions: {}, namespace: undefined }
     } else {
         let former: openwhisk.Package = undefined
         if (!pkg.clean && !namespaceIsClean) {
@@ -179,7 +179,7 @@ export async function deployPackage(pkg: PackageSpec, wsk: openwhisk.Client,
         await wsk.packages.update({name: pkg.name, package: owPkg}).then(result => {
             const packageVersions = {}
             packageVersions[pkg.name] = { version: result.version, digest }
-            pkgResponse = { successes: [], failures: [], packageVersions, actionVersions: {}, namespace: result.namespace }
+            pkgResponse = { successes: [], failures: [], ignored: [], packageVersions, actionVersions: {}, namespace: result.namespace }
         }).catch(err => {
             pkgResponse = wrapError(err, `package '${pkg.name}'`)
         })
@@ -227,7 +227,7 @@ function  deployAction(action: ActionSpec, wsk: openwhisk.Client, prefix: string
         // Skipping deployment
         const actionVersions = {}
         actionVersions[name] = versions.actionVersions[name]
-        return Promise.resolve(wrapMessage(`Action ${name} was unchanged since last deployment (not re-deployed)`, actionVersions, undefined))
+        return Promise.resolve(wrapSuccess(name, "action", true, undefined, actionVersions, undefined))
     }
     // Will be deployed
     // Compute the annotations that we will definitely be adding
@@ -278,11 +278,7 @@ function  deployAction(action: ActionSpec, wsk: openwhisk.Client, prefix: string
         const map = {}
         map[name] = { version: response.version, digest }
         const namespace = response.namespace.split('/')[0]
-        let wrapmsg = ""
-        if (action.wrapping) {
-            wrapmsg = ` (wrapping ${action.wrapping})`
-        }
-        return Promise.resolve(wrapMessage(`Action ${name} deployed${wrapmsg}`, map, namespace))
+        return Promise.resolve(wrapSuccess(name, "action", false, action.wrapping, map, namespace))
     }).catch(err => {
         return Promise.resolve(wrapError(err, `action '${name}'`))
     })

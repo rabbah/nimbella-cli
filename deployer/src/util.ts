@@ -18,8 +18,8 @@
  * from Nimbella Corp.
  */
 
-import { DeployStructure, DeployResponse, PackageSpec, ActionSpec, VersionMap,
-    DeployerAnnotation, WebResource, VersionEntry } from './deploy-struct'
+import { DeployStructure, DeployResponse, DeploySuccess, DeployKind, ActionSpec, PackageSpec,
+    DeployerAnnotation, WebResource, VersionMap, VersionEntry } from './deploy-struct'
 import * as openwhisk from 'openwhisk'
 import * as fs from 'fs'
 import * as os from 'os'
@@ -346,7 +346,7 @@ export function emptyStructure(): DeployStructure {
 
 // Provide an empty DeployResponse with all required members defined but empty
 export function emptyResponse(): DeployResponse {
-    return { successes:[], failures:[], namespace: undefined, packageVersions: {}, actionVersions: {} }
+    return { successes:[], failures:[], ignored: [], namespace: undefined, packageVersions: {}, actionVersions: {} }
 }
 
 // Combine multiple DeployResponses into a single DeployResponse
@@ -354,26 +354,30 @@ export function combineResponses(responses: DeployResponse[]): DeployResponse {
     if (responses.length == 0) {
         return emptyResponse()
     }
-    const combinedSuccesses: string[][] = responses.map(response => response.successes)
+    const combinedSuccesses: DeploySuccess[][] = responses.map(response => response.successes)
     const successes = combinedSuccesses.reduce((prev, curr) => prev.concat(curr), [])
     const combinedFailures: Error[][] = responses.map(response => response.failures)
     const failures = combinedFailures.reduce((prev, curr) => prev.concat(curr), [])
+    const combinedIgnored: string[][] = responses.map(response => response.ignored)
+    const ignored = combinedIgnored.reduce((prev, curr) => prev.concat(curr))
     const packageVersions = responses.reduce((prev, curr) => Object.assign(prev, curr.packageVersions), {})
     const actionVersions = responses.reduce((prev, curr) => Object.assign(prev, curr.actionVersions), {})
     const webHashes = responses.reduce((prev, curr) => Object.assign(prev, curr.webHashes || {}), {})
     const namespace = responses.map(r => r.namespace).reduce((prev, curr) => prev || curr)
-    return { successes, failures, packageVersions, actionVersions, webHashes, namespace}
+    return { successes, failures, ignored, packageVersions, actionVersions, webHashes, namespace}
 }
 
 // Turn the strays from a DeployStructure into a response indicating that they were skipped
 export function straysToResponse(strays: string[]): DeployResponse {
-    return { successes: strays.map(stray => `Ignored: ${stray}`), failures: [], packageVersions: {}, actionVersions: {} ,
+    return { successes: [], ignored: strays, failures: [], packageVersions: {}, actionVersions: {},
         namespace: undefined }
 }
 
-// Wrap a single message as a DeployResponse
-export function wrapMessage(message: string, actionVersions: VersionMap, namespace: string): DeployResponse {
-    return { successes: [ message ], failures: [] , packageVersions: {}, actionVersions, webHashes: {}, namespace }
+// Wrap a single success as a DeployResponse
+export function wrapSuccess(name: string, kind: DeployKind, skipped: boolean, wrapping: string, actionVersions: VersionMap,
+        namespace: string): DeployResponse {
+    const success: DeploySuccess = { name, kind, skipped, wrapping }
+    return { successes:[ success ], failures:[], ignored: [], namespace, packageVersions: {}, actionVersions }
 }
 
 // Wrap a single error as a DeployResponse
@@ -383,7 +387,7 @@ export function wrapError(err: Error, context: string): DeployResponse {
     if (typeof err == 'object') {
         err['context'] = context
     }
-    const result = { successes: [], failures: [ err ] , packageVersions: {}, actionVersions: {}, namespace: undefined }
+    const result = { successes: [], failures: [ err ] , ignored: [], packageVersions: {}, actionVersions: {}, namespace: undefined }
     //console.log("wrapped error")
     //console.dir(result, { depth: null })
     return result

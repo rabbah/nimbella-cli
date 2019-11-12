@@ -143,17 +143,59 @@ function displayResult(result: DeployResponse, project: string, logger: NimBaseC
   if (result.successes.length == 0 && result.failures.length == 0) {
       logger.log("Nothing deployed")
   } else {
-      for (const msg of result.successes) {
-          logger.log(msg)
-      }
-      for (const err of result.failures) {
-          success = false
-          const context = (err as any)['context']
-          if (context) {
-              logger.displayError(`While deploying ${context}:`, err)
+      const actions: string[] = []
+      const web: string[] = []
+      let skippedActions = 0
+      let skippedWeb = 0
+      for (const success of result.successes) {
+          if (success.kind === 'web') {
+              if (success.skipped) {
+                  skippedWeb++
+              } else {
+                  web.push(success.name)
+              }
+          } else if (success.kind == "action") {
+              if (success.skipped) {
+                  skippedActions++
+              } else {
+                  let name = success.name
+                  if (success.wrapping) {
+                      name += ` (wrapping ${success.wrapping})`
+                  }
+                  actions.push(name)
+              }
           }
-          logger.displayError(err.message, err)
-        }
+      }
+      if (actions.length > 0) {
+          logger.log('Deployed actions:')
+          for (const action of actions) {
+              logger.log(`  - ${action}`)
+          }
+      }
+      if (skippedActions > 0) {
+          logger.log(`skipped ${skippedActions} unchanged actions`)
+      }
+      if (web.length > 0) {
+          logger.log('Deployed web content:')
+          for (const item of web) {
+              logger.log(`  - ${item}`)
+          }
+      }
+      if (skippedWeb > 0) {
+          logger.log(`skipped ${skippedWeb} unchanged web resources`)
+      }
+      if (result.failures.length > 0) {
+          success = false
+          console.error('Failures:')
+          for (const err of result.failures) {
+              success = false
+              const context = (err as any)['context']
+              if (context) {
+                  logger.displayError(`While deploying ${context}:`, err)
+              }
+              logger.displayError(err.message, err)
+          }
+      }
   }
   return success
 }

@@ -19,8 +19,8 @@
  */
 
 import { Storage, Bucket } from '@google-cloud/storage'
-import { Credentials, WebResource, DeployResponse, BucketSpec, VersionEntry } from './deploy-struct'
-import { wrapMessage, wrapError } from './util';
+import { Credentials, WebResource, DeployResponse, DeploySuccess, BucketSpec, VersionEntry } from './deploy-struct'
+import { wrapSuccess, wrapError } from './util';
 
 import * as path from 'path'
 import * as fs from 'fs'
@@ -74,8 +74,8 @@ export function deployToBucket(resource: WebResource, client: Bucket, spec: Buck
     if (versions && versions.webHashes && versions.webHashes[resource.filePath] && versions.webHashes[resource.filePath] === digest) {
         const webHashes = {}
         webHashes[resource.filePath] = versions.webHashes[resource.filePath]
-        const msg = `Resource ${resource.filePath} was unchanged since last deployment (not re-deployed)`
-        const response = { successes: [ msg ], failures: [], actionVersions: {}, packageVersions: {}, webHashes, namespace: undefined }
+        const success: DeploySuccess = {name: resource.filePath, kind: "web", skipped: true }
+        const response = { successes: [ success ], failures: [], ignored: [], actionVersions: {}, packageVersions: {}, webHashes, namespace: undefined }
         return Promise.resolve(response)
     } // else not incremental or no digest exists for this resource or digest does not match
     let destination = resource.simpleName
@@ -94,8 +94,8 @@ export function deployToBucket(resource: WebResource, client: Bucket, spec: Buck
     //console.log('fixed up destination', destination)
     // Upload
     return client.upload(resource.filePath, { destination }).then(() => {
-        const msg = `${resource.filePath} deployed to\n https://${client.name}/${destination}`
-        const response = wrapMessage(msg, {}, undefined)
+        const item = `https://${client.name}/${destination}`
+        const response = wrapSuccess(item, "web", false, undefined, {}, undefined)
         response.webHashes = {}
         response.webHashes[resource.filePath] = digest
         return response

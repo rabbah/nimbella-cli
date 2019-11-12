@@ -136,10 +136,20 @@ export interface VersionMap {
     [key: string]: VersionInfo
 }
 
+export type DeployKind = "web" | "action"
+
+export interface DeploySuccess {
+    name: string
+    kind: DeployKind
+    skipped: boolean
+    wrapping?: string
+}
+
 // Contains the responses from an actual deployment
 export interface DeployResponse {
-    successes: string[]
+    successes: DeploySuccess[]
     failures: Error[]
+    ignored: string[]
     namespace: string
     packageVersions: VersionMap
     actionVersions: VersionMap

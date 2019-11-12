@@ -289,18 +289,59 @@ function displayResult(result: DeployResponse, project: string, verboseErrors: b
     if (result.successes.length == 0 && result.failures.length == 0) {
         console.log("Nothing deployed")
     } else {
-        for (const msg of result.successes) {
-            console.log(msg)
-        }
-        for (const err of result.failures) {
-            success = false
-            const context = err['context']
-            if (context) {
-                console.error(`While deploying ${context}:`)
+        const actions: string[] = []
+        const web: string[] = []
+        let skippedActions = 0
+        let skippedWeb = 0
+        for (const success of result.successes) {
+            if (success.kind === 'web') {
+                if (success.skipped) {
+                    skippedWeb++
+                } else {
+                    web.push(success.name)
+                }
+            } else if (success.kind == "action") {
+                if (success.skipped) {
+                    skippedActions++
+                } else {
+                    let name = success.name
+                    if (success.wrapping) {
+                        name += ` (wrapping ${success.wrapping})`
+                    }
+                    actions.push(name)
+                }
             }
-            console.error("Error!", getMessageFromError(err))
-            if (verboseErrors && err.stack) {
-                console.log(err.stack)
+        }
+        if (actions.length > 0) {
+            console.log('Deployed actions:')
+            for (const action of actions) {
+                console.log(`  - ${action}`)
+            }
+        }
+        if (skippedActions > 0) {
+            console.log(`skipped ${skippedActions} unchanged actions`)
+        }
+        if (web.length > 0) {
+            console.log('Deployed web content:')
+            for (const item of web) {
+                console.log(`  - ${item}`)
+            }
+        }
+        if (skippedWeb > 0) {
+            console.log(`skipped ${skippedWeb} unchanged web resources`)
+        }
+        if (result.failures.length > 0) {
+            success = false
+            console.error('Failures:')
+            for (const err of result.failures) {
+                const context = err['context']
+                if (context) {
+                    console.error(`While deploying ${context}:`)
+                }
+                console.error("Error!", getMessageFromError(err))
+                if (verboseErrors && err.stack) {
+                    console.log(err.stack)
+                }
             }
         }
     }
