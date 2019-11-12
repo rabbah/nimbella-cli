@@ -61,7 +61,7 @@
     },
     "update": {
       "s3": {
-        "host": "https://apijosh.nimbella.io/downloads/nim"
+        "host": "https://apigcp.nimbella.io/downloads/nim"
       }
     },
     "topics": {
