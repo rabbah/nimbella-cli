@@ -23,6 +23,8 @@ import { NimBaseCommand } from '../../NimBaseCommand'
 import { deployProject } from 'deployer/api'
 import { Flags, OWOptions, DeployResponse, Credentials, CredentialRow } from 'deployer/deploy-struct'
 import { getCredentialList, switchNamespace, fileSystemPersister } from 'deployer/login'
+import { computeBucketName } from 'deployer/deploy-to-bucket'
+import * as path from 'path'
 
 export class ProjectDeploy extends NimBaseCommand {
   static description = 'Deploy Nimbella projects'
@@ -138,13 +140,13 @@ function displayResult(result: DeployResponse, project: string, logger: NimBaseC
   if (result.apihost) {
       hostClause = ` on host '${result.apihost}'`
   }
-  logger.log(`\nResult of deploying project '${project}'${namespaceClause}${hostClause}`)
+  logger.log(`\nResult of deploying project '${path.resolve(project)}'${namespaceClause}${hostClause}`)
   let success = true
   if (result.successes.length == 0 && result.failures.length == 0) {
       logger.log("Nothing deployed")
   } else {
       const actions: string[] = []
-      const web: string[] = []
+      let deployedWeb = 0
       let skippedActions = 0
       let skippedWeb = 0
       for (const success of result.successes) {
@@ -152,7 +154,7 @@ function displayResult(result: DeployResponse, project: string, logger: NimBaseC
               if (success.skipped) {
                   skippedWeb++
               } else {
-                  web.push(success.name)
+                  deployedWeb++
               }
           } else if (success.kind == "action") {
               if (success.skipped) {
@@ -166,6 +168,16 @@ function displayResult(result: DeployResponse, project: string, logger: NimBaseC
               }
           }
       }
+      if (deployedWeb > 0) {
+          let bucketClause = ""
+          if (result.apihost) {
+              bucketClause = ` to https://${computeBucketName(result.apihost, result.namespace)}`
+          }
+          logger.log(`Deployed ${deployedWeb} web content items${bucketClause}`)
+      }
+      if (skippedWeb > 0) {
+          logger.log(`Skipped ${skippedWeb} unchanged web resources`)
+      }
       if (actions.length > 0) {
           logger.log('Deployed actions:')
           for (const action of actions) {
@@ -173,16 +185,7 @@ function displayResult(result: DeployResponse, project: string, logger: NimBaseC
           }
       }
       if (skippedActions > 0) {
-          logger.log(`skipped ${skippedActions} unchanged actions`)
-      }
-      if (web.length > 0) {
-          logger.log('Deployed web content:')
-          for (const item of web) {
-              logger.log(`  - ${item}`)
-          }
-      }
-      if (skippedWeb > 0) {
-          logger.log(`skipped ${skippedWeb} unchanged web resources`)
+          logger.log(`Skipped ${skippedActions} unchanged actions`)
       }
       if (result.failures.length > 0) {
           success = false
