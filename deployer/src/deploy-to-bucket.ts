@@ -106,7 +106,7 @@ export function deployToBucket(resource: WebResource, client: Bucket, spec: Buck
 
 // Compute the bucket name by adjoining the namespace to the host name portion of apiHost, separated by a dash.
 // The namespace is obtained from the OW credentials by querying the controller.
-function computeBucketName(apiHost: string, namespace: string): string {
+export function computeBucketName(apiHost: string, namespace: string): string {
     const url = URL(apiHost)
     return namespace + '-' + url.hostname
 }
