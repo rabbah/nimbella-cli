@@ -54,18 +54,18 @@ There are two ways to install the Nimbella CLI.
 
 You can obtain an installer by clicking
 
-- [here for mac](https://apigcp.nimbella.io/downloads/nim/macos/nim-v0.1.1.pkg)
-- [here for windows](https://apigcp.nimbella.io/downloads/nim/win/nim-v0.1.1-x64.exe)
+- [here for mac](https://apigcp.nimbella.io/downloads/nim/macos/nim-v0.1.2.pkg)
+- [here for windows](https://apigcp.nimbella.io/downloads/nim/win/nim-v0.1.2-x64.exe)
 
 Save the installer on your machine, then execute it and follow instructions.  When installation finishes, verify by typing `nim` at a command prompt.
 
 ### <span id="NPMInstall"></span>Install using npm
 
 ```
-npm install -g https://apigcp.nimbella.io/downloads/nim/nim-v0.1.1/nim-v0.1.1.tar.gz
+npm install -g https://apigcp.nimbella.io/downloads/nim/nim-v0.1.2/nim-v0.1.2.tar.gz
 
 ```
-When installation finishes, verfy by typing `nim` at a command prompt.
+When installation finishes, verify by typing `nim` at a command prompt.
 
 -----
 
@@ -80,7 +80,7 @@ The **Nimbella Command Line Tool** (`nim`) is your primary portal to Nimbella se
 A comprehensive CLI for the Nimbella stack
 
 VERSION
-  nimbella-cli/0.1.1 darwin-x64 node-v11.15.0
+  nimbella-cli/0.1.2 darwin-x64 node-v11.15.0
 
 USAGE
   $ nim [COMMAND]

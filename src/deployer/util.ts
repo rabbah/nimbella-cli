@@ -462,7 +462,7 @@ type RuntimeTable = { [ key: string ]: RuntimeEntry[] }
 function initRuntimes() {
     if (!runtimesRead) {
         runtimesRead = true
-        const runtimes: RuntimeTable = require('./runtimes.json').runtimes
+        const runtimes: RuntimeTable = require('../../runtimes.json').runtimes
         for (const runtime in runtimes) {
             const runtimeEntries: RuntimeEntry[] = runtimes[runtime]
             for (const entry of runtimeEntries) {
@@ -739,9 +739,8 @@ export function saveUsFromOurselves(namespace: string, apihost: string) {
     let sensitiveNamespaces : string[]
     let productionProjects : string[]
     try {
-        // These are only present in deployers used internally; customers won't have them
-        sensitiveNamespaces = require('./sensitiveNamespaces.json')
-        productionProjects = require('./productionProjects.json')
+        sensitiveNamespaces = require('../../sensitiveNamespaces.json')
+        productionProjects = require('../../productionProjects.json')
     } catch (_) {
         // Customers don't need a --production flag ... their auth token defines what they can and can't do
         return
