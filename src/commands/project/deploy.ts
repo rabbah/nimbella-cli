@@ -134,11 +134,11 @@ export async function disambiguateNamespace(namespace: string, apihost: string|u
 function displayResult(result: DeployResponse, project: string, logger: NimBaseCommand): boolean {
   let namespaceClause = ""
   if (result.namespace) {
-      namespaceClause = ` to namespace '${result.namespace}'`
+      namespaceClause = `\n  to namespace '${result.namespace}'`
   }
   let hostClause = ""
   if (result.apihost) {
-      hostClause = ` on host '${result.apihost}'`
+      hostClause = `\n  on host '${result.apihost}'`
   }
   logger.log(`\nResult of deploying project '${path.resolve(project)}'${namespaceClause}${hostClause}`)
   let success = true
@@ -171,7 +171,7 @@ function displayResult(result: DeployResponse, project: string, logger: NimBaseC
       if (deployedWeb > 0) {
           let bucketClause = ""
           if (result.apihost) {
-              bucketClause = ` to https://${computeBucketName(result.apihost, result.namespace)}`
+              bucketClause = ` to\n  https://${computeBucketName(result.apihost, result.namespace)}`
           }
           logger.log(`Deployed ${deployedWeb} web content items${bucketClause}`)
       }
