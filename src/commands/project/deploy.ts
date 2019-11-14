@@ -20,10 +20,10 @@
 
 import { flags } from '@oclif/command'
 import { NimBaseCommand } from '../../NimBaseCommand'
-import { deployProject } from 'deployer/api'
-import { Flags, OWOptions, DeployResponse, Credentials, CredentialRow } from 'deployer/deploy-struct'
-import { getCredentialList, switchNamespace, fileSystemPersister } from 'deployer/login'
-import { computeBucketName } from 'deployer/deploy-to-bucket'
+import { deployProject } from '../../deployer/api'
+import { Flags, OWOptions, DeployResponse, Credentials, CredentialRow } from '../../deployer/deploy-struct'
+import { getCredentialList, switchNamespace, fileSystemPersister } from '../../deployer/login'
+import { computeBucketName } from '../../deployer/deploy-to-bucket'
 import * as path from 'path'
 
 export class ProjectDeploy extends NimBaseCommand {

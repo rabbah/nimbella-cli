@@ -26,6 +26,7 @@
 set -e
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SELFDIR
+MAINDIR=$SELFDIR/../main
 
 # First run a clean build in aio
 pushd ../aio-cli-plugin-runtime
@@ -36,9 +37,20 @@ popd
 # Generate the package tarball
 npm pack ../aio-cli-plugin-runtime
 
-# Install the tarball as an npm package
+# Move the tarball into the deployer project
 TARBALL=$(echo adobe-aio-cli-plugin-runtime*)
-npm install --save $TARBALL
+mkdir -p aiodeploy/web
+mv $TARBALL aiodeploy/web/adobe-aio-cli-plugin-runtime.tgz
+
+# Perform the deployment to make the tarball visible by https
+PROJECT=nimdev
+if [ -f $MAINDIR/config/nimconfig.json ]; then
+	PROJECT=$(jq -r .current < "$MAINDIR/config/nimconfig.json")
+fi
+nimadmin project set nimgcp
+echo yes | nimadmin user set nimbella nimaio
+nimadmin project set $PROJECT
+nim project deploy aiodeploy
 
 # Record that nimbella-cli is now up to date with aio-cli-plugin-runtime
 ./aioUpToDate.sh record

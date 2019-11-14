@@ -19,8 +19,8 @@
  */
 
 import { NimBaseCommand } from '../../NimBaseCommand'
-import { getCredentialList, fileSystemPersister } from 'deployer/login'
-import { CredentialRow } from 'deployer/deploy-struct'
+import { getCredentialList, fileSystemPersister } from '../../deployer/login'
+import { CredentialRow } from '../../deployer/deploy-struct'
 
 // Constants used in formatting the credential list
 const LIST_HEADER = 'Namespace            Current Storage API Host'

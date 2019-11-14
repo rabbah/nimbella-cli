@@ -20,7 +20,7 @@
 
 import { flags } from '@oclif/command'
 import { NimBaseCommand } from '../../NimBaseCommand'
-import { doLogin, fileSystemPersister } from 'deployer/login'
+import { doLogin, fileSystemPersister } from '../../deployer/login'
 
 export default class AuthLogin extends NimBaseCommand {
   static description = 'Gain access to a Nimbella namespace'

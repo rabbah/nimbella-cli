@@ -1,0 +1,3 @@
+targetNamespace: nimaio
+bucket:
+  mainPageSuffix: adobe-aio-cli-plugin-runtime.tgz

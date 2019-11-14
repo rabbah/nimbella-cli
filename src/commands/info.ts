@@ -28,11 +28,9 @@ export default class Info extends Command {
   static args = []
 
   async run() {
-    const deployer = require('deployer/version.json')
     const cli = require('../../version.json')
     const aio = require('@adobe/aio-cli/package.json')
-    this.log(`nimb command version: ${cli.version}`)
-    this.log(`Deployer version:     ${deployer.version}`)
-    this.log(`Adobe I/O version:    ${aio.version}`)
+    this.log(`nim command version: ${cli.version}`)
+    this.log(`Adobe I/O version:   ${aio.version}`)
   }
 }

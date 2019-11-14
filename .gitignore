@@ -11,6 +11,8 @@ package-lock.json
 *-error.log
 /.nyc_output
 version.json
+runtimes.json
+productionProjects.json
 *.tgz
 nim.html
 deployer/minified/

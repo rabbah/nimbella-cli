@@ -64,13 +64,8 @@ elif [ "$UPTODATE" != 'true' ]; then
     echo $UPTODATE
     exit -1
 fi
-TARBALL=$(grep -e '@adobe/aio-cli-plugin-runtime' package.json | sed -e 's/^.*file://' | sed 's/".*$//')
-if [ ! -f "$TARBALL" ]; then
-		echo "The required AIO  tarball is not present. './makeAioPacks.sh' needs to be run first."
-		exit -1
-fi
 
-# Store version info (TODO: currently this is done in the deployer directory as well; eventually it should only be done in one place)
+# Store version info
 HASH=$(git rev-parse HEAD)
 DIRTY=$(git status --porcelain)
 if [ -n "$DIRTY" ]; then
@@ -80,15 +75,15 @@ BUILDINFO=${HASH:0:8}${DIRTY}
 VERSION=$(jq -r .version package.json)
 echo '{ "version": "'$VERSION '('$BUILDINFO')" }' | jq . > version.json
 
-# Build the deployer
-deployer/buildMinified.sh
+# Copy in the latest runtimes.json and productionProjects.json
+cp $SELFDIR/../main/config/runtimes.json .
+cp $SELFDIR/../main/config/productionProjects.json .
 
 # Build the HTML form of the documentation
 pandoc -o nim.html -f markdown -s -t html < doc/nim.md
 
 # Install
 npm install
-npm install mindeployer.tgz
 
 # Build
 npx tsc
