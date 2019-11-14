@@ -36,6 +36,7 @@
         "archiver": "^3.0.0",
         "dotenv": "7.0.0",
         "expand-home-dir": "0.0.3",
+        "gtoken": "4.1.0",
         "ignore": "5.0.6",
         "js-yaml": "^3.13.1",
         "mime-types": "2.1.22",
