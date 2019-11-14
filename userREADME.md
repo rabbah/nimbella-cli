@@ -5,7 +5,7 @@ $ npm install -g nimbella-cli
 $ nim COMMAND
 running command...
 $ nim (-v|--version|version)
-nimbella-cli/0.1.1 darwin-x64 node-v11.15.0
+nimbella-cli/0.1.2 darwin-x64 node-v11.15.0
 $ nim --help [COMMAND]
 USAGE
   $ nim COMMAND
@@ -95,7 +95,7 @@ OPTIONS
   --web=true|yes|false|no|raw            treat ACTION as a web action or as a raw HTTP web action
 ```
 
-_See code: [src/commands/action/create.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/action/create.ts)_
+_See code: [src/commands/action/create.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/action/create.ts)_
 
 ## `nim action:delete ACTIONNAME`
 
@@ -109,7 +109,7 @@ OPTIONS
   --json  output raw json
 ```
 
-_See code: [src/commands/action/delete.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/action/delete.ts)_
+_See code: [src/commands/action/delete.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/action/delete.ts)_
 
 ## `nim action:get ACTIONNAME`
 
@@ -135,7 +135,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/action/get.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/action/get.ts)_
+_See code: [src/commands/action/get.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/action/get.ts)_
 
 ## `nim action:invoke ACTIONNAME`
 
@@ -162,7 +162,7 @@ OPTIONS
   --version                    Show version
 ```
 
-_See code: [src/commands/action/invoke.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/action/invoke.ts)_
+_See code: [src/commands/action/invoke.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/action/invoke.ts)_
 
 ## `nim action:list`
 
@@ -190,7 +190,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/action/list.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/action/list.ts)_
+_See code: [src/commands/action/list.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/action/list.ts)_
 
 ## `nim action:update ACTIONNAME [ACTIONPATH]`
 
@@ -225,7 +225,7 @@ OPTIONS
   --web=true|yes|false|no|raw            treat ACTION as a web action or as a raw HTTP web action
 ```
 
-_See code: [src/commands/action/update.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/action/update.ts)_
+_See code: [src/commands/action/update.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/action/update.ts)_
 
 ## `nim activation:get [ACTIVATIONID]`
 
@@ -250,7 +250,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/activation/get.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/activation/get.ts)_
+_See code: [src/commands/activation/get.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/activation/get.ts)_
 
 ## `nim activation:list [ACTIVATIONID]`
 
@@ -279,7 +279,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/activation/list.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/activation/list.ts)_
+_See code: [src/commands/activation/list.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/activation/list.ts)_
 
 ## `nim activation:logs [ACTIVATIONID]`
 
@@ -304,7 +304,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/activation/logs.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/activation/logs.ts)_
+_See code: [src/commands/activation/logs.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/activation/logs.ts)_
 
 ## `nim activation:result [ACTIVATIONID]`
 
@@ -328,7 +328,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/activation/result.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/activation/result.ts)_
+_See code: [src/commands/activation/result.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/activation/result.ts)_
 
 ## `nim auth:list`
 
@@ -344,7 +344,7 @@ OPTIONS
   --help         Show help
 ```
 
-_See code: [src/commands/auth/list.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/auth/list.ts)_
+_See code: [src/commands/auth/list.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/auth/list.ts)_
 
 ## `nim auth:login TOKEN`
 
@@ -364,7 +364,7 @@ OPTIONS
   --help             Show help
 ```
 
-_See code: [src/commands/auth/login.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/auth/login.ts)_
+_See code: [src/commands/auth/login.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/auth/login.ts)_
 
 ## `nim auth:logout NAMESPACE`
 
@@ -384,7 +384,7 @@ OPTIONS
   --help             Show help
 ```
 
-_See code: [src/commands/auth/logout.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/auth/logout.ts)_
+_See code: [src/commands/auth/logout.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/auth/logout.ts)_
 
 ## `nim auth:switch NAMESPACE`
 
@@ -404,7 +404,7 @@ OPTIONS
   --help             Show help
 ```
 
-_See code: [src/commands/auth/switch.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/auth/switch.ts)_
+_See code: [src/commands/auth/switch.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/auth/switch.ts)_
 
 ## `nim autocomplete [SHELL]`
 
@@ -446,7 +446,7 @@ ALIASES
   $ nim docs
 ```
 
-_See code: [src/commands/doc.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/doc.ts)_
+_See code: [src/commands/doc.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/doc.ts)_
 
 ## `nim help [COMMAND]`
 
@@ -474,7 +474,7 @@ USAGE
   $ nim info
 ```
 
-_See code: [src/commands/info.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/info.ts)_
+_See code: [src/commands/info.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/info.ts)_
 
 ## `nim namespace:get`
 
@@ -500,7 +500,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/namespace/get.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/namespace/get.ts)_
+_See code: [src/commands/namespace/get.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/namespace/get.ts)_
 
 ## `nim namespace:list`
 
@@ -524,7 +524,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/namespace/list.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/namespace/list.ts)_
+_See code: [src/commands/namespace/list.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/namespace/list.ts)_
 
 ## `nim package:bind PACKAGENAME BINDPACKAGENAME`
 
@@ -552,7 +552,7 @@ OPTIONS
   --version                              Show version
 ```
 
-_See code: [src/commands/package/bind.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/package/bind.ts)_
+_See code: [src/commands/package/bind.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/package/bind.ts)_
 
 ## `nim package:create PACKAGENAME`
 
@@ -581,7 +581,7 @@ OPTIONS
   --version                              Show version
 ```
 
-_See code: [src/commands/package/create.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/package/create.ts)_
+_See code: [src/commands/package/create.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/package/create.ts)_
 
 ## `nim package:delete PACKAGENAME`
 
@@ -595,7 +595,7 @@ OPTIONS
   --json  output raw json
 ```
 
-_See code: [src/commands/package/delete.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/package/delete.ts)_
+_See code: [src/commands/package/delete.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/package/delete.ts)_
 
 ## `nim package:get PACKAGENAME`
 
@@ -618,7 +618,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/package/get.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/package/get.ts)_
+_See code: [src/commands/package/get.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/package/get.ts)_
 
 ## `nim package:list [NAMESPACE]`
 
@@ -646,7 +646,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/package/list.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/package/list.ts)_
+_See code: [src/commands/package/list.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/package/list.ts)_
 
 ## `nim package:update PACKAGENAME`
 
@@ -675,7 +675,7 @@ OPTIONS
   --version                              Show version
 ```
 
-_See code: [src/commands/package/update.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/package/update.ts)_
+_See code: [src/commands/package/update.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/package/update.ts)_
 
 ## `nim project:deploy [PROJECTS]`
 
@@ -702,7 +702,7 @@ OPTIONS
   --yarn             Use yarn instead of npm for node builds
 ```
 
-_See code: [src/commands/project/deploy.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/project/deploy.ts)_
+_See code: [src/commands/project/deploy.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/project/deploy.ts)_
 
 ## `nim project:watch [PROJECTS]`
 
@@ -728,7 +728,7 @@ OPTIONS
   --yarn             Use yarn instead of npm for node builds
 ```
 
-_See code: [src/commands/project/watch.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/project/watch.ts)_
+_See code: [src/commands/project/watch.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/project/watch.ts)_
 
 ## `nim route:create BASEPATH RELPATH APIVERB ACTION`
 
@@ -759,7 +759,7 @@ OPTIONS
   --version                                         Show version
 ```
 
-_See code: [src/commands/route/create.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/route/create.ts)_
+_See code: [src/commands/route/create.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/route/create.ts)_
 
 ## `nim route:delete BASEPATHORAPINAME [RELPATH] [APIVERB]`
 
@@ -787,7 +787,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/route/delete.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/route/delete.ts)_
+_See code: [src/commands/route/delete.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/route/delete.ts)_
 
 ## `nim route:get BASEPATHORAPINAME`
 
@@ -813,7 +813,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/route/get.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/route/get.ts)_
+_See code: [src/commands/route/get.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/route/get.ts)_
 
 ## `nim route:list [BASEPATH] [RELPATH] [APIVERB]`
 
@@ -844,7 +844,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/route/list.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/route/list.ts)_
+_See code: [src/commands/route/list.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/route/list.ts)_
 
 ## `nim rule:create NAME TRIGGER ACTION`
 
@@ -873,7 +873,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/rule/create.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/rule/create.ts)_
+_See code: [src/commands/rule/create.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/rule/create.ts)_
 
 ## `nim rule:delete NAME`
 
@@ -899,7 +899,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/rule/delete.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/rule/delete.ts)_
+_See code: [src/commands/rule/delete.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/rule/delete.ts)_
 
 ## `nim rule:disable NAME`
 
@@ -925,7 +925,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/rule/disable.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/rule/disable.ts)_
+_See code: [src/commands/rule/disable.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/rule/disable.ts)_
 
 ## `nim rule:enable NAME`
 
@@ -951,7 +951,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/rule/enable.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/rule/enable.ts)_
+_See code: [src/commands/rule/enable.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/rule/enable.ts)_
 
 ## `nim rule:get NAME`
 
@@ -977,7 +977,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/rule/get.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/rule/get.ts)_
+_See code: [src/commands/rule/get.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/rule/get.ts)_
 
 ## `nim rule:list`
 
@@ -1005,7 +1005,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/rule/list.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/rule/list.ts)_
+_See code: [src/commands/rule/list.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/rule/list.ts)_
 
 ## `nim rule:status NAME`
 
@@ -1031,7 +1031,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/rule/status.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/rule/status.ts)_
+_See code: [src/commands/rule/status.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/rule/status.ts)_
 
 ## `nim rule:update NAME TRIGGER ACTION`
 
@@ -1060,7 +1060,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/rule/update.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/rule/update.ts)_
+_See code: [src/commands/rule/update.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/rule/update.ts)_
 
 ## `nim trigger:create TRIGGERNAME`
 
@@ -1090,7 +1090,7 @@ OPTIONS
   --version                              Show version
 ```
 
-_See code: [src/commands/trigger/create.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/trigger/create.ts)_
+_See code: [src/commands/trigger/create.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/trigger/create.ts)_
 
 ## `nim trigger:delete TRIGGERPATH`
 
@@ -1116,7 +1116,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/trigger/delete.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/trigger/delete.ts)_
+_See code: [src/commands/trigger/delete.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/trigger/delete.ts)_
 
 ## `nim trigger:fire TRIGGERNAME`
 
@@ -1144,7 +1144,7 @@ OPTIONS
   --version                    Show version
 ```
 
-_See code: [src/commands/trigger/fire.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/trigger/fire.ts)_
+_See code: [src/commands/trigger/fire.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/trigger/fire.ts)_
 
 ## `nim trigger:get TRIGGERPATH`
 
@@ -1170,7 +1170,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/trigger/get.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/trigger/get.ts)_
+_See code: [src/commands/trigger/get.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/trigger/get.ts)_
 
 ## `nim trigger:list`
 
@@ -1198,7 +1198,7 @@ OPTIONS
   --version                Show version
 ```
 
-_See code: [src/commands/trigger/list.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/trigger/list.ts)_
+_See code: [src/commands/trigger/list.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/trigger/list.ts)_
 
 ## `nim trigger:update TRIGGERNAME`
 
@@ -1228,7 +1228,7 @@ OPTIONS
   --version                              Show version
 ```
 
-_See code: [src/commands/trigger/update.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.1/src/commands/trigger/update.ts)_
+_See code: [src/commands/trigger/update.ts](https://github.com//nimbella-corp/nimbella-cli/blob/v0.1.2/src/commands/trigger/update.ts)_
 
 ## `nim update [CHANNEL]`
 
