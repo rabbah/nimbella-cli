@@ -27,6 +27,7 @@ const aioCommands = ['action', 'actions', 'activation', 'activations', 'namespac
 // stack or delegate to Apache I/O.  Note that we declare dependency on the entire Apache I/O in order to get clean dispatching but we only
 // use the "runtime" branch.   We shadow the aio runtime tree to a small extent in order to give correct help.
 export async function run() {
+    cleanEnvironment()
     const isHelp = makeCanonical() || process.argv.length < 4
     // Examine command to classify it as aio or not and apply 'plurals relaxation'
     const cmd = process.argv[2]
@@ -45,6 +46,17 @@ export async function run() {
     // console.log("not delegating")
     colonize()
     await require('@oclif/command').run()
+}
+
+// Purge the process environment of entries that match __OW_*.   These are not attempting to influence 'nim' because
+// we specifically document that that doesn't work.  If they are there at all they are strays from some other usage but
+// they can do mischief.
+function cleanEnvironment() {
+    for (const item in process.env) {
+        if (item.startsWith('__OW_')) {
+            delete process.env[item]
+        }
+    }
 }
 
 // Change the user's presented command into a canonical form:
