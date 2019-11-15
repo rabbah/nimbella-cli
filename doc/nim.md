@@ -6,7 +6,7 @@ This document is organized as follows.
 
   - [Downloading and Installing](#Installing)
       - [Using an installer](#Installers)
-      - [Using npm](#NPMInstall)
+      - [Using npm or yarn](#NPMInstall)
   - [Introducing the `nim` command](#What)
   - [About Nimbella Projects](#Projects)
   - [Nimbella Accounts and Login](#Login)
@@ -31,6 +31,7 @@ This document is organized as follows.
       - [Limitations, Requirements](#WebLimitations)
       - [The "Action Wrapping" Alternative](#ActionWrapping)
  - [Incorporating build steps for actions and web content](#Building)
+      - [Errors in Builds](#BuildErrors)
       - [Out-of-line builds and shared builds](#OutOfLineBuild)
       - [The effect of `--incremental` on Builds](#BuildIncremental)
       - [Examples of building (common use cases)](#BuildExamples)
@@ -45,10 +46,10 @@ There are two ways to install the Nimbella CLI.
 - For `mac` and `windows` we highly recommend using an installer.  In that case
   - you get automated update services when new versions are available.
   - When the CLI is installed that way, it is self-contained and has no dependencies on other software
-- It is also possible to install the CLI using `npm`.  In that case
+- It is also possible to install the CLI using `npm` or `yarn`.  In that case
   - you have to check for new versions and re-run the install when they are available
   - you must have `node` at at least version `10.0.0` because the installation depends on a locally installed `node`
-- For `linux`, use the `npm` method.  An installer is not available at this time, although we hope to provide one in the future.
+- For `linux`, use `npm` or `yarn`.  An installer is not available at this time, although we hope to provide one in the future.
 
 ### <span id="Installers"></span>Using an installer
 
@@ -59,12 +60,18 @@ You can obtain an installer by clicking
 
 Save the installer on your machine, then execute it and follow instructions.  When installation finishes, verify by typing `nim` at a command prompt.
 
-### <span id="NPMInstall"></span>Install using npm
+### <span id="NPMInstall"></span>Install using npm or yarn
 
 ```
 npm install -g https://apigcp.nimbella.io/downloads/nim/nim-v0.1.2/nim-v0.1.2.tar.gz
 
 ```
+or
+
+```
+yarn global add https://apigcp.nimbella.io/downloads/nim/nim-v0.1.2/nim-v0.1.2.tar.gz
+```
+
 When installation finishes, verify by typing `nim` at a command prompt.
 
 -----
@@ -105,15 +112,15 @@ The commands divide into four categories.
 
 #### Openwhisk Entity Management commands
 
-The `action`, `activation`, `namespace`, `package`, `route`, `rule` and `trigger` commands each manage the corresponding kind of entity as defined by [Apache OpenWhisk](http://openwhisk.org).  Nimbella builds the serverless computing part of its stack on OpenWhisk.  The syntax for these seven commands approximates that of like-named commands of the `wsk` binary provided by the Apache OpenWhisk project, except that `route` is used in place of `api`.  The implementation for these commands is dervied from the Adobe I/O runtime opensource project.
+The `action`, `activation`, `namespace`, `package`, `route`, `rule` and `trigger` commands each manage the corresponding kind of entity as defined by [Apache OpenWhisk](http://openwhisk.org).  Nimbella powers the "serverless computing" portion of its offering with a modified version of OpenWhisk.  The syntax for these seven commands approximates that of like-named commands of the `wsk` binary provided by the Apache OpenWhisk project, except that `route` is used in place of `api` (the implementation for these commands is derived from the Adobe I/O runtime opensource project).  If you are used to using `wsk`, note that the `project` command of `nim` is not a replacement for `wsk project` (see [About Nimbella Projects](#Projects)).
 
 #### Supporting commands
 
-The `autocomplete`, `doc`, `help`, `info` and `update` commands provide supporting services in either explaining how to do things or updating the CLI to a later version.  Note that `nim update` will not work unless you installed `nim` with one of the provided installers for `mac` or `windows`.
+The `autocomplete`, `doc`, `help`, `info` and `update` commands provide supporting services in either explaining how to do things or updating the CLI to a later version.  Note that `nim update` works only on `mac` and `windows`you installed `nim` with one of the provided installers for `mac` or `windows`.
 
 #### Credential Management
 
-The `auth` subtree gives you management of Nimbella credentials.  Nimbella does not use `.wskprops` (as the `wsk` binary does) but replaces it with a more flexible "credential store."  The `nim auth` commands will write `.wskprops` as a courtesy in case you also want to use `wsk`.
+The `auth` subtree gives you management of Nimbella credentials, that is, access to specific Nimbella _namespaces_.
 
 ```
  > nim auth
@@ -135,9 +142,11 @@ Notice the use of colon separators between segments of a command name.  This hap
  > nim auth list
 ```
 
+The `nim` command does not regard `~/.wskprops` as canonical, the way the `wsk` binary does, but replaces it with a more flexible "credential store."  The `nim` command _does_ update `~/.wskprops` in synch with the credential store, but does not support other configuration options set via the process environment, such as `WSK_CONFIG_FILE`.  Although `nim` uses the OpenWhisk `nodejs` client internally, it takes steps to nullify the effect of any `__OW_*` variables in the environment to prevent collisions with other uses of the client.  By keeping `~/.wskprops` in synch, `nim` permits you to also use the `wsk` binary, if you like, without further configuration fiddling.  The flexibility of the credential store replaces the other configuration mechanisms.  For more information on managing the credential store see [Nimbella Accounts and Login](#Login) and [Managing Multiple Namespaces](#MultiNS).
+
 #### Project Level Deployment
 
-The `project` subtree provides two commands, `deploy` and `watch` which operate on logical groupings of resources (OpenWhisk entities, web content, storage, etc) that make up typical applications.  Such a grouping is called a _project_.  We often use the term _the deployer_ for the parts of `nim` that operate on projects.  Much of the rest of this document concerns itself with projects, hence with the deployer.
+The `project` command has two subcommands, `deploy` and `watch` which operate on logical groupings of resources (OpenWhisk entities, web content, storage, etc) that make up typical applications.  Such a grouping is called a _project_.  We often use the term _the deployer_ for the parts of `nim` that operate on projects.  Much of the rest of this document concerns itself with projects, hence with the deployer.
 
 ```
  > nim project
@@ -209,7 +218,7 @@ terminology, because the Nimbella stack builds on OpenWhisk.
 
 In Nimbella, as in OpenWhisk, the unit of authorization is called a
 [*namespace*](https://github.com/apache/incubator-openwhisk/blob/master/docs/reference.md#namespaces-and-packages). As in all OpenWhisk deployments, a namespace contains
-[actions](https://github.com/apache/incubator-openwhisk/blob/master/docs/actions.md), optionally grouped into [*packages*](https://github.com/apache/incubator-openwhisk/blob/master/docs/packages.md). (OpenWhisk has additional entities called [*rules*](https://github.com/apache/incubator-openwhisk/blob/master/docs/triggers_rules.md), [*triggers*](https://github.com/apache/incubator-openwhisk/blob/master/docs/triggers_rules.md), [*routes*](https://github.com/apache/incubator-openwhisk/blob/master/docs/apigateway.md) (aka "API gateway"), and [*activations*](https://github.com/apache/incubator-openwhisk/blob/master/docs/actions.md); `nim` command supports these individually but, currently, not as part of a project).
+[actions](https://github.com/apache/incubator-openwhisk/blob/master/docs/actions.md), optionally grouped into [*packages*](https://github.com/apache/incubator-openwhisk/blob/master/docs/packages.md). (OpenWhisk has additional entities called [*rules*](https://github.com/apache/incubator-openwhisk/blob/master/docs/triggers_rules.md), [*triggers*](https://github.com/apache/incubator-openwhisk/blob/master/docs/triggers_rules.md), [*routes*](https://github.com/apache/incubator-openwhisk/blob/master/docs/apigateway.md) (aka "API gateway"), and [*activations*](https://github.com/apache/incubator-openwhisk/blob/master/docs/actions.md); the `nim` command supports these individually but, currently, not as part of a project).
 
 Going beyond OpenWhisk, a
 Nimbella namespace also contains other resources, such as object store
@@ -302,8 +311,11 @@ where every action has its code contained in a single file.
 > cp hello.js example1/packages/demo
 > nim project deploy example1
 
-Result of deploying project 'example1' to namespace '...' on host 'https://....nimbella.io'
-Action demo/hello deployed
+Result of deploying project '.../example1'
+  to namespace '...'
+  on host 'https://...nimbella.io'
+Deployed actions:
+  - demo/hello
 
 ```
 
@@ -461,14 +473,17 @@ package directories, as needed, and add the actions to them.  Assuming example1 
 > cp work0.js work30.js example1/packages/test
 > nim project deploy example1
 
-Result of deploying project 'example1' to namespace '...' on host 'https://...nimbella.io'
-Action admin/adduser deployed
-Action sampleJavaScript deployed
-Action samplePython deployed
-Action welcome deployed
-Action demo/hello deployed
-Action test/work0 deployed
-Action test/work30 deployed
+Result of deploying project '.../example1'
+  to namespace '...'
+  on host 'https://...nimbella.io'
+Deployed actions:
+  - admin/adduser
+  - sampleJavaScript
+  - samplePython
+  - welcome
+  - demo/hello
+  - test/work0
+  - test/work30
 
 ```
 
@@ -515,9 +530,11 @@ section. Let's alter example 1 a little bit.
 > cp helloMain.js helloAux.js example2/packages/demo/hello
 > nim project deploy example2
 
-Result of deploying project 'example2' to namespace '...' on host 'https://...'
-Action demo/hello deployed
-
+Result of deploying project '.../example2'
+  to namespace '...'
+  on host 'https://...nimbella.io'
+Deployed actions:
+  - demo/hello
 ```
 
 As the example shows, an action can be a *directory* instead of a single
@@ -580,15 +597,17 @@ Similarly, the file `../../../actionSrc/helpers.js` becomes just
 Consider the previous example whose output was
 
 ```
-Result of deploying project 'example1' to namespace '...'
+Result of deploying project '.../example1'
+  to namespace '...'
   on host 'https://...nimbella.io'
-Action admin/adduser deployed
-Action sampleJavaScript deployed
-Action samplePython deployed
-Action welcome deployed
-Action demo/hello deployed
-Action test/work0 deployed
-Action test/work30 deployed
+Deployed actions:
+  - admin/adduser
+  - sampleJavaScript
+  - samplePython
+  - welcome
+  - demo/hello
+  - test/work0
+  - test/work30
 ```
 
 Now let's suppose that you've changed `demo/hello` and `welcome` but not the others.   You aren't ready to do a production deployment or submit for testing, you just want to deploy the actual changes so you can continue developing.  You do this using the `--incremental` flag.
@@ -596,16 +615,13 @@ Now let's suppose that you've changed `demo/hello` and `welcome` but not the oth
 ```
 > nim project deploy example1 --incremental
 
-Result of deploying project 'example1' to namespace '...'
- on host'https://...nimbella.io'
-Action admin/adduser was unchanged since last deployment (not re-deployed)
-Action sampleJavaScript was unchanged since last deployment (not re-deployed)
-Action samplePython was unchanged since last deployment (not re-deployed)
-Action welcome deployed
-Action demo/hello deployed
-Action test/work0 was unchanged since last deployment (not re-deployed)
-Action test/work30 was unchanged since last deployment (not re-deployed)
-
+Result of deploying project '.../example1'
+  to namespace '...'
+  on host 'https://...nimbella.io'
+Deployed actions:
+  - welcome
+  - demo/hello
+Skipped 5 unchanged actions
 ```
 
 The `--incremental` option skips the uploads of actions whose digests have not changed.  Those digests are computed over the action's _contents_ and also its _metadata_ (thus, when you change properties of an action using [configuration](#Configuring), the change will be detected).  The `--incremental` option also skips the re-zipping of large multi-file actions whose included contents are older than the last zip.
@@ -620,15 +636,17 @@ A good way to exploit the `--incremental` option when developing is to use `nim 
 
 ```
  > nim project watch example1
-nim project watch example1
+/Users/joshuaauerbach/nimbella> nim project watch example1
 Watching example1
 ...
 Deploying 'example1' due to change in 'project.yml'
 
-Result of deploying project 'example1' on host 'https://apijosh.nimbella.io'
-Action demo/hello was unchanged since last deployment (not re-deployed)
+Result of deploying project '/Users/joshuaauerbach/nimbella/example1'
+  on host 'https://apijosh.nimbella.io'
+Skipped 7 unchanged actions
 Deployment complete.  Resuming watch.
 ```
+
 The ellipsis in the example isn't part of the transcript, it represents a passage of time during which the `project.yml` of the project was changed in a way that did not effect the semantics of the action `demo/hello` (if it had, `demo/hello` would have been redeployed).  The `project watch` command accepts a list of projects and most of the flags that `project deploy` accepts (an exception is `--incremental`, which is assumed).  The command will run until interrupted (typically, one would devote a terminal window to it while working elsewhere, e.g., in your favorite IDE).
 
 -----
@@ -840,24 +858,19 @@ example3/web/favicon.ico
 Deploying the project, we see the following.
 
 ```
-> nim project deploy example3
+ > nim project deploy example3
 
-Result of deploying project 'example3' to namespace '...' on host 'https://...'
-example3/web/chatroom.html deployed to
- https://<ns>-apigcp.nimbella.io/chatroom.html
-example3/web/chatroom.css deployed to
- https://<ns>-apigcp.nimbella.io/chatroom.css
-example3/web/runner.js deployed to
- https://<ns>-apigcp.nimbella.io/runner.js
-example3/web/favicon.ico deployed to
- https://<ns>-apigcp.nimbella.io/favicon.ico
-Action ... deployed
-...
-
+Result of deploying project '.../example3'
+  to namespace '...'
+  on host 'https://apigcp.nimbella.io'
+Deployed 4 web content items to
+  https://<ns>-apigcp.nimbella.io
+Deployed actions:
+  ...
 ```
 
 As the output shows, the contents of `web` were deployed to the web,
-with URLs within your namespace's unique DNS domain `<ns>-apigcp.nimbella.io` as shown.  The token `<ns>` will be
+with URLs within your namespace's unique DNS domain `<ns>-apigcp.nimbella.io`.  The token `<ns>` will be
 replaced by the name of your namespace.  The remaining portion of the domain name may differ from the typical `apigcp.nimbella.io`
 depending on your API host within the Nimbella cloud. To access the content, either
 `http` or `https` may be used. For `https`, the SSL certificate will be
@@ -932,19 +945,18 @@ bucket:
 The deployment should go like the following.
 
 ```
-> nim project deploy example4
-Running './build.sh in chatdemo/web
+ > nim project deploy chat
+Running './build.sh in chat/web
 
-Result of deploying project 'example4' to namespace '...' on host 'https://...'
-example4/web/build/asset-manifest.json deployed to
- https://<ns>-apigcp.nimbella.io/asset-manifest.json
-chatdemo/web/build/index.html deployed to
- https://<ns>-apigcp.nimbella.io/index.html
-chatdemo/web/build/favicon.ico deployed to
- https://<ns>-apigcp.nimbella.io/favicon.ico
-...
-Action ... deployed
-...
+Result of deploying project '.../chat'
+  to namespace 'chatdemo'
+  on host 'https://apigcp.nimbella.io'
+Deployed 24 web content items to
+  https://chatdemo-apigcp.nimbella.io
+Deployed actions:
+  - chatadmin/create
+  ...
+  - chatroom/postMessage
 ```
 
 ### <span id="WebLimitations"></span>Limitations, Requirements
@@ -1016,6 +1028,14 @@ into the action (action directories). This has two implications.
 - It is possible (though not required) for the script to generate the `.include` or `.ignore` file that refines this process.
 - If the build is designed to produce a `.zip` file directly, you must _also_ ensure that there are no other files that will be interpreted as part of the action (otherwise the deployer will do its own zipping).  The easiest way to ensure that there is only one file is to use a one-line `.include`.
 
+### <span id="BuildErrors"></span>Errors in Builds
+
+The deployer decides whether a build has failed based on examining the return code from a subprocess running the build.  Thus, it is good practice to ensure that a build will set a non-zero return code on failure.   When a build returns a zero, the deployer does not display its output.  If it returns non-zero, all of its output (both on `stdout` and on `stderr`) are displayed.
+
+If you suspect a build is not doing what you expect but there is no visible error, try rerunning `nim project deploy` with the `--verbose-build` flag.  This causes all of the output of the build to display on the console, regardless of apparent success.  This will often reveal errors in the build that are being swallowed because the build is returning zero despite the errors.
+
+We've tried using other criteria, such as the presence of output on `stderr` but that does not work well in practice.  Many utilities (most notably `npm`) write some of their output to `stderr` routinely.
+
 ### <span id="OutOfLineBuild"></span>Out-of-line builds and shared builds
 
 There are three possibilities when using the `.build` directive ("out of line" building).
@@ -1049,7 +1069,7 @@ Using the `--incremental` option has an effect on whether or not builds are exec
 
 Each action that has a build step can be either in a _built_ or _unbuilt_ state.  Similarly, the `web` directory can be either _built_ or _unbuilt_.  If an action or web directory is _unbuilt_, the build is run as usual prior to determining if the content has changed.   If the directory is _built_, the incremental deployment proceeds directly to change determination without re-running the build.  The state is determined as follows.
 
-- If the build is triggered by `package.json`, the directory is considered _built_ if and only if it contains a `package-lock.json` (or `yarn.lock`) and a `node_modules` both of which are newer than the `package.json`.  If both `package-lock.json` and `yarn.lock` are present, the new one is used in this determination.
+- If the build is triggered by `package.json`, the directory is considered _built_ if and only if it contains a `package-lock.json` (or `yarn.lock`) and a `node_modules` both of which are newer than the `package.json`.  If both `package-lock.json` and `yarn.lock` are present, the newer of the two is used in this determination.
 - If the build employs a script, then the directory is considered _built_ if and only if _the directory containing the script_ also contains a file called `.built` (for out-of-line builds, the directory containing the script is usually not the action directory).
 
 In the script case, the convention of using a `.built` marker to suppress subsequent builds requires the script to set this marker when it executes.  It's a very coarse-grained heuristic, which we offer because (1) the deployer doesn't know the dependencies of the build and (2) we want to err in the direction of efficiency when doing incremental deploying.  You always have the remedy of running a full deploy.  But, note that the use of this convention is optional.  If the script does not create a `.built` marker, it will always run, which could be fine if the script does dependency analysis and rebuilds only what it needs to.
@@ -1075,9 +1095,12 @@ Let's deploy that.
 > nim project deploy example5
 Running 'npm install' in example5/packages/demo/qrfunc
 
-Result of deploying project 'example5' to namespace '...' on host 'https://...'
-Action demo/qrfunc deployed
-...
+Result of deploying project 'example5'
+  to namespace '...'
+  on host 'https://...nimbella.io'
+Deployed actions:
+  - demo/qrfunc
+  ...
 ```
 
 Yes.  That's all that was needed.  The presence of `package.json` triggered the `npm install`, after which the normal behavior for multi-file actions (autozipping) took over and created a zip file to upload that contained `qr.js`, `package.json` and the entire `node_modules`.
