@@ -70,6 +70,16 @@ any warranty or condition, and the licensor will not be liable
 to you for any damages arising out of these terms or the use
 or nature of the software, under any kind of legal claim.***
 
+## Third Party Libraries
+
+The software includes third party libraries which are subject
+to their own license terms. These terms accompany each of the
+libraries included with the software. If you do not agree to
+abide by the applicable license terms for the third party
+libraries, then you may not install them and cannot use the
+software. Such third party libraries and their license terms
+are available at https://nimbella.io/licenses/nim/thirdparty.
+
 ## Definitions
 
 The **licensor** is the individual or entity offering these
