@@ -5,8 +5,7 @@
 This document is organized as follows.
 
   - [Downloading and Installing](#Installing)
-      - [Using an installer](#Installers)
-      - [Using npm or yarn](#NPMInstall)
+      - [Installing as a `node` dependency using 'npm' or 'yarn'](#NPMInstall)
   - [Introducing the `nim` command](#What)
   - [About Nimbella Projects](#Projects)
   - [Nimbella Accounts and Login](#Login)
@@ -41,37 +40,54 @@ This document is organized as follows.
 
 ## <span id="Installing"></span>Downloading and Installing the Nimbella CLI
 
-There are two ways to install the Nimbella CLI.
+In the following instructions we assume your intent is to install the Nimbella CLI as a command to be invoked from shells or scripts.  [Below](#NPMInstall) we discuss how to install `nim` as a dependency of another package using `npm` or `yarn`.  We don't recommend installing globally with `npm` or `yarn`.
 
-- For `mac` and `windows` we highly recommend using an installer.  In that case
+When using the preferred installation for your system
+  - The CLI is self-contained and has no dependencies on previously installed software
   - you get automated update services when new versions are available.
-  - When the CLI is installed that way, it is self-contained and has no dependencies on other software
-- It is also possible to install the CLI using `npm` or `yarn`.  In that case
-  - you have to check for new versions and re-run the install when they are available
-  - you must have `node` at at least version `10.0.0` because the installation depends on a locally installed `node`
-- For `linux`, use `npm` or `yarn`.  An installer is not available at this time, although we hope to provide one in the future.
 
-### <span id="Installers"></span>Using an installer
+For `mac` and `windows` we provide installers.  To download, click
 
-You can obtain an installer by clicking
+- [here for mac](https://apigcp.nimbella.io/downloads/nim/macos/nim.pkg)
+- [here for windows](https://apigcp.nimbella.io/downloads/nim/win/nim-x64.exe)
 
-- [here for mac](https://apigcp.nimbella.io/downloads/nim/macos/nim-v0.1.3.pkg)
-- [here for windows](https://apigcp.nimbella.io/downloads/nim/win/nim-v0.1.3-x64.exe)
+After downloading, you must execute the provided installer.
 
-Save the installer on your machine, then execute it and follow instructions.  When installation finishes, verify by typing `nim` at a command prompt.
-
-### <span id="NPMInstall"></span>Install using npm or yarn
+For `linux` we provide a scripted install.  Use
 
 ```
-npm install -g https://apigcp.nimbella.io/downloads/nim/nim-v0.1.3/nim-v0.1.3.tar.gz
+curl https://apigcp.nimbella.io/downloads/nim/nim-install-linux.sh | sudo bash
+```
+
+When the install completes, do
+
+```
+nim update
+```
+
+This will first of all verify that `nim` is installed and capable of self-updating.  In most cases, it will say that it already has the latest version.  However, occasionally, the initial install may be of less than the latest version and the update step will correct that.
+
+
+### <span id="NPMInstall"></span>Local install using npm or yarn
+
+As `nim` is implemented as node package it is also possible to install it with `npm` or `yarn` but we recommend this only for situations where you do not want a global install but rather are making `nim` a dependency of some other package.
+
+```
+npm install https://apigcp.nimbella.io/downloads/nim/nimbella-cli.tgz
 ```
 or
 
 ```
-yarn global add https://apigcp.nimbella.io/downloads/nim/nim-v0.1.3/nim-v0.1.3.tar.gz
+yarn add https://apigcp.nimbella.io/downloads/nim/nimbella-cli.tgz
 ```
 
-When installation finishes, verify by typing `nim` at a command prompt.
+When installation finishes, you can execute `nim` locally to the package into which is has been incorporated by using
+
+```
+npx nim ...
+```
+
+When installed in this way, `nim update` will not work: you have to do a fresh install to get later versions.
 
 -----
 
