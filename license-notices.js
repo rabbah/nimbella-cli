@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /*
  * Nimbella CONFIDENTIAL
  * ---------------------
@@ -21,15 +22,20 @@
 const fs = require('fs'),
       path = require('path')
 
-const PREAMBLE = `Third Party Libraries.
+const PREAMBLE = `## Third Party Libraries.
 
-This software includes third party libraries which are subject to their own
-license terms. These terms accompany each of the libraries included with this
-software. If you do not agree to abide by the applicable license terms for
-the third party libraries, then you may not install them and cannot use this
+The software includes third party libraries which are subject
+to their own license terms. These terms accompany each of the
+libraries included with the software. If you do not agree to
+abide by the applicable license terms for the third party
+libraries, then you may not install them and cannot use the
 software.
 
-The list below groups the third party libraries by their license terms.`
+The list below groups the third party libraries by their license terms.
+`
+
+// exclude some node modules because they are ours
+const EXCLUDES = [ 'nimbella-cli', 'deployer' ]
 
 const ALTERNATIVES = {
     'APACHE 2.0': 'APACHE 2.0',
@@ -94,7 +100,7 @@ function checkForLicense(pkgroot) {
             let name = pkg.name
             if (name === undefined || name === '') {
                 throw new Error(`${pkgfile} has no name property.`)
-            } else if (name === 'nimbella-cli') {
+            } else if (EXCLUDES.includes(name)) {
                 return
             }
 
@@ -151,9 +157,9 @@ nodeList(root)
         console.log(PREAMBLE)
         Object.entries(LICENSES).forEach(([license, pkgs]) => {
             console.log()
-            console.log(`- ${license}`)
-            console.log(`  ${LINKS[license]}\n`)
-            pkgs.forEach(p => console.log(`  ${p}`))
+            console.log(`### ${license} licensed libraries`)
+            console.log(`- A reference copy of the ${license} license is available at [${LINKS[license]}](${LINKS[license]})\n`)
+            pkgs.forEach(p => console.log(`    - [${p}](https://npmjs.org/${p})`))
         })
     })
     .catch(console.error)
