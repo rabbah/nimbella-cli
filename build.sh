@@ -96,25 +96,46 @@ set -e
 # Full install
 npm install
 
-# Build (includes making a link for use on the present machine)
-# TODO: if we move to using only stable versions in the main build we might stop doing this.
+# Build (includes making a link for use on the present machine) TODO: if we move to using
+#   only stable versions in the main build we might stop making a symlink
 npx tsc
 npm link
 
 # Optionally package
 if [ -n "$PKG" ]; then
+		# Clean up old material
 		rm -fr dist tmp nim-cli.tgz
+
+		# Rename READMEs so the customer gets an appropriate one (not our internal one)
 		mv README.md devREADME.md
 		mv userREADME.md README.md
+
+		# Create the standalone tarballs
 		npx oclif-dev pack -t linux-x64,win32-x64,darwin-x64
+
+		# Create installers for macos and win (keep x64 only) and provide consistent naming
 		npx oclif-dev pack:macos
+		MACOS=dist/macos/*.pkg
+		mv $MACOS dist/macos/nim.pkg
 		npx oclif-dev pack:win
+		rm -f dist/win/*x86*
+		WIN=dist/win/*x64.exe
+		mv $WIN dist/win/nim-x64.exe
+
+		# Add the linux install script
+		URL=$(jq -r .gz dist/linux-x64)
+		sed -e 's+URL=+URL='$URL'+' < nim-install-linux.sh > dist/nim-install-linux.sh
+
+		# Create a minimal tarball for dependent installs
 		npm pack
+		mv nimbella-cli-*.tgz dist/nimbella-cli.tgz
+
+		# Clean up
 		git checkout userREADME.md
 		mv devREADME.md README.md
-		mv nimbella-cli-*.tgz dist/nimbella-cli.tgz
+
+		# Wrap into a single tarball for subsequent deployment
 		pushd dist
-		rm -f win/*x86*
 		tar czf ../nim-cli.tgz *
 		popd
 fi

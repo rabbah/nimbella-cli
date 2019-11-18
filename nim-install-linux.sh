@@ -5,7 +5,7 @@
 #   curl https://<URL-of-this-script> | sudo bash
 
 # URL of the tarball to install (generated during build)
-URL=https://apigcp.nimbella.io/downloads/nim/nim-%V%/nim-%V%-linux-x64.tar.gz
+URL=
 
 # Download and unpack the tarball
 set -e
