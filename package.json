@@ -12,7 +12,7 @@
   },
   "keywords": [],
   "author": "Joshua Auerbach",
-  "license": "UNLICENSED",
+  "license": "SEE LICENSE IN 'LICENSE' or 'license.html'",
   "dependencies": {
     "@adobe/aio-cli": "^2.1.0",
     "@adobe/aio-cli-plugin-runtime": "https://nimaio-apigcp.nimbella.io/adobe-aio-cli-plugin-runtime.tgz",
@@ -64,6 +64,8 @@
     "/lib",
     "/oclif.manifest.json",
     "/nim.html",
+    "/LICENSE",
+    "/license.html",
     "/package.json",
     "/version.json",
     "/runtimes.json",

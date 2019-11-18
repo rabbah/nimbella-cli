@@ -79,13 +79,25 @@ echo '{ "version": "'$VERSION '('$BUILDINFO')" }' | jq . > version.json
 cp $SELFDIR/../main/config/runtimes.json .
 cp $SELFDIR/../main/config/productionProjects.json .
 
-# Build the HTML form of the documentation
+# Build the HTML forms of the documentation and the LICENSE
 pandoc -o nim.html -f markdown -s -t html < doc/nim.md
+set +e
+pandoc -o license.html -f markdown -t html < LICENSE
+set -e
 
-# Install
+# Generate the license-notices.txt file.  Note: to avoid unnecessary entries
+# this step requires a clean production install.  We do a full install later.
+rm -fr node_modules
+npm install --production
+set +e
+node license-notices.js > license-notices.txt
+set -e
+
+# Full install
 npm install
 
-# Build
+# Build (includes making a link for use on the present machine)
+# TODO: if we move to using only stable versions in the main build we might stop doing this.
 npx tsc
 npm link
 
@@ -97,8 +109,10 @@ if [ -n "$PKG" ]; then
 		npx oclif-dev pack -t linux-x64,win32-x64,darwin-x64
 		npx oclif-dev pack:macos
 		npx oclif-dev pack:win
-		mv README.md userREADME.md
+		npm pack
+		git checkout userREADME.md
 		mv devREADME.md README.md
+		mv nimbella-cli-*.tgz dist/nimbella-cli.tgz
 		pushd dist
 		rm -f win/*x86*
 		tar czf ../nim-cli.tgz *

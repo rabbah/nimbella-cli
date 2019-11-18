@@ -18,19 +18,36 @@
  * from Nimbella Corp.
  */
 
-import { Command } from '@oclif/command'
+import { flags } from '@oclif/command'
+import { NimBaseCommand } from '../NimBaseCommand'
+import * as open from 'open'
 
-export default class Info extends Command {
+export default class Info extends NimBaseCommand {
   static description = "show information about this version of 'nim'"
 
-  static flags = {}
+  static flags = {
+    license: flags.boolean({ description: 'Display the license'}),
+    ...NimBaseCommand.flags
+  }
 
   static args = []
 
   async run() {
-    const cli = require('../../version.json')
-    const aio = require('@adobe/aio-cli/package.json')
-    this.log(`nim command version: ${cli.version}`)
-    this.log(`Adobe I/O version:   ${aio.version}`)
+    const { flags } = this.parse(Info)
+    if (flags.license) {
+      try {
+        const html = require.resolve('../../license.html')
+        await open(html)
+      } catch (err) {
+        this.displayError(err.message, err)
+        this.log("Packaging error: cannot locate license")
+      }
+    } else {
+      const cli = require('../../version.json')
+      const aio = require('@adobe/aio-cli/package.json')
+      this.log(`nim command version: ${cli.version}`)
+      this.log(`Adobe I/O version:   ${aio.version}`)
+      this.log("'nim info --license' to display the license")
+    }
   }
 }
