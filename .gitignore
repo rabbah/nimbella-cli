@@ -17,4 +17,6 @@ productionProjects.json
 nim.html
 deployer/minified/
 license.html
-license-notices.txt
+thirdparty-licenses.md
+thirdparty-licenses.html
+

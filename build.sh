@@ -79,19 +79,16 @@ echo '{ "version": "'$VERSION '('$BUILDINFO')" }' | jq . > version.json
 cp $SELFDIR/../main/config/runtimes.json .
 cp $SELFDIR/../main/config/productionProjects.json .
 
-# Build the HTML forms of the documentation and the LICENSE
-pandoc -o nim.html -f markdown -s -t html < doc/nim.md
-set +e
-pandoc -o license.html -f markdown -t html < LICENSE
-set -e
-
-# Generate the license-notices.txt file.  Note: to avoid unnecessary entries
+# Generate the license-notices.md file.  Note: to avoid unnecessary entries
 # this step requires a clean production install.  We do a full install later.
 rm -fr node_modules
 npm install --production
-set +e
-node license-notices.js > license-notices.txt
-set -e
+node license-notices.js > thirdparty-licenses.md
+
+# Build the HTML forms of the documentation and the LICENSE
+pandoc -o nim.html -f markdown -s -t html < doc/nim.md
+pandoc -o license.html -f markdown -t html < LICENSE
+pandoc -o thirdparty-licenses.html -f markdown_strict -t html < thirdparty-licenses.md
 
 # Full install
 npm install
@@ -129,6 +126,9 @@ if [ -n "$PKG" ]; then
 		# Create a minimal tarball for dependent installs
 		npm pack
 		mv nimbella-cli-*.tgz dist/nimbella-cli.tgz
+
+		# Add documentation and licenses
+		cp nim.html license.html thirdparty-licenses.html dist
 
 		# Clean up
 		git checkout userREADME.md
