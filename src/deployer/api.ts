@@ -59,6 +59,9 @@ export function deploy(todeploy: DeployStructure): Promise<DeployResponse> {
     //console.log("Starting deploy")
     return cleanOrLoadVersions(todeploy).then(doDeploy).then(results => {
         writeProjectStatus(todeploy.filePath, results)
+        if (!results.namespace && todeploy.credentials) {
+            results.namespace = todeploy.credentials.namespace
+        }
         return results
     })
 }
