@@ -1,0 +1,23 @@
+{
+  "annotations": {
+    "exec": "go:1.12",
+    "final": true,
+    "provide-api-key": false,
+    "raw-http": false,
+    "web-export": true
+  },
+  "exec": {
+    "kind": "go:1.12",
+    "binary": false
+  },
+  "limits": {
+    "concurrency": 1,
+    "logs": 10,
+    "memory": 256,
+    "timeout": 60000
+  },
+  "name": "golang",
+  "namespace": "nimbella/hellos",
+  "parameters": {},
+  "publish": false
+}

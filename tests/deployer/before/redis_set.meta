@@ -1,0 +1,23 @@
+{
+  "annotations": {
+    "exec": "nodejs:10",
+    "final": true,
+    "provide-api-key": false,
+    "raw-http": false,
+    "web-export": true
+  },
+  "exec": {
+    "kind": "nodejs:10",
+    "binary": false
+  },
+  "limits": {
+    "concurrency": 1,
+    "logs": 10,
+    "memory": 256,
+    "timeout": 60000
+  },
+  "name": "set",
+  "namespace": "nimbella/redis",
+  "parameters": {},
+  "publish": false
+}

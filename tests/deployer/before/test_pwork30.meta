@@ -1,0 +1,25 @@
+{
+  "annotations": {
+    "exec": "python:3",
+    "final": false,
+    "provide-api-key": false,
+    "raw-http": false,
+    "web-export": false
+  },
+  "exec": {
+    "kind": "python:3",
+    "binary": false
+  },
+  "limits": {
+    "concurrency": 1,
+    "logs": 10,
+    "memory": 256,
+    "timeout": 60000
+  },
+  "name": "pwork30",
+  "namespace": "nimbella/test",
+  "parameters": {
+    "size": 30
+  },
+  "publish": false
+}

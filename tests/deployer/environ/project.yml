@@ -1,0 +1,6 @@
+targetNamespace: test
+packages:
+  - name: default
+    actions:
+    - name: variable
+      runtime: ${RUNTIME}

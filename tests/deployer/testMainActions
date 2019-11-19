@@ -1,0 +1,296 @@
+#!/bin/bash
+# Nimbella CONFIDENTIAL
+# ---------------------
+#
+#   2018 - present Nimbella Corp
+#   All Rights Reserved.
+#
+# NOTICE:
+#
+# All information contained herein is, and remains the property of
+# Nimbella Corp and its suppliers, if any.  The intellectual and technical
+# concepts contained herein are proprietary to Nimbella Corp and its
+# suppliers and may be covered by U.S. and Foreign Patents, patents
+# in process, and are protected by trade secret or copyright law.
+#
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Nimbella Corp.
+#
+
+# This tests the deployment of actions via 'nimadmin install actions' and 'nimadmin install demos'.
+
+# In its usual mode of operation, it assumes that the current deployment is correct and evaluates the
+# whether the (generally new) deployer can reproduce the same state.
+
+# With the --postdeploy flag, it assumes that the 'before' directory is currect and evaluates the
+# current deployment against that directory.  This mode is designed to be run by a build-bot
+# like Jenkins and tests the committed deployer after a complete deployment.
+
+# List of actions to verify in the 'nimbella' namespace (should generally be in synch with what 'nimadmin install actions' installs)
+declare -a NIMACTIONS
+NIMACTIONS=(
+		hello
+		hellos/golang
+		hellos/java8
+		hellos/node10
+		hellos/node8
+		hellos/php
+		hellos/python2
+		hellos/python3
+		hellos/swift4
+		redis/allKeys
+		redis/get
+		redis/getMany
+		redis/llen
+		redis/lrange
+		redis/rpush
+		redis/set
+		redis/setMany
+		run/encrypt
+		run/fn
+		test/ping
+		test/pwork0
+		test/pwork1
+		test/pwork10
+		test/pwork100
+		test/pwork1000
+		test/pwork3
+		test/pwork30
+		test/work0
+		test/work1
+		test/work10
+		test/work100
+		test/work1000
+		test/work3
+		test/work30
+		user/authorize
+		user/login
+		welcome
+)
+
+# List of nimbella packages involved in the test
+declare -a NIMPKGS
+NIMPKGS=(hellos redis run test user)
+
+# List of actions to verify in the 'playground' namespace
+declare -a PGACTIONS
+PGACTIONS=(
+		playground-delete 
+		playground-fetch 
+		playground-run 
+		playground-userpackage 
+		showCode
+)
+
+# List of actions to verify in the 'qrdemo' namespace
+declare -a QRACTIONS
+QRACTIONS=(
+		demo/qrfunc
+)
+
+# List of actions to verify in the 'chatdemo' namespace
+declare -a CHATACTIONS
+CHATACTIONS=(
+		chatadmin/create
+		chatadmin/reset
+		chatadmin/who
+		chatroom/delAllMessages
+		chatroom/delAllUsers
+		chatroom/delByUserId
+		chatroom/delMessage
+		chatroom/getMessages
+		chatroom/getUserList
+		chatroom/newUserId
+		chatroom/postMessage
+)
+
+# List of actions to verify in the 'tradedemo' namespace
+declare -a TRADEACTIONS
+TRADEACTIONS=(
+		tradedemo/buyStock
+		tradedemo/getCashBalance
+		tradedemo/getPositions
+		tradedemo/getStockDescription
+		tradedemo/getStockHistory
+		tradedemo/newAccount
+		tradedemo/sellStock
+)
+
+# List of actions to verify in the 'calcdemo' namespace
+declare -a CALCACTIONS
+CALCACTIONS=(
+		calc/eval
+)
+
+# Directories
+SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+MAINDIR=$SELFDIR/../../../main
+BEFOREDIR=$SELFDIR/before
+AFTERDIR=$SELFDIR/after
+
+# Function to set user credentials
+function setuser {
+		pushd $MAINDIR
+		nimadmin user set $1 $2
+		popd
+}
+
+# Function to delete known binary files from unzipped actions (definitely a kluge)
+function specialExclusions {
+		rm -f nimadmin
+}
+
+# Function to retrieve an action
+function getAction {
+		PKG=$(dirname "$1")
+		if [ "$PKG" == "." ]; then
+				NAME="$1"
+		else
+				NAME=${PKG}_$(basename "$1")
+		fi
+		nim action get "$1" | tail -n +2 > $NAME.meta
+		../canonical.js $NAME.meta
+		BINARY=$(jq -r .exec.binary $NAME.meta)
+		if [ "$BINARY" != "true" ]; then
+				nim action get "$1" --save-as $NAME.code
+		else
+				ZIPPED=$(jq -r .annotations.zipped $NAME.meta)
+				if [ "$ZIPPED" == "true" ]; then
+						nim action get "$1" --save-as $NAME.zip
+						mkdir $NAME.code
+						cd $NAME.code
+						unzip -q ../$NAME.zip
+						specialExclusions
+						cd ..
+						rm $NAME.zip
+				fi
+		fi
+}
+
+# Function to retrieve the content of all relevant actions into the current directory
+function getAllActions {
+		setuser nimbella
+		for act in ${NIMACTIONS[*]}; do
+				getAction $act
+		done
+		setuser playground
+		for act in ${PGACTIONS[*]}; do
+				getAction $act
+		done
+		setuser demos qrdemo
+		for act in ${QRACTIONS[*]}; do
+				getAction $act
+		done
+		setuser demos chatdemo
+		for act in ${CHATACTIONS[*]}; do
+				getAction $act
+		done
+		setuser demos tradedemo
+		for act in ${TRACEACTIONS[*]}; do
+				getAction $act
+		done
+		setuser demos calcdemo
+		for act in ${CALCACTIONS[*]}; do
+				getAction $act
+		done
+}
+
+# Parse cmdline, set mode of operation
+if [ -n "$2" ]; then
+		echo "too many arguments"
+		exit 1
+elif [ "$1" == "--postdeploy" ]; then
+		POSTDEPLOY=true
+elif [ -n "$1" ]; then
+		echo "invalid argument $1"
+		exit 1
+fi
+set -e
+
+
+# Except in --postdeploy mode, retrieve existing actions, then delete them, then redeploy them
+if [ -z "$POSTDEPLOY" ]; then
+	# Retrieve
+	rm -fr $BEFOREDIR
+	mkdir $BEFOREDIR
+	pushd $BEFOREDIR
+	getAllActions
+	popd
+
+  # Delete the actions (and their packages as needed)
+	setuser nimbella
+	for act in ${NIMACTIONS[*]}; do
+    nim action delete $act
+  done
+	for pkg in ${NIMPKGS[*]}; do
+	  nim package delete $pkg
+	done
+  setuser playground   					 
+	for act in ${PGACTIONS[*]}; do
+    nim action delete $act
+  done
+  setuser demos qrdemo
+  for act in ${QRACTIONS[*]}; do
+    nim action delete $act
+	done
+  nim package delete demo
+  setuser demos chatdemo
+  for act in ${CHATACTIONS[*]}; do
+    nim action delete $act
+  done
+	nim package delete chatadmin
+	nim package delete chatroom
+	setuser demos tradedemo
+	for act in ${TRADEACTIONS[*]}; do
+    nim action delete $act
+	done
+	nim package delete tradedemo
+	setuser demos calcdemo
+	for act in ${CALCACTIONS[*]}; do
+    nim action delete $act
+  done
+	nim package delete calc
+
+	# run the install
+	pushd $MAINDIR
+	PROJECT=$(nimadmin project info | cut -f4 -d' ')
+	./build.sh content $PROJECT
+	nimadmin install actions
+	nimadmin install demos
+	popd
+fi
+
+# Retrieve the new actions (in normal mode, or the pre-existing ones if --postdeploy)
+rm -fr $AFTERDIR
+mkdir $AFTERDIR
+pushd $AFTERDIR
+getAllActions
+popd
+
+# Compare before and after
+pushd $SELFDIR
+set +e
+CODE=0
+for i in before/*.code; do
+		NAME=$(basename $i)
+		echo "Comparing $NAME"
+		FLAGS=-ub
+		if [ -d "$NAME" ]; then
+			 FLAGS=-rub
+    fi
+		diff $FLAGS $i after/$NAME
+		if [ "$?" -ne 0 ]; then
+				CODE=1
+		fi
+done
+for i in before/*.meta; do
+		NAME=$(basename $i)
+		echo "Comparing $NAME"
+		diff -ub $i after/$NAME
+		if [ "$?" -ne 0 ]; then
+				CODE=1
+		fi
+done
+popd
+exit $CODE

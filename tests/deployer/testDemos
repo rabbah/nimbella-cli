@@ -1,0 +1,86 @@
+#!/bin/bash
+# Nimbella CONFIDENTIAL
+# ---------------------
+#
+#   2018 - present Nimbella Corp
+#   All Rights Reserved.
+#
+# NOTICE:
+#
+# All information contained herein is, and remains the property of
+# Nimbella Corp and its suppliers, if any.  The intellectual and technical
+# concepts contained herein are proprietary to Nimbella Corp and its
+# suppliers and may be covered by U.S. and Foreign Patents, patents
+# in process, and are protected by trade secret or copyright law.
+#
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Nimbella Corp.
+#
+
+# This tests the correctness of the web content deployed in a previous run of 'nimadmin install demos'.  The actions of the demos are tested
+# in testMainActions so those tests are not duplicated here.
+
+# Parse cmdline
+if [ -n "$2" ]; then
+		echo "too many arguments"
+		exit 1
+elif [ -z "$1" ]; then
+		echo "The Demos test only runs in --postdeploy mode $1"
+		exit 0
+elif [ "$1" != "--postdeploy" ]; then
+		echo "unrecognized argument $1"
+		exit 1
+fi
+
+# Define directories and orient
+SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CONFIGDIR=$SELFDIR/../../../main/config
+DEPLOYDIR=$(cd "$CONFIGDIR/deployable" && pwd)
+cd $SELFDIR
+
+# Get appropriate suffix for the project
+PROJECT=$(jq -r .current < $CONFIGDIR/nimconfig.json)
+SUFFIX="-api${PROJECT:3}.nimbella.io"
+
+# Build the list of files
+pushd $DEPLOYDIR
+QRFILES=$(find qrcode/web -type f -print)
+CALCFILES=$(find calculator/web -type f -print)
+TRADEFILES=$(find trade/web/build -type f -print)
+CHATFILES=$(find chat/web/build -type f -print)
+popd
+
+WEBFILES="$QRFILES $CALCFILES $TRADEFILES $CHATFILES"
+
+# Test one content file
+function testFile() {
+		if [[ "$1" == "calculator/web/"* ]]; then
+				DEMO=calcdemo
+				FILE=${1:15}
+		elif [[ "$1" == "chat/web/build/"* ]]; then
+				DEMO=chatdemo
+				FILE=${1:15}
+		elif [[ "$1" == "trade/web/build/"* ]]; then
+				DEMO=tradedemo
+				FILE=${1:16}
+		elif [[ "$1" == "qrcode/web/"* ]]; then
+				DEMO=qrdemo
+				FILE=${1:11}
+		else
+				echo "Cannot find demo membership for file $1"
+				exit 1
+		fi
+		URL="https://$DEMO$SUFFIX/$FILE"
+		FILE="$DEPLOYDIR/$1"
+		echo "Testing $URL"
+		curl -s -o /tmp/testfile $URL
+		diff -ub $FILE /tmp/testfile
+}
+
+# Test all files
+set -e
+for file in $WEBFILES; do
+		testFile $file
+done
+echo "Test succeeded"

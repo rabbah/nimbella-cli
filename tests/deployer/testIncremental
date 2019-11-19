@@ -1,0 +1,146 @@
+#
+# Nimbella CONFIDENTIAL
+# ---------------------
+#
+#   2018 - present Nimbella Corp
+#   All Rights Reserved.
+#
+# NOTICE:
+#
+# All information contained herein is, and remains the property of
+# Nimbella Corp and its suppliers, if any.  The intellectual and technical
+# concepts contained herein are proprietary to Nimbella Corp and its
+# suppliers and may be covered by U.S. and Foreign Patents, patents
+# in process, and are protected by trade secret or copyright law.
+#
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Nimbella Corp.
+#
+
+# Test the incremental deploy feature
+
+SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+WBTESTS=../../../workbench/tests/workbench
+
+cd $SELFDIR
+pushd ../../../main
+nimadmin user set demos test
+popd
+
+# Test that a given action was not deployed (otherwise error)
+function shouldNotHaveDeployed() {
+    if [[ "$2" == *"/$1"* ]]; then
+		   echo "$1 was deployed but should not have been"
+			 exit 1
+	  fi
+}
+
+# Test that a given action was deployed (otherwise error)
+function shouldHaveDeployed() {
+    if [[ "$2" != *"/$1"* ]]; then
+		   echo "$1 was not deployed but should have been"
+			 exit 1
+	  fi
+}
+
+# Test that web content was deployed (otherwise error)
+function shouldHaveDeployedWeb() {
+    if [[ "$1" != *"Deployed 1 web"* ]]; then
+		   echo "Web content was not deployed but should have been"
+			 exit 1
+	  fi
+}
+
+# Test that web content was not deployed (otherwise error)
+function shouldNotHaveDeployedWeb() {
+    if [[ "$1" != *"Skipped 1 unchanged web"* ]]; then
+		   echo "Web content was deployed but should not have been"
+			 exit 1
+	  fi
+}
+
+# Clean start
+nim project deploy cleanProject
+
+# Populate the project
+rm -fr incremental
+mkdir -p incremental/packages/incremental/action5
+mkdir -p incremental/web
+cp $WBTESTS/resources/html1 incremental/web/index.html
+cp $WBTESTS/resources/action1 incremental/packages/incremental/action1.js
+cp $WBTESTS/resources/action1 incremental/packages/incremental/action2.js
+cp $WBTESTS/resources/action1 incremental/packages/incremental/action3.js
+cp $WBTESTS/resources/action1 incremental/packages/incremental/action4.js
+cp $WBTESTS/resources/action1 incremental/packages/incremental/action5/inclusion1.js
+cp $WBTESTS/resources/action1 incremental/packages/incremental/action5/inclusion2.js
+cp $WBTESTS/resources/action1 incremental/packages/incremental/action5/inclusion3.js
+
+set -e
+
+# Regular deploy
+nim project deploy incremental
+
+# Incremental deploy with no changes
+echo -e "\nDeploying incrementally with no changes"
+RESULT=$(nim project deploy incremental --incremental)
+echo -e "$RESULT"
+for i in action1 action2 action3 action4 action5; do
+   shouldNotHaveDeployed "$i" "$RESULT"
+done
+shouldNotHaveDeployedWeb "$RESULT"
+
+# Change code of actions 3 and 4 and redeploy incrementally
+cp $WBTESTS/resources/action2 incremental/packages/incremental/action3.js
+cp $WBTESTS/resources/action2 incremental/packages/incremental/action4.js
+echo -e "\nDeploying incrementally after changing code of actions 3 and 4"
+RESULT=$(nim project deploy incremental --incremental)
+echo -e "$RESULT"
+for i in action1 action2 action5; do
+   shouldNotHaveDeployed "$i" "$RESULT"
+done
+shouldNotHaveDeployedWeb "$RESULT"
+for i in action3 action4; do
+   shouldHaveDeployed "$i" "$RESULT"
+done
+
+# Change metadata of actions 1 and 2, also contents of index.html, and redeploy incrementally
+echo "packages:" > incremental/project.yml
+echo "  - name: incremental" >> incremental/project.yml
+echo "    actions:" >> incremental/project.yml
+echo "    - name: action1" >> incremental/project.yml
+echo "      web: false" >> incremental/project.yml
+echo "    - name: action2" >> incremental/project.yml
+echo "      web: raw" >> incremental/project.yml
+cp $WBTESTS/resources/html2 incremental/web/index.html
+echo -e "\nDeploying incrementally after changing metadata of actions 1 and 2 and contents of index.html"
+RESULT=$(nim project deploy incremental --incremental)
+echo -e "$RESULT"
+for i in action1 action2; do
+   shouldHaveDeployed "$i" "$RESULT"
+done
+shouldHaveDeployedWeb "$RESULT"
+for i in action3 action4 action5; do
+   shouldNotHaveDeployed "$i" "$RESULT"
+done
+
+# Add an .include file to action5 changing the composition but not touching any included files
+echo "inclusion1.js" > incremental/packages/incremental/action5/.include
+echo "inclusion2.js" >> incremental/packages/incremental/action5/.include
+echo -e "\nDeploying incrementally after adding a member-changing .include to action 5"
+RESULT=$(nim project deploy incremental --incremental)
+echo -e "$RESULT"
+shouldHaveDeployed action5 "$RESULT"
+for i in action1 action2 action3 action4; do
+		shouldNotHaveDeployed "$i" "$RESULT"
+done
+
+# A final round with nothing changed
+echo -e "\nDeploying incrementally with no new changes"
+RESULT=$(nim project deploy incremental --incremental)
+echo -e "$RESULT"
+for i in action1 action2 action3 action4 action5; do
+   shouldNotHaveDeployed "$i" "$RESULT"
+done
+shouldNotHaveDeployedWeb "$RESULT"
+echo "Test succeeded"

@@ -1,0 +1,36 @@
+#
+# Nimbella CONFIDENTIAL
+# ---------------------
+#
+#   2018 - present Nimbella Corp
+#   All Rights Reserved.
+#
+# NOTICE:
+#
+# All information contained herein is, and remains the property of
+# Nimbella Corp and its suppliers, if any.  The intellectual and technical
+# concepts contained herein are proprietary to Nimbella Corp and its
+# suppliers and may be covered by U.S. and Foreign Patents, patents
+# in process, and are protected by trade secret or copyright law.
+#
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Nimbella Corp.
+#
+
+import platform
+import time
+
+def work(size):
+    start = time.time() * 1000
+    junk = 5
+    for number in range(size * 20000):
+        junk = junk + number
+    end = time.time() * 1000
+    return round(10 * (end - start)) / 10
+
+def main(params):
+    size = params.get("size", 1)
+    elapsed = work(size)
+    result = "Size = " + str(size) + " Elapsed = " + str(elapsed) + " ms"
+    return {"result": result }

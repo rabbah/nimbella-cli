@@ -1,0 +1,23 @@
+{
+  "annotations": {
+    "exec": "python:2",
+    "final": false,
+    "provide-api-key": false,
+    "raw-http": false,
+    "web-export": false
+  },
+  "exec": {
+    "kind": "python:2",
+    "binary": false
+  },
+  "limits": {
+    "concurrency": 1,
+    "logs": 10,
+    "memory": 256,
+    "timeout": 60000
+  },
+  "name": "python2",
+  "namespace": "nimbella/hellos",
+  "parameters": {},
+  "publish": false
+}

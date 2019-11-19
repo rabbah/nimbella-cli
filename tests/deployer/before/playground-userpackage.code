@@ -1,0 +1,63 @@
+/*
+ * Nimbella CONFIDENTIAL
+ * ---------------------
+ *
+ *   2018 - present Nimbella Corp
+ *   All Rights Reserved.
+ *
+ * NOTICE:
+ *
+ * All information contained herein is, and remains the property of
+ * Nimbella Corp and its suppliers, if any.  The intellectual and technical
+ * concepts contained herein are proprietary to Nimbella Corp and its
+ * suppliers and may be covered by U.S. and Foreign Patents, patents
+ * in process, and are protected by trade secret or copyright law.
+ *
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Nimbella Corp.
+ */
+const openwhisk = require('openwhisk');
+
+// Returns the package structure for a given user, creating it if it doesn't exist.
+// Used to initialize playground state when an existing user loads the playground page and also to begin the
+// process with an empty package for a new user.
+// This code also maintains a lastSession date as a package annotation.  This denotes the last time
+// this user opened the playground and can be used to expire the package.
+function main(outerParam) {
+    let param = JSON.parse(outerParam['__ow_body'])
+    let playgroundId = param['playgroundId']
+    let wsk = openwhisk({ignore_certs: outerParam.__ignore_certs}) // ignores self-signed certs, necessary in some deployments
+    let name = "user" + playgroundId
+    let ts = new Date().toISOString()
+    let tsAnnotation = { key: "lastSession", value: ts }
+    return wsk.packages.get(name).then(result => {
+       console.log('found existing package', result)
+       let annotations = result.annotations
+       annotations.push(tsAnnotation)
+       return wsk.packages.update({"name": name, "package": {annotations: annotations}}).then(_ => {
+         // Return original response, which has the old timestamp.  Client does not use the timestamp in the response.
+         // The response from the update does not include the package list.
+         return result
+       }).catch(err => {
+         console.log("could not add lastSession annotation (proceeding)", err)
+         return result // even if not updated
+       })
+    }).catch(err => {
+      console.log('package does not exist or other error')
+      if (err.statusCode === 404) {
+        // Simple not found error.  Just create the package
+        return wsk.packages.create({"name": name, "package": { annotations: [ tsAnnotation ]}}).then(result => {
+          console.log('created package', result)
+          return result
+        }).catch(err => {
+          console.error('error creating package', err)
+          return { error: err }
+        })
+      } else {
+        console.error('unrecoverable error retrieving package', err)
+        return { error: err }
+      }
+    })
+}
+//main({"__ow_body": "{\"playgroundId\": 42}"})

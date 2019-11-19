@@ -1,0 +1,36 @@
+/*
+ * Nimbella CONFIDENTIAL
+ * ---------------------
+ *
+ *   2018 - present Nimbella Corp
+ *   All Rights Reserved.
+ *
+ * NOTICE:
+ *
+ * All information contained herein is, and remains the property of
+ * Nimbella Corp and its suppliers, if any.  The intellectual and technical
+ * concepts contained herein are proprietary to Nimbella Corp and its
+ * suppliers and may be covered by U.S. and Foreign Patents, patents
+ * in process, and are protected by trade secret or copyright law.
+ *
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Nimbella Corp.
+ */
+const openwhisk = require('openwhisk');
+
+// Deletes a deployed action (named according to the playgroundId and action name) if the action exists.
+function main(outerParam) {
+    let param = JSON.parse(outerParam['__ow_body'])
+    let playgroundId = param['playgroundId']
+    let actionName = param['actionName']
+    let wsk = openwhisk({ignore_certs: outerParam.__ignore_certs}) // ignores self-signed certs, necessary in some deployments
+    let fullName = 'user' + playgroundId + '/' + actionName
+    console.log("deleting action", fullName)
+    return wsk.actions.delete(fullName).then(result => {
+        console.log('deleted user action')
+        return result
+    }).catch(err => {
+        console.error('action did not exist or error occurred', err)
+    })
+}

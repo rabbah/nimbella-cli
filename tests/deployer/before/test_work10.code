@@ -1,0 +1,53 @@
+/*
+ * Nimbella CONFIDENTIAL
+ * ---------------------
+ *
+ *   2018 - present Nimbella Corp
+ *   All Rights Reserved.
+ *
+ * NOTICE:
+ *
+ * All information contained herein is, and remains the property of
+ * Nimbella Corp and its suppliers, if any.  The intellectual and technical
+ * concepts contained herein are proprietary to Nimbella Corp and its
+ * suppliers and may be covered by U.S. and Foreign Patents, patents
+ * in process, and are protected by trade secret or copyright law.
+ *
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Nimbella Corp.
+ */
+
+function milli() {
+  var t = process.hrtime();
+  return 1000 * t[0] + t[1] / 1000000
+}
+
+// For a 2017 3Ghz i7 using node 10
+// On initial iterations, about 2 ms.
+// Speeds up to 0.75 ms after 40 iterations.
+function work() {
+  var res = 0
+  for (var i=0; i<700000; i++){
+      res += 1;
+  }
+  return res
+}
+
+function sleep(ms){
+    return new Promise(resolve=>{
+       setTimeout(resolve,ms)
+    })
+}
+
+async function main({size}) {
+  var start = milli()
+  for (var i=0; i<size; i++) {  // each round is roughly 2 millis on unloaded machine
+    work();
+    await sleep(0.1)
+  }
+  var end = milli()
+  let elapsed = Math.round(100 * (end - start)) / 100
+  console.log("Size = ", size, "   Elapsed = ", elapsed, " ms")
+  return {payload: "Size = " + size + "   Elapsed = " + elapsed + " ms"}
+}

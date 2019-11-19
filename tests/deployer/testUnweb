@@ -1,0 +1,51 @@
+#
+# Nimbella CONFIDENTIAL
+# ---------------------
+#
+#   2018 - present Nimbella Corp
+#   All Rights Reserved.
+#
+# NOTICE:
+#
+# All information contained herein is, and remains the property of
+# Nimbella Corp and its suppliers, if any.  The intellectual and technical
+# concepts contained herein are proprietary to Nimbella Corp and its
+# suppliers and may be covered by U.S. and Foreign Patents, patents
+# in process, and are protected by trade secret or copyright law.
+#
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Nimbella Corp.
+#
+
+# This tests the artificial project 'unweb' which was created for issue nimbella-cli#15
+
+SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+cd $SELFDIR
+pushd ../../../main
+nimadmin user set demos test
+popd
+
+# For the initial deploy, use a project.yml that specifies a clean deploy and does not specify 'webby'
+echo "targetNamespace: test" > unweb/project.yml
+echo "cleanNamespace: true" >> unweb/project.yml
+nim project deploy unweb
+
+# For the second deploy, don't specify clean and set web=false
+echo "targetNamespace: test" > unweb/project.yml
+echo "packages:" >> unweb/project.yml
+echo "  - name: printer" >> unweb/project.yml
+echo "    actions:" >> unweb/project.yml
+echo "      - name: notify" >> unweb/project.yml
+echo "        web: false" >> unweb/project.yml
+nim project deploy unweb
+
+# Get the action back for inspection
+RESULT=$(nim action get printer/notify | tail -n +2 | jq -r '.annotations[] | select(.key=="web-export") | .value')
+if [ "$RESULT" != "false" ]; then
+	 echo "Unweb test failed"
+   exit 1
+fi
+echo "Unweb test succeeded"
+

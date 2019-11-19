@@ -19,4 +19,8 @@ deployer/minified/
 license.html
 thirdparty-licenses.md
 thirdparty-licenses.html
-
+.nimbella/
+__deployer__.zip
+tests/deployer/after/
+tests/deployer/incremental/
+tests/deployer/unweb/project.yml

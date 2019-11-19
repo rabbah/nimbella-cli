@@ -1,0 +1,52 @@
+#
+# Nimbella CONFIDENTIAL
+# ---------------------
+#
+#   2018 - present Nimbella Corp
+#   All Rights Reserved.
+#
+# NOTICE:
+#
+# All information contained herein is, and remains the property of
+# Nimbella Corp and its suppliers, if any.  The intellectual and technical
+# concepts contained herein are proprietary to Nimbella Corp and its
+# suppliers and may be covered by U.S. and Foreign Patents, patents
+# in process, and are protected by trade secret or copyright law.
+#
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Nimbella Corp.
+#
+
+# This tests the artificial project 'sharedBuild'
+
+SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+cd $SELFDIR
+pushd ../../../main
+nimadmin user set demos test
+popd
+pushd sharedBuild
+git clean -fdx
+popd
+set -e
+nim project deploy sharedBuild
+TEST1=$(nim action invoke deployer-test/test1 -r | jq -r .msg)
+TEST2=$(nim action invoke deployer-test/test2 -r | jq -r .msg)
+TEST3=$(nim action invoke deployer-test/test3 -r | jq -r .msg)
+CODE=0
+if [ "$TEST1" != "three is 3" ]; then
+	 echo "Incorrect answer from test1: $TEST1"
+	 CODE=1
+fi
+if [ "$TEST2" != "two is 2" ]; then
+	 echo "Incorrect answer from test2: $TEST2"
+	 CODE=1
+fi
+if [ "$TEST3" != "three is 3" ]; then
+	 echo "Incorrect answer from test3: $TEST3"
+	 CODE=1
+fi
+exit $CODE
+
+

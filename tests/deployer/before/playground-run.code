@@ -1,0 +1,100 @@
+/*
+ * Nimbella CONFIDENTIAL
+ * ---------------------
+ *
+ *   2018 - present Nimbella Corp
+ *   All Rights Reserved.
+ *
+ * NOTICE:
+ *
+ * All information contained herein is, and remains the property of
+ * Nimbella Corp and its suppliers, if any.  The intellectual and technical
+ * concepts contained herein are proprietary to Nimbella Corp and its
+ * suppliers and may be covered by U.S. and Foreign Patents, patents
+ * in process, and are protected by trade secret or copyright law.
+ *
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Nimbella Corp.
+ */
+const openwhisk = require('openwhisk');
+
+// Impose limits on playground actions
+const limits = {
+    timeout: 5000, // 5 seconds
+    memory: 128    // megabytes
+}
+
+// Optionally deploys code as an action and optionally runs deployed code.   Which of these things happens
+//    depends on the "verb" parameter which is one of saveOnly, saveWeb, runOnly, or saveAndRun.
+// The input parameters are
+//    action -- the name of the action as assigned by the user or one of the default sample names; combines with playgroundId to form
+//          the action name as viewed by Nimbella
+//    verb -- one of saveOnly, saveWeb, runOnly, or saveAndRun
+//    code -- the code to run (may be omitted on runOnly)
+//    params -- parameters to pass to the code when running it (ignored if saveOnly is present or implied)
+//    playgroundId -- the identity of the browser instance submitting the code (functions as a kind of user id but not enduring
+//          or authenticated).  Becomes part of the name of the action.
+//    runtime -- the whisk runtime ('kind') value to use in running or saving the action.
+//    showCode -- whether or not to set the show-code annotation (ignored unless verb == saveWeb)
+function main(outerParam) {
+    // Get parameters
+    const param = JSON.parse(outerParam['__ow_body'])
+    console.log("param", param)
+    const verb = param['verb']
+    const code = param['code']
+    const codeParams = param['params']
+    const playgroundId = param['playgroundId']
+    const action = param['actionName']
+    const showCode = verb == "saveWeb" ? (param['showCode'] === true) : false
+    const wsk = openwhisk({ignore_certs: outerParam.__ignore_certs}) // ignores self-signed certs, necessary in some deployments
+    const actionName = 'user' + playgroundId + '/' + action
+
+    // If runOnly, just run.
+    if (verb == "runOnly") {
+        const t1 = new Date().getTime()
+        return wsk.actions.invoke({ actionName: actionName, blocking: true, params: codeParams }).then(aresult => {
+          // Return the result
+          const t2 = new Date().getTime()
+          console.log('aresult: ', aresult)
+          const response = aresult['response']
+          const result = response['result']
+          return { param: param, result: result, runTime: t2 - t1 }
+        }).catch(err => {
+            console.error('error invoking action', err)
+            return {error: err}
+        })
+    } else {
+        // we will deploy something and possibly run it
+        const runtime = param['runtime']
+        const annotations = {"web-export": verb == "saveWeb" ? true : false, "show-code": showCode }
+        const deployParams = {name: actionName, action: code, kind: runtime, annotations, limits}
+        console.log("deployParams", deployParams)
+        if (verb == "saveOnly" || verb == "saveWeb") {
+            // If saveOnly or saveWeb, just deploy and return
+            return wsk.actions.update(deployParams).then(() => {
+                return { saved: true }
+            })
+        } else if (verb == "saveAndRun") {
+            // Save and Run both
+            const t0 = new Date().getTime()
+            return wsk.actions.update(deployParams).then(() => {
+                const t1 = new Date().getTime()
+                return wsk.actions.invoke({ actionName: actionName, blocking: true, params: codeParams }).then(aresult => {
+                    const t2 = new Date().getTime()
+                    const response = aresult['response']
+                    const result = response['result']
+                    return { param: param, result: result, deployTime: t1 - t0, runTime: t2 - t1 }
+                }).catch(err => {
+                    console.error('error invoking action', err)
+                    return {error: err}
+                })
+            }).catch(err => {
+                console.error('error creating action', err)
+                return {error: err}
+            })
+        } else {
+            console.log("bad verb", verb)
+        }
+    }
+}
