@@ -203,6 +203,13 @@ export async function switchNamespace(namespace: string, apihost: string|undefin
     return answer
 }
 
+// Get the credentials for a namespace.  Similar logic to switchNamespace but does not change which
+// namespace is considered current.
+export async function getCredentialsForNamespace(namespace: string, apihost: string|undefined, persister: Persister): Promise<Credentials> {
+    const store = await persister.loadCredentialStore()
+    return getUniqueCredentials(namespace, apihost, store)
+}
+
 // Get the current credentials.  This will succeed iff the user has a credential store
 // or there was enough information in .wskprops / .objectstorecreds to bootstrap one.
 // Otherwise, we throw an error.

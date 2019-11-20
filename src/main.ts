@@ -29,9 +29,12 @@ const aioCommands = ['action', 'actions', 'activation', 'activations', 'namespac
 export async function run() {
     cleanEnvironment()
     const isHelp = makeCanonical() || process.argv.length < 4
-    // Examine command to classify it as aio or not and apply 'plurals relaxation'
+    // Examine command to classify it as aio or not and apply 'plurals relaxation'.
+    // To decide if it's an aio command we use a list of aio subtrees and also a
+    // short list of our own commands that extend the aio subtrees.  Right now, the
+    // only command in that "short list" is 'namespace clean' so we don't even use a list.
     const cmd = process.argv[2]
-    let aioCmd = aioCommands.includes(cmd)
+    let aioCmd = aioCommands.includes(cmd)  && (cmd != 'namespace' || process.argv[3] != 'clean')
     // Apply simple "plurals" fix
     if (aioCmd && cmd.endsWith('s')) {
         process.argv[2] = cmd.slice(0, -1)

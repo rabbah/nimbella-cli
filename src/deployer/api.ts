@@ -203,9 +203,9 @@ export function getMessageFromError(err: any): string {
 
 // Undocumented function to wipe a namespace of everything except its activations (the activations cannot be wiped via the public API)
 export async function wipeNamespace(host: string, auth: string) {
-    console.log("Requested wipe-namespace function with host", host, "and auth", auth)
+    // console.log("Requested wipe-namespace function with host", host, "and auth", auth)
     const init: OWOptions = { apihost: host, api_key: auth}
     const client = openwhisk(init)
-    console.log("Client opened")
+    // console.log("Client opened")
     return wipe(client)
 }
