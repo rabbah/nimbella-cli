@@ -47,6 +47,14 @@ if [ -n "$STABLE" ]; then
         echo "The nimbella-cli repo is not fully committed: a stable version cannot be declared"
         exit 1
     fi
+		UPTODATE=$(./aioUpToDate.sh)
+		if [ "$UPTODATE" == "false" ]; then
+				echo "Incompatible releases for 'aio-cli-plugin-runtime' and 'nimbella-cli'.  Bring both repos up to date, then run './makeAioPacks.sh' in nimbella-cli."
+				exit -1
+		elif [ "$UPTODATE" != 'true' ]; then
+				echo $UPTODATE
+				exit -1
+		fi
     LAST_VERSION=$(jq -r .nimcli < ../workbench/stable/versions.json)
     NEW_VERSION=$(jq -r .version < package.json)
     if [ "$LAST_VERSION" == "$NEW_VERSION" ]; then
@@ -56,14 +64,6 @@ if [ -n "$STABLE" ]; then
 fi
 
 # Check repo synchronization
-UPTODATE=$(./aioUpToDate.sh)
-if [ "$UPTODATE" == "false" ]; then
-    echo "Incompatible releases for 'aio-cli-plugin-runtime' and 'nimbella-cli'.  Bring both repos up to date, then run './makeAioPacks.sh' in nimbella-cli."
-    exit -1
-elif [ "$UPTODATE" != 'true' ]; then
-    echo $UPTODATE
-    exit -1
-fi
 
 # Store version info
 HASH=$(git rev-parse HEAD)
