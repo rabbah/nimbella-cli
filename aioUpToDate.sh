@@ -45,7 +45,7 @@ if [ ! -d ../aio-cli-plugin-runtime ]; then
     exit 0
 fi
 pushd ../aio-cli-plugin-runtime > /dev/null
-BR=$(git symbolic-ref head --short)
+BR=$(git symbolic-ref HEAD --short)
 HASH=$(git rev-parse HEAD)
 popd > /dev/null
 if [ "$BR" != "dev" ]; then
