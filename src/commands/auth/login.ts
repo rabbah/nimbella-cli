@@ -39,11 +39,11 @@ export default class AuthLogin extends NimBaseCommand {
     let credentials: Credentials
     let apihost: string
     if (flags.auth && flags.apihost && !args.token) {
-      apihost = flags.apihost
+      apihost = this.parseAPIHost(flags.apihost)
       credentials = await addCredentialAndSave(apihost, flags.auth, undefined, fileSystemPersister)
         .catch((err: Error) => this.handleError(err.message, err))
     } else if (args.token) {
-      apihost = flags.apihost || 'https://apigcp.nimbella.io'
+      apihost = this.parseAPIHost(flags.apihost) || 'https://apigcp.nimbella.io'
       credentials = await doLogin(args.token, fileSystemPersister, apihost).catch((err: Error) => this.handleError(err.message, err))
     } else {
       this.handleError("A login token is required unless both --auth and --apihost are specified")

@@ -35,9 +35,9 @@ export default class AuthLogout extends NimBaseCommand {
 
   async run() {
     const {args, flags} = this.parse(AuthLogout)
-
-    const namespace = await disambiguateNamespace(args.namespace, flags.apihost).catch(err => this.handleError(err.message, err))
-    const creds = await forgetNamespace(namespace, flags.apihost, fileSystemPersister).catch(err => this.handleError(err.message, err))
+    const host = this.parseAPIHost(flags.apihost)
+    const namespace = await disambiguateNamespace(args.namespace, host).catch(err => this.handleError(err.message, err))
+    const creds = await forgetNamespace(namespace, host, fileSystemPersister).catch(err => this.handleError(err.message, err))
     this.log(`Successful logout from namespace '${namespace}' on API host '${creds.ow.apihost}'`)
   }
 }

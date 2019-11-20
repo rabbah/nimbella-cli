@@ -51,6 +51,22 @@ export abstract class NimBaseCommand extends Command {
     }
   }
 
+  parseAPIHost (host: string|undefined): string|undefined {
+    if (!host) {
+      return undefined
+    }
+    if (host.includes(':')) {
+      return host
+    }
+    if (host.includes('.')) {
+      return 'https://' + host
+    }
+    if (!host.startsWith('api')) {
+      host = 'api' + host
+    }
+    return 'https://' + host + ".nimbella.io"
+  }
+
   handleError (msg: string, err?: any) {
     this.parse(this.constructor as typeof NimBaseCommand)
 

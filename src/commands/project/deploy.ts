@@ -76,7 +76,7 @@ export async function processCredentials(ignore_certs: boolean, apihost: string|
     logger: NimBaseCommand): Promise<{ creds: Credentials|undefined, owOptions: OWOptions }> {
   const owOptions: OWOptions = { ignore_certs }  // No explicit undefined
   if (apihost) {
-    owOptions.apihost = apihost
+    owOptions.apihost = logger.parseAPIHost(apihost)
   }
   if (auth) {
     owOptions.api_key = auth

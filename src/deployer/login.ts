@@ -199,7 +199,7 @@ export async function switchNamespace(namespace: string, apihost: string|undefin
     store.currentNamespace = namespace
     persister.saveCredentialStore(store)
     persister.saveLegacyInfo(newHost, answer.ow.api_key)
-    console.log(`Switched target namespace to '${namespace}' on API host '${newHost}'`)
+    //console.log(`Switched target namespace to '${namespace}' on API host '${newHost}'`)
     return answer
 }
 
