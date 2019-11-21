@@ -28,7 +28,7 @@ The software includes third party libraries which are subject
 to their own license terms. These terms accompany each of the
 libraries included with the software. If you do not agree to
 abide by the applicable license terms for the third party
-libraries, then you may not install them and cannot use the
+libraries, then you should not install them and cannot use the
 software.
 
 The list below groups the third party libraries by their license terms.

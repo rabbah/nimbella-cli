@@ -76,9 +76,9 @@ The software includes third party libraries which are subject
 to their own license terms. These terms accompany each of the
 libraries included with the software. If you do not agree to
 abide by the applicable license terms for the third party
-libraries, then you may not install them and cannot use the
+libraries, then you should not install them and cannot use the
 software. Such third party libraries and their license terms
-are available [here](https://nimbella.io/downloads/nim/thirdparty-licenses.html).
+are available at https://nimbella.io/downloads/nim/thirdparty-licenses.html.
 
 ## Definitions
 
