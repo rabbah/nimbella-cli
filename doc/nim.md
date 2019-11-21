@@ -5,7 +5,7 @@
 This document is organized as follows.
 
   - [Downloading and Installing](#Installing)
-      - [Installing as a `node` dependency using 'npm' or 'yarn'](#NPMInstall)
+      - [Installing as a dependency](#NPMInstall)
   - [Introducing the `nim` command](#What)
   - [About Nimbella Projects](#Projects)
   - [Nimbella Accounts and Login](#Login)
@@ -40,9 +40,10 @@ This document is organized as follows.
 
 ## <span id="Installing"></span>Downloading and Installing the Nimbella CLI
 
-In the following instructions we assume your intent is to install the Nimbella CLI as a command to be invoked from shells or scripts.  [Below](#NPMInstall) we discuss how to install `nim` as a dependency of another package using `npm` or `yarn`.  We don't recommend installing globally with `npm` or `yarn`.
+In the following instructions we assume your intent is to install the Nimbella CLI as a command to be invoked from shells or scripts.  Below we discuss how to [install as a dependency](#NPMInstall) of another `npm` package using `npm` or `yarn`.  We don't recommend installing globally with `npm` or `yarn`.
 
-When using the preferred installation for your system
+When installing for shell invocation
+
   - The CLI is self-contained and has no dependencies on previously installed software
   - you get automated update services when new versions are available.
 
@@ -59,7 +60,7 @@ For `linux` we provide a scripted install.  Use
 curl https://apigcp.nimbella.io/downloads/nim/nim-install-linux.sh | sudo bash
 ```
 
-When the install completes, do
+Regardless of the operating system, when the install completes, do
 
 ```
 nim update
@@ -68,9 +69,9 @@ nim update
 This will first of all verify that `nim` is installed and capable of self-updating.  In most cases, it will say that it already has the latest version.  However, occasionally, the initial install may be of less than the latest version and the update step will correct that.
 
 
-### <span id="NPMInstall"></span>Local install using npm or yarn
+### <span id="NPMInstall"></span>Installing as a dependency
 
-As `nim` is implemented as node package it is also possible to install it with `npm` or `yarn` but we recommend this only for situations where you do not want a global install but rather are making `nim` a dependency of some other package.
+Since `nim` is implemented as an `npm` package it is also possible to install it with `npm` or `yarn` but we recommend this only for situations where you do not want a global install but rather are making `nim` a dependency of some other package.
 
 ```
 npm install https://apigcp.nimbella.io/downloads/nim/nimbella-cli.tgz
