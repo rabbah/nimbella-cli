@@ -33,6 +33,7 @@ export default class NamespaceClean extends NimBaseCommand {
         justwhisk: flags.boolean({ description: 'Remove only OpenWhisk entitities, leaving other content'}),
         force: flags.boolean({ description: 'just do it, omitting confirmatory prompt'}),
         apihost: flags.string({ description: 'the API host of the namespace to be cleaned'}),
+        auth: flags.string({char: 'u', description: 'the API key for the namespace to be cleaned'}),
         ...NimBaseCommand.flags
      }
 
@@ -48,16 +49,29 @@ export default class NamespaceClean extends NimBaseCommand {
                 return
             }
         }
-        const creds = await getCredentialsForNamespace(args.namespace, flags.apihost, fileSystemPersister)
-        await wipeNamespace(creds.ow.apihost, creds.ow.api_key)
-        this.log(`OpenWhisk entities removed from namespace '${args.namespace}' on host '${creds.ow.apihost}'`)
-        if (flags.justwhisk || !creds.storageKey) {
+        let auth: string
+        let apihost: string
+        let storageKey: {}
+        if (flags.auth && flags.apihost) {
+            // Bypass credential fetching (used by `nimadmin` when cleaning up a namespace)
+            auth = flags.auth
+            apihost = flags.apihost
+            storageKey = undefined
+        } else {
+            const creds = await getCredentialsForNamespace(args.namespace, flags.apihost, fileSystemPersister)
+            auth = creds.ow.api_key
+            apihost = creds.ow.apihost
+            storageKey = creds.storageKey
+        }
+        await wipeNamespace(apihost, auth)
+        this.log(`OpenWhisk entities removed from namespace '${args.namespace}' on host '${apihost}'`)
+        if (flags.justwhisk || !storageKey) {
             return
         }
-        const bucketName = computeBucketName(creds.ow.apihost, args.namespace)
-        const storage = new Storage(creds.storageKey)
+        const bucketName = computeBucketName(apihost, args.namespace)
+        const storage = new Storage(storageKey)
         const client = storage.bucket(bucketName)
         await cleanBucket(client, undefined)
-        this.log(`Web content removed from namespace '${args.namespace}' on host '${creds.ow.apihost}'`)
+        this.log(`Web content removed from namespace '${args.namespace}' on host '${apihost}'`)
      }
 }

@@ -51,7 +51,8 @@ export default class AuthLogin extends NimBaseCommand {
       if (flags.auth || !apihost) {
         this.handleError("Internal error: incorrect use of 'admin'")
       }
-      credentials = await doAdminLogin(apihost)
+      await doAdminLogin(apihost)
+      return
     } else if (flags.auth && flags.apihost) {
       credentials = await addCredentialAndSave(apihost, flags.auth, undefined, fileSystemPersister)
         .catch((err: Error) => this.handleError(err.message, err))
