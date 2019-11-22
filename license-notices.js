@@ -120,7 +120,9 @@ function checkForLicense(pkgroot) {
                 throw new Error(`${pkgroot} has an invalid license field`)
             }
         } else {
-            throw new Error(`${pkgroot} has an incomplete package.json`)
+            console.error(`${pkgroot} has an incomplete package.json`)
+            // Not terminal
+            return
         }
     } else {
         throw new Error(`${pkgroot} is missing package.json`)
