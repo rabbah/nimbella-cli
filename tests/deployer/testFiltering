@@ -30,7 +30,10 @@ pushd filtering
 git clean -fdx
 popd
 CODE=0
-BAD_DEPLOY=$(nim project deploy filtering | grep foo.html~)
+set -e
+DEPLOY=$(nim project deploy filtering)
+set +e
+BAD_DEPLOY=$(echo "$DEPLOY" | grep foo.html~)
 if [ -n "$BAD_DEPLOY" ]; then
 	 echo "Error: foo.html~ should not have been deployed"
    CODE=1

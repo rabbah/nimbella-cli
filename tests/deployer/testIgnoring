@@ -38,9 +38,15 @@ touch ignoring/packages/default/.gitignore
 touch ignoring/packages/default/index.js # otherwise deployer fails
 
 CODE=0
-BAD_DEPLOY=$(nim project deploy ignoring | grep .gitignore\ deployed)
-if [ -n "$BAD_DEPLOY" ]; then
+set -e
+DEPLOY=$(nim project deploy ignoring)
+set +e
+if [[ "$DEPLOY" == *".gitignore"* ]]; then
 	 echo "Error: '.gitignore' should not have been deployed"
+   CODE=1
+fi
+if [[ "$DEPLOY" == *".DS_Store"* ]]; then
+	 echo "Error: '.DS_Store' should not have been deployed"
    CODE=1
 fi
 

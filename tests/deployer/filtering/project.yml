@@ -1,0 +1,7 @@
+targetNamespace: test
+cleanNamespace: true
+packages:
+  - name: test
+    actions:
+      - name: test
+        runtime: nodejs:default
