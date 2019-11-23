@@ -54,7 +54,7 @@ export default class AuthLogin extends NimBaseCommand {
       await doAdminLogin(apihost)
       return
     } else if (flags.auth && flags.apihost) {
-      credentials = await addCredentialAndSave(apihost, flags.auth, undefined, fileSystemPersister)
+      credentials = await addCredentialAndSave(apihost, flags.auth, undefined, false, fileSystemPersister)
         .catch((err: Error) => this.handleError(err.message, err))
     } else {
       this.handleError("A login token is required unless both --auth and --apihost are specified")

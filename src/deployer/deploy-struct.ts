@@ -206,6 +206,7 @@ export interface CredentialNSMap {
 export interface CredentialEntry {
     api_key: string
     storageKey: CredentialStorageEntry
+    redis: boolean
 }
 
 // Part of CredentialStore for the storage credentials.  THese are organized for convenience in initializing a Storage
@@ -220,6 +221,7 @@ export interface Credentials {
     namespace: string|undefined
     ow: OWOptions
     storageKey: CredentialStorageEntry|undefined
+    redis: boolean
 }
 
 // Compact and less complete information about a Credential suitable for listing and tabular display
@@ -227,5 +229,6 @@ export interface CredentialRow {
     namespace: string
     current: boolean
     storage: boolean
+    redis: boolean
     apihost: string
 }

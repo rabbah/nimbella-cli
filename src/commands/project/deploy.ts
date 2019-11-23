@@ -90,7 +90,7 @@ export async function processCredentials(ignore_certs: boolean, apihost: string|
     // For backward compatibility with `wsk`, we accept the absence of target when both apihost and auth are
     // provided on the command line.  We synthesize credentials with (as yet) unknown namespace; if it later
     // turns out that the creds conflict with a targetNamespace in the config, an error will be indicated then.
-    creds = { namespace: undefined, ow: owOptions, storageKey: undefined}
+    creds = { namespace: undefined, ow: owOptions, storageKey: undefined, redis: false }
   } /* else undefined creds; this isn't necessarily an error since the config might supply a namespace via targetNamespace */
   return { creds, owOptions }
 }

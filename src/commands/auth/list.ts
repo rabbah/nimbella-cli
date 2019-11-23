@@ -23,7 +23,7 @@ import { getCredentialList, fileSystemPersister } from '../../deployer/login'
 import { CredentialRow } from '../../deployer/deploy-struct'
 
 // Constants used in formatting the credential list
-const LIST_HEADER = 'Namespace            Current Storage API Host'
+const LIST_HEADER = 'Namespace            Current Storage   Redis API Host'
 const NS_LEN = 21
 const YES = '   yes  '
 const NO = '    no  '
@@ -45,7 +45,7 @@ export default class AuthList extends NimBaseCommand {
   async formatCredentialList(credentialPromise: Promise<CredentialRow[]>) {
     //console.log("formatting credentials")
     return credentialPromise.then(credentialList => {
-        console.log(LIST_HEADER)
+        this.log(LIST_HEADER)
         for (const row of credentialList) {
             let ns = row.namespace
             let pad = ''
@@ -56,7 +56,8 @@ export default class AuthList extends NimBaseCommand {
             }
             const curr = row.current ? YES : NO
             const stor = row.storage ? YES : NO
-            this.log(ns + pad + curr + stor + row.apihost)
+            const redis = row.redis ? YES : NO
+            this.log(ns + pad + curr + stor + redis + row.apihost)
         }
     }).catch((err: Error) => this.handleError(err.message, err))
   }

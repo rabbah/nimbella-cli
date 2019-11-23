@@ -40,6 +40,7 @@ interface ExpectedResponse {
     uuid?: string,
     key?: string,
     storage?: string
+    redis?: boolean
 }
 
 // Format of input piped to stdin from `nim user get`
@@ -48,6 +49,7 @@ interface NimUserData {
     uuid?: string,
     key?: string,
     storage?: string
+    redis?: string
 }
 
 // Non-exported constants
@@ -108,7 +110,7 @@ export async function doLogin(token: string, persister: Persister, host: string 
         throw new Error("The Nimbella Service responded '" + (response.error || "unknown failure") + "'")
     } else {
         const auth = response.uuid + ':' + response.key
-        const credentials = await addCredentialAndSave(response.apihost, auth, response.storage, persister)
+        const credentials = await addCredentialAndSave(response.apihost, auth, response.storage, response.redis, persister)
         persister.saveLegacyInfo(response.apihost, auth)
         return credentials
     }
@@ -131,7 +133,7 @@ export function doAdminLogin(apihost: string): Promise<Credentials> {
         process.stdin.on('end', async () => {
             const nimInput: NimUserData = JSON.parse(input)
             const auth = nimInput.uuid + ':' + nimInput.key
-            const creds = await addCredentialAndSave(apihost, auth, nimInput.storage, fileSystemPersister)
+            const creds = await addCredentialAndSave(apihost, auth, nimInput.storage, !!nimInput.redis, fileSystemPersister)
             saveLegacyInfo(apihost, auth)
             resolve(creds)
         })
@@ -140,7 +142,8 @@ export function doAdminLogin(apihost: string): Promise<Credentials> {
 }
 
 // Add credential to credential store and make it the default.  Does not persist the result
-export function addCredential(store: CredentialStore, apihost: string, namespace: string, api_key: string, storage: string): Credentials {
+export function addCredential(store: CredentialStore, apihost: string, namespace: string, api_key: string, storage: string,
+        redis: boolean): Credentials {
     //console.log("Adding credential to credential store")
     let nsMap = store.credentials[apihost]
     if (!nsMap) {
@@ -148,10 +151,10 @@ export function addCredential(store: CredentialStore, apihost: string, namespace
         store.credentials[apihost] = nsMap
     }
     const storageKey: CredentialStorageEntry = storage ? parseStorageString(storage, undefined, undefined) : undefined
-    nsMap[namespace] = { api_key, storageKey }
+    nsMap[namespace] = { api_key, storageKey, redis }
     store.currentHost = apihost
     store.currentNamespace = namespace
-    return { namespace, ow: { apihost, api_key}, storageKey }
+    return { namespace, ow: { apihost, api_key}, storageKey, redis }
 }
 
 // Remove a namespace from the credential store
@@ -221,15 +224,16 @@ export async function getCredentials(persister: Persister): Promise<Credentials>
         throw new Error("There are no credentials for any namespace")
     }
     const entry = store.credentials[store.currentHost][store.currentNamespace]
-    const { storageKey, api_key } = entry
-    return { namespace: store.currentNamespace, ow: { apihost: store.currentHost, api_key }, storageKey }
+    const { storageKey, api_key, redis } = entry
+    return { namespace: store.currentNamespace, ow: { apihost: store.currentHost, api_key }, storageKey, redis }
 }
 
 // Convenience function to load, add, save a new credential
-export async function addCredentialAndSave(apihost: string, auth: string, storage: string, persister: Persister): Promise<Credentials> {
+export async function addCredentialAndSave(apihost: string, auth: string, storage: string, redis: boolean,
+        persister: Persister): Promise<Credentials> {
     const credStore = await persister.loadCredentialStore()
     return getNamespace(apihost, auth).then(namespace => {
-        const credentials = addCredential(credStore, apihost, namespace, auth, storage)
+        const credentials = addCredential(credStore, apihost, namespace, auth, storage, redis)
         persister.saveCredentialStore(credStore)
         console.log(`Stored a credential set for namespace '${namespace}' and API host '${apihost}'`)
         return Promise.resolve(credentials)
@@ -244,7 +248,8 @@ export async function getCredentialList(persister: Persister): Promise<Credentia
         for (const namespace in store.credentials[apihost]) {
             const current = apihost == store.currentHost && namespace == store.currentNamespace
             const storage = !!store.credentials[apihost][namespace].storageKey
-            result.push({namespace, current, storage, apihost})
+            const redis = store.credentials[apihost][namespace].redis
+            result.push({namespace, current, storage, apihost, redis })
         }
     }
     result = result.sort((a,b) => a.namespace.localeCompare(b.namespace))
@@ -338,7 +343,7 @@ async function initialCredentialStore(): Promise<CredentialStore> {
         let storageKey: CredentialStorageEntry = storage ? parseStorageString(storage, currentNamespace, apihost) : undefined
         const credentials: CredentialHostMap = {}
         const nsMap: CredentialNSMap = {}
-        nsMap[currentNamespace] = { api_key, storageKey }
+        nsMap[currentNamespace] = { api_key, storageKey, redis: false }
         credentials[apihost] = nsMap
         const ans = { currentHost: apihost, currentNamespace, credentials }
         //console.log("returning initialzed credential store", ans)
@@ -403,9 +408,9 @@ function getUniqueCredentials(namespace: string, apihost: string|undefined, stor
             throw new Error(`The namespace '${namespace}' exists on more than one API host.  An '--apihost' argument is required`)
         }
     }
-    const { storageKey, api_key } = credentialEntry
+    const { storageKey, api_key, redis } = credentialEntry
     //console.log('have authkey', api_key)
-    return { namespace, ow: { apihost: newHost, api_key }, storageKey }
+    return { namespace, ow: { apihost: newHost, api_key }, storageKey, redis }
 }
 
 // Turn a raw storage string into the form used internally.  Also optionally checks for mismatch with the expected namespace and apihost

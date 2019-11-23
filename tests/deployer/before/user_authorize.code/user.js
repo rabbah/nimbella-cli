@@ -98,6 +98,7 @@ function userAddOrGet(apihost, configPath, command, flags, {subject, namespace})
                                 uuid: value.uuid,
                                 key: value.key,
                                 storage: value.storage,
+                                redis: !!value.redis,
                                 namespace: value.namespace
                             }
                         } else {
