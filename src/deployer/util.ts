@@ -242,6 +242,9 @@ function validateActionSpec(arg: {}): string {
                 if (!(typeof arg[item] == 'string')) {
                     return `'${item}' member of an 'action' must be a string`
                 }
+                if (item === 'runtime' && !validateRuntime(arg[item])) {
+                    return `'${arg[item]}' is not a valid runtime value`
+                }
                 break
             case 'binary':
             case 'clean':

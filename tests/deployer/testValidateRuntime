@@ -18,23 +18,24 @@
 # from Nimbella Corp.
 #
 
-# This runs those tests that are self-verifying.  
-# Currently a single cmdline argument is passed to testMainActions only.  This is undoubtedly temporary
+# Test the validation of runtime names
 
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 cd $SELFDIR
+pushd ../../../main
+nimadmin user set demos test
+popd
 
-set -e
+# Deploy erroneous project
+DEPLOY=$(nim project deploy validateRuntime 2>&1)
+if [[ "$DEPLOY" == *"content was malformed"* ]]; then
+	 echo "Got error from controller: should not have gotten that far"
+	 exit 1
+fi
+if [[ "$DEPLOY" != *"not a valid runtime"* ]]; then
+	 echo "Expected error message from the deployer is not present"
+	 exit 1
+fi
 
-function runTest() {
-    echo "------------------------"
-    echo "Starting test$1"
-    ./test$1 $2
-    echo "test$1 succeeded"
-}
-
-for i in SharedBuild Filtering WebInclude Ignoring EmptyReduce Incremental Environment Errors Unweb ValidateRuntime; do
-   runTest $i
-done
-runTest MainActions $1
-runTest Demos $1
+echo "Validate runtime test succeeded"
