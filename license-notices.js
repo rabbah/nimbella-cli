@@ -66,6 +66,26 @@ const LINKS = {
     '(MIT AND BSD-3-Clause)': 'https://opensource.org/licenses/MIT, https://opensource.org/licenses/BSD-3-Clause'
 }
 
+// some packages do not conform to how licenses should be declared
+// this is an attempt to provide a mechanism to check an alternate location
+// which works at least for these packages now where the license is in the
+// readme file instead. The verifier property should not be modefied and
+// must match exactly what is in the coresponding file location for the
+// package (including any trailing white spaces).
+const NON_CONFORMING_BUT_LICENSED = {
+    'cli-table': {
+        license: 'MIT',
+        location: 'README.md',
+        verifier: `## License \n\n(The MIT License)\n\nCopyright (c) 2010 LearnBoost &lt;dev@learnboost.com&gt;`
+    },
+
+    'pad-component': {
+        license: 'MIT',
+        location: 'Readme.md',
+        verifier: `## License \n\n  MIT`
+    }
+}
+
 // helper to debug/log
 const debug = process.env.DEBUG ? console.log : () => {}
 
@@ -95,15 +115,16 @@ function checkForLicense(pkgroot) {
 
     if (fs.existsSync(pkgfile)) {
         let pkg = require(pkgfile)
+
+        let name = pkg.name
+        if (name === undefined || name === '') {
+            throw new Error(`${pkgfile} has no name property.`)
+        } else if (EXCLUDES.includes(name)) {
+            return
+        }
+
         let metadata = pkg.license || pkg.licenses
         if (metadata) {
-            let name = pkg.name
-            if (name === undefined || name === '') {
-                throw new Error(`${pkgfile} has no name property.`)
-            } else if (EXCLUDES.includes(name)) {
-                return
-            }
-
             if (typeof metadata === 'string') {
                 addLicense(metadata, name, pkgroot)
             } else if (typeof metadata.type === 'string') {
@@ -120,13 +141,25 @@ function checkForLicense(pkgroot) {
                 throw new Error(`${pkgroot} has an invalid license field`)
             }
         } else {
-            console.error(`${pkgroot} has an incomplete package.json`)
-            // Not terminal
-            return
+            let licenseInfo = NON_CONFORMING_BUT_LICENSED[name]
+            if (licenseInfo !== undefined && verifyAlternateLicenseLocation(pkgroot, licenseInfo)) {
+                addLicense(licenseInfo.license, name, pkgroot)
+            } else {
+                throw new Error(`${pkgroot} package.json is missing license property`)
+            }
         }
     } else {
         throw new Error(`${pkgroot} is missing package.json`)
     }
+}
+
+function verifyAlternateLicenseLocation(pkgroot, licenseInfo) {
+    const location = path.join(pkgroot, licenseInfo.location)
+    if (fs.existsSync(location) && licenseInfo.verifier && typeof licenseInfo.license === 'string') {
+        let altLocation = fs.readFileSync(location, 'utf8')
+        return altLocation.includes(licenseInfo.verifier)
+    }
+    return false
 }
 
 function toJson(licenses) {
@@ -161,7 +194,7 @@ nodeList(root)
             console.log()
             console.log(`### ${license} licensed libraries`)
             console.log(`- A reference copy of the ${license} license is available at [${LINKS[license]}](${LINKS[license]})\n`)
-            pkgs.forEach(p => console.log(`    - [${p}](https://npmjs.org/${p})`))
+            Array.from(pkgs).sort().forEach(p => console.log(`    - [${p}](https://npmjs.org/${p})`))
         })
     })
     .catch(console.error)
