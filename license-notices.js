@@ -197,4 +197,7 @@ nodeList(root)
             Array.from(pkgs).sort().forEach(p => console.log(`    - [${p}](https://npmjs.org/${p})`))
         })
     })
-    .catch(console.error)
+    .catch(err => {
+        console.error(err)
+        process.exit(1)
+    })

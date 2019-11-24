@@ -63,8 +63,6 @@ if [ -n "$STABLE" ]; then
     fi
 fi
 
-# Check repo synchronization
-
 # Store version info
 HASH=$(git rev-parse HEAD)
 DIRTY=$(git status --porcelain)
@@ -81,9 +79,21 @@ cp $SELFDIR/../main/config/productionProjects.json .
 
 # Generate the license-notices.md file.  Note: to avoid unnecessary entries
 # this step requires a clean production install.  We do a full install later.
+# Failures of this step are terminal when building a stable version but are
+# considered "warnings" otherwise.
 rm -fr node_modules
 npm install --production
+if [ -z "$STABLE"]; then
+	set +e
+fi
 node license-notices.js > thirdparty-licenses.md
+# Error check here will only happen in the non-stable case
+if [ $? -ne 0 ]; then
+		echo "!!!"
+		echo "!!! License issues must be resolved in time for the next stable version"
+		echo "!!!"
+fi
+set -e
 
 # Build the HTML forms of the documentation and the LICENSE
 pandoc -o nim.html -f markdown -s -t html < doc/nim.md
