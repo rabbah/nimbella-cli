@@ -38,7 +38,7 @@ export default class AuthLogin extends NimBaseCommand {
   async run() {
     const {args, flags} = this.parse(AuthLogin)
     let credentials: Credentials
-    const apihost = this.parseAPIHost(flags.apihost) || (args.token ? 'https://apigcip.nimbella.io' : undefined)
+    const apihost = this.parseAPIHost(flags.apihost) || (flags.admin ? undefined : 'https://apigcp.nimbella.io')
     if (args.token) {
       if (flags.auth) {
         this.handleError('You cannot specify both a login token and an auth key.  Use one or the other')
@@ -53,11 +53,12 @@ export default class AuthLogin extends NimBaseCommand {
       }
       await doAdminLogin(apihost)
       return
-    } else if (flags.auth && flags.apihost) {
+    } else if (flags.auth) {
       credentials = await addCredentialAndSave(apihost, flags.auth, undefined, false, fileSystemPersister)
         .catch((err: Error) => this.handleError(err.message, err))
+      fileSystemPersister.saveLegacyInfo(apihost, flags.auth)
     } else {
-      this.handleError("A login token is required unless both --auth and --apihost are specified")
+      this.handleError("A login token is required unless both --auth is specified")
     }
     this.log(`Successful login to namespace '${credentials.namespace}' on host '${apihost}'`)
   }
