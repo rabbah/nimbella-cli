@@ -1,9 +1,0 @@
-/src/
-/tsconfig.json
-/*.map
-/*.sh
-/buildMinified.sh
-/*~
-/deployer.md
-
-
