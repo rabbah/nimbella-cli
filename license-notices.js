@@ -35,7 +35,7 @@ The list below groups the third party libraries by their license terms.
 `
 
 // exclude some node modules because they are ours
-const EXCLUDES = [ 'nimbella-cli', 'deployer' ]
+const EXCLUDES = [ 'nimbella-cli', 'deployer', 'nimbella-workbench' ]
 
 const ALTERNATIVES = {
     'APACHE 2.0': 'APACHE 2.0',
