@@ -20,8 +20,8 @@
 
 import { flags } from '@oclif/command'
 import { NimBaseCommand } from '../../NimBaseCommand'
-import { deployProject } from '../../deployer/api'
-import { Flags, OWOptions, DeployResponse, Credentials } from '../../deployer/deploy-struct'
+import { readAndPrepare, buildProject, deploy } from '../../deployer/api'
+import { Flags, OWOptions, DeployResponse, Credentials, DeployStructure } from '../../deployer/deploy-struct'
 import { getCredentialList, switchNamespace, fileSystemPersister } from '../../deployer/login'
 import { computeBucketName } from '../../deployer/deploy-to-bucket'
 import * as path from 'path'
@@ -97,7 +97,9 @@ export async function processCredentials(ignore_certs: boolean, apihost: string|
 
 // Deploy one project
 export async function doDeploy(project: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions, logger: NimBaseCommand): Promise<boolean> {
-  return deployProject(project, owOptions, creds, fileSystemPersister, cmdFlags)
+  const todeploy = await readAndPrepare(project, owOptions, creds, fileSystemPersister, cmdFlags)
+  displayHeader(project, todeploy.credentials, logger)
+  return buildProject(todeploy).then(deploy)
     .then((result: DeployResponse) => displayResult(result, project, logger))
     .catch((err: Error) => {
       logger.displayError(err.message, err)
@@ -130,21 +132,26 @@ export async function disambiguateNamespace(namespace: string, apihost: string|u
     return namespace
 }
 
-// Display the result of a successful run
-function displayResult(result: DeployResponse, project: string, logger: NimBaseCommand): boolean {
+// Display the deployment "header" (what we are about to deploy)
+function displayHeader(project: string, creds: Credentials, logger: NimBaseCommand) {
   let namespaceClause = ""
-  if (result.namespace) {
-      namespaceClause = `\n  to namespace '${result.namespace}'`
+  if (creds && creds.namespace) {
+      namespaceClause = `\n  to namespace '${creds.namespace}'`
   }
   let hostClause = ""
-  if (result.apihost) {
-      hostClause = `\n  on host '${result.apihost}'`
+  if (creds && creds.ow.apihost) {
+      hostClause = `\n  on host '${creds.ow.apihost}'`
   }
-  logger.log(`\nResult of deploying project '${path.resolve(project)}'${namespaceClause}${hostClause}`)
+  logger.log(`Deploying project '${path.resolve(project)}'${namespaceClause}${hostClause}`)
+}
+
+// Display the result of a successful run
+function displayResult(result: DeployResponse, project: string, logger: NimBaseCommand): boolean {
   let success = true
   if (result.successes.length == 0 && result.failures.length == 0) {
-      logger.log("Nothing deployed")
+      logger.log("\nNothing deployed")
   } else {
+      logger.log('')
       const actions: string[] = []
       let deployedWeb = 0
       let skippedActions = 0
