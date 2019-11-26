@@ -1,6 +1,6 @@
 {
   "name": "nimbella-cli",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "A comprehensive CLI for the Nimbella stack",
   "main": "lib/index.js",
   "repository": {
@@ -14,7 +14,7 @@
   "author": "Joshua Auerbach",
   "license": "SEE LICENSE IN 'LICENSE' or 'license.html'",
   "dependencies": {
-    "@adobe/aio-cli": "^2.1.0",
+    "@adobe/aio-cli": "2.1.0",
     "@adobe/aio-cli-plugin-runtime": "https://nimaio-apigcp.nimbella.io/adobe-aio-cli-plugin-runtime.tgz",
     "@google-cloud/storage": "^3.2.1",
     "@oclif/command": "^1",
