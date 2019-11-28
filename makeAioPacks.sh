@@ -19,14 +19,23 @@
 # from Nimbella Corp.
 #
 #
-# This script makes the tarball(s) from aio that are used in the nimbella-cli build.
-# It also installs the tarballs as dependencies and maintains the aio.hash file.
-#
+# This script makes the tarball from aio-cli-plugin-runtime that is used in the nimbella-cli build.
+# When called directly, there are minimal checks and the result is suitable for testing.
+# When called by commitAioPacks.sh there are numerous checks and the result is committed to a public location
 
 set -e
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SELFDIR
 MAINDIR=$SELFDIR/../main
+
+# Check that aio-cli-plugin-runtime is on the dev branch
+pushd ../aio-cli-plugin-runtime
+BR=$(git symbolic-ref HEAD --short)
+popd
+if [ "$BR" != "dev" ]; then
+		echo "aio-cli-plugin-runtime is not on the 'dev' branch"
+		exit 1
+fi
 
 # First run a clean build in aio
 pushd ../aio-cli-plugin-runtime
@@ -36,21 +45,10 @@ popd
 
 # Generate the package tarball
 npm pack ../aio-cli-plugin-runtime
+pushd ../aio-cli-plugin-runtime
+git checkout README.md
+popd
 
-# Move the tarball into the deployer project
-TARBALL=$(echo adobe-aio-cli-plugin-runtime*)
-mkdir -p aiodeploy/web
-mv $TARBALL aiodeploy/web/adobe-aio-cli-plugin-runtime.tgz
-
-# Perform the deployment to make the tarball visible by https
-PROJECT=nimdev
-if [ -f $MAINDIR/config/nimconfig.json ]; then
-	PROJECT=$(jq -r .current < "$MAINDIR/config/nimconfig.json")
-fi
-nimadmin project set nimgcp
-echo yes | nimadmin user set nimbella nimaio
-nimadmin project set $PROJECT
-nim project deploy aiodeploy
-
-# Record that nimbella-cli is now up to date with aio-cli-plugin-runtime
-./aioUpToDate.sh record
+# Give the tarball a stable name
+TARBALL=$(echo adobe-aio-cli-plugin-runtime-*.tgz)
+mv $TARBALL adobe-aio-cli-plugin-runtime.tgz

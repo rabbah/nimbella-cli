@@ -29,11 +29,12 @@ if [ "$1" == "--pack" ]; then
 elif [ "$1" == "--stable" ]; then
 		STABLE=true
 		PKG=true
+elif [ "$1" == "--testaio" ]; then
+		TESTAIO=true
 elif [ -n "$1" ]; then
 		echo "Illegal argument '$1'"
 		exit 1
 fi
-
 
 # Orient
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -49,7 +50,7 @@ if [ -n "$STABLE" ]; then
     fi
 		UPTODATE=$(./aioUpToDate.sh)
 		if [ "$UPTODATE" == "false" ]; then
-				echo "Incompatible releases for 'aio-cli-plugin-runtime' and 'nimbella-cli'.  Bring both repos up to date, then run './makeAioPacks.sh' in nimbella-cli."
+				echo "Incompatible releases for 'aio-cli-plugin-runtime' and 'nimbella-cli'.  Bring both repos up to date, then run './commitAioPacks.sh' in nimbella-cli."
 				exit -1
 		elif [ "$UPTODATE" != 'true' ]; then
 				echo $UPTODATE
@@ -77,13 +78,19 @@ echo '{ "version": "'$VERSION '('$BUILDINFO')" }' | jq . > version.json
 cp $SELFDIR/../main/config/runtimes.json .
 cp $SELFDIR/../main/config/productionProjects.json .
 
+# Process --testaio flag by temp-altering package.json
+if [ -n "$TESTAIO" ]; then
+		cp package.json saved-package.json
+		jq -r '.dependencies."@adobe/aio-cli-plugin-runtime" = "file:adobe-aio-cli-plugin-runtime.tgz"' < saved-package.json > package.json
+fi
+
 # Generate the license-notices.md file.  Note: to avoid unnecessary entries
 # this step requires a clean production install.  We do a full install later.
 # Failures of this step are terminal when building a stable version but are
 # considered "warnings" otherwise.
 rm -fr node_modules
 npm install --production
-if [ -z "$STABLE"]; then
+if [ -z "$STABLE" ]; then
 	set +e
 fi
 node license-notices.js > thirdparty-licenses.md
@@ -107,6 +114,11 @@ npm install
 #   only stable versions in the main build we might stop making a symlink
 npx tsc
 npm link
+
+# Cleanup alteration for -testaio
+if [ -n "$TESTAIO" ]; then
+		mv saved-package.json package.json
+fi
 
 # Optionally package
 if [ -n "$PKG" ]; then

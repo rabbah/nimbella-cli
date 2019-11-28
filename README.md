@@ -45,51 +45,66 @@ A comprehensive CLI for the Nimbella stack
    * Set up group membership and permissions to make this possible on your machine without the need to use `sudo` routinely.
 
 ### Co-requisite repositories
-- **main** should be a sibling and should be up-to-date.
-  - It need not be built.
-- **aio-cli-plugin-runtime** should be a sibling and should be up-to-date
-  - Clone this from `nimbella-corp` (a fork), not directly from Adobe.
-  - Checkout its `dev` branch rather than `master` (the setup will check this)
-  - It need not be pre-built but will build as part of setup.
+**main** should be a sibling and should be up-to-date.  It need not be built.
+
+**aio-cli-plugin-runtime** contains our modifications to a major dependency which we get from Adobe I/O.  It does _not_ need to be present just to build the current version of `nim` for internal use.  However, it _does_ need to be present if making further modifications to that dependency or if creating a stable version of the deployer.
 
 **workbench** is needed only if you are building the stable deployer
 
-### Setup
-
-The following should be done initially and then periodically if `aio-cli-plugin-runtime` changes.  The build will check and warn when `aio-cli-plugin-runtime` needs to be pulled.
-
-```
-./makeAioPacks.sh
-```
-(in this repo).
 
 ### Routine Building
 
-The following suffices when there have been no changes to `aio-cli-plugin-runtime`.
+The following suffices to build the current `nim` using the current version of our Adobe I/O dependency.
 
 ```
 ./build.sh
 ```
-in this repo.  The command `nim` should now be in your path.  For now, `deployProject` will also be in your path.
+in this repo, or
 
-### If you make a change to `aio-cli-plugin-runtime`
+```
+./build.sh nimcli
+```
+in `main`.  In either case, the command `nim` should now be in your path.
 
-(as opposed to just pulling a chnage made by someone else).  Actually, you only need to do this for changes on the `dev` branch since the `master` branch should just be tracking the upstream repo and is not used by this build.  Of course, a _rebase_ of the `dev` branch counts as a change.
+### Building the Adobe I/O dependency for testing
+
+For this, you do need the `aio-cli-plugin-runtime` repo to be a sibling of this one.
+
+  - Clone it from `nimbella-corp` (a fork), not directly from Adobe.
+  - Checkout its `dev` branch rather than `master` (scripts will check this)
+  - It need not be pre-built (scripts will build it)
+
+Build it with
+
+```
+./makeAioPacks.sh
+```
+in this repo.  The result should be a tarball in the root of this repo.
+
+Test it with
+
+```
+./build.sh --testaio
+```
+
+The `--testaio` flag causes the local tarball to be used for the dependency, rather than the deployed version that is normally used.
+
+### Committing a new (tested) version of the Adobe I/O dependency
 
 - First _commit_ the change in `aio-cli-plugin-runtime` (it need not be pushed yet)
-- Then, in this repo, run `./makeAioPacks.sh`
-- Then, in this repo, commit `aio.hash` and `package.json` (if it has changed)
-- Push at will
+- Then, in this repo, run `./commitAioPacks.sh`
+- Then, in this repo, commit `aio.hash` and `package.json`, which will have changed as a result
+- Push both repos at will
 
-### Packaging Builds
+### Stable Versions
 
-This aspect is still under construction.
+Building a stable version requires `aio-cli-plugin-runtime` (for checking; it is not rebuilt).   It also requires the `workbench` repo as a peer because that is where stable versions are kept.
 
-```
-./build.sh --pack
-```
+1. Commit this repo (there can be no uncommitted changes).
+2. Issue `npm version patch`
+3. In the `main` repo issue `./build.sh newstablecli`
 
-This does a normal build, followed by packaging steps.  It produces an update image and installers for mac and windows (the linux installer can't be built except on linux and I don't yet understand how it's supposed to work).  The packaged material (in `dist`) needs to be copied to `config/nginx-content/downloads/nim` in `main`.  Further automation will follow.
+The script will check that you did the first two steps and will also check that the two repos are in synch with each other.  The new stable version will be in `workbench/stable`
 
 ### Usage
 
