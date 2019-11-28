@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+
+import { fileSystemPersister } from './deployer/login';
+
 /*
  * Nimbella CONFIDENTIAL
  * ---------------------
@@ -43,6 +46,7 @@ export async function run() {
     if (aioCmd && !isHelp) {
         // A non-help aio command
         // console.log('delegating to aio')
+        fixAioCredentials()
         await require('@adobe/aio-cli/src').run(['runtime'].concat(process.argv.slice(2)))
         return
     }
@@ -94,6 +98,32 @@ function makeCanonical(): boolean {
     }
     process.argv = argvbase.concat(cmdTokens)
     return haveHelp
+}
+
+// Stuff the current namespace, API host, and AUTH key into the environment so that AIO does not look in .wskprops when invoked by nim
+function fixAioCredentials() {
+    let store = fileSystemPersister.loadCredentialStoreIfPresent()
+    let currentHost: string
+    let currentNamespace: string
+    let currentAuth: string
+    if (store) {
+        currentHost = store.currentHost
+        currentNamespace = store.currentNamespace
+    } else {
+        // No credential store (brand new user who's never done a login?).   Not much we can do, other than using our default API host in place of AIO's
+        currentHost = 'https://apigcp.nimbella.io'
+    }
+    if (store && currentHost && currentNamespace) {
+        const creds = store.credentials[currentHost][currentNamespace]
+        if (creds) {
+            currentAuth = creds.api_key
+        } else {
+            console.log(`Error retrieving credentials for '${currentNamespace}' on host '${currentHost}'`)
+        }
+    }
+    process.env.AIO_RUNTIME_APIHOST = currentHost
+    process.env.AIO_RUNTIME_AUTH = currentAuth
+    process.env.AIO_RUNTIME_NAMESPACE = currentNamespace
 }
 
 // Check whether a token is a flag
