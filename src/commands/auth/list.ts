@@ -27,6 +27,7 @@ const LIST_HEADER = 'Namespace            Current Storage   Redis API Host'
 const NS_LEN = 21
 const YES = '   yes  '
 const NO = '    no  '
+const MAYBE = '   -?-  '
 
 export default class AuthList extends NimBaseCommand {
   static description = 'List all your Nimbella Namespaces'
@@ -56,7 +57,7 @@ export default class AuthList extends NimBaseCommand {
             }
             const curr = row.current ? YES : NO
             const stor = row.storage ? YES : NO
-            const redis = row.redis ? YES : NO
+            const redis = row.redis ? YES : row.redis === false ? NO : MAYBE
             this.log(ns + pad + curr + stor + redis + row.apihost)
         }
     }).catch((err: Error) => this.handleError(err.message, err))
