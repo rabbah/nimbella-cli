@@ -110,7 +110,7 @@ export async function doLogin(token: string, persister: Persister, host: string 
         throw new Error("The Nimbella Service responded '" + (response.error || "unknown failure") + "'")
     } else {
         const auth = response.uuid + ':' + response.key
-        const credentials = await addCredentialAndSave(response.apihost, auth, response.storage, response.redis, persister)
+        const credentials = await addCredentialAndSave(response.apihost, auth, response.storage, response.redis, persister, undefined)
         persister.saveLegacyInfo(response.apihost, auth)
         return credentials
     }
@@ -133,7 +133,7 @@ export function doAdminLogin(apihost: string): Promise<Credentials> {
         process.stdin.on('end', async () => {
             const nimInput: NimUserData = JSON.parse(input)
             const auth = nimInput.uuid + ':' + nimInput.key
-            const creds = await addCredentialAndSave(apihost, auth, nimInput.storage, !!nimInput.redis, fileSystemPersister)
+            const creds = await addCredentialAndSave(apihost, auth, nimInput.storage, !!nimInput.redis, fileSystemPersister, nimInput.namespace)
             saveLegacyInfo(apihost, auth)
             resolve(creds)
         })
@@ -230,9 +230,10 @@ export async function getCredentials(persister: Persister): Promise<Credentials>
 
 // Convenience function to load, add, save a new credential
 export async function addCredentialAndSave(apihost: string, auth: string, storage: string, redis: boolean,
-        persister: Persister): Promise<Credentials> {
+        persister: Persister, namespace: string): Promise<Credentials> {
     const credStore = await persister.loadCredentialStore()
-    return getNamespace(apihost, auth).then(namespace => {
+    const nsPromise = namespace ? Promise.resolve(namespace) : getNamespace(apihost, auth)
+    return nsPromise.then(namespace => {
         const credentials = addCredential(credStore, apihost, namespace, auth, storage, redis)
         persister.saveCredentialStore(credStore)
         console.log(`Stored a credential set for namespace '${namespace}' and API host '${apihost}'`)

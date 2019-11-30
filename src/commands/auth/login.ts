@@ -30,6 +30,7 @@ export default class AuthLogin extends NimBaseCommand {
     apihost: flags.string({ description: 'API host to use for authentication'}),
     auth: flags.string({ char: 'u', description: 'API key to use for authentication' }),
     admin: flags.boolean({ hidden: true }),
+    namespace: flags.string({ hidden: true }),
     ...NimBaseCommand.flags
   }
 
@@ -43,22 +44,22 @@ export default class AuthLogin extends NimBaseCommand {
       if (flags.auth) {
         this.handleError('You cannot specify both a login token and an auth key.  Use one or the other')
       }
-      if (flags.admin) {
-        this.handleError("Internal error: incorrect use of 'admin'")
+      if (flags.admin || flags.namespace) {
+        this.handleError("Internal error: incorrect use of administrative flags")
       }
       credentials = await doLogin(args.token, fileSystemPersister, apihost).catch((err: Error) => this.handleError(err.message, err))
     } else if (flags.admin) {
-      if (flags.auth || !apihost) {
-        this.handleError("Internal error: incorrect use of 'admin'")
+      if (flags.auth || flags.namespace || !apihost) {
+        this.handleError("Internal error: incorrect use of administrative flags")
       }
       await doAdminLogin(apihost)
       return
     } else if (flags.auth) {
-      credentials = await addCredentialAndSave(apihost, flags.auth, undefined, false, fileSystemPersister)
+      credentials = await addCredentialAndSave(apihost, flags.auth, undefined, false, fileSystemPersister, flags.namespace)
         .catch((err: Error) => this.handleError(err.message, err))
       fileSystemPersister.saveLegacyInfo(apihost, flags.auth)
     } else {
-      this.handleError("A login token is required unless both --auth is specified")
+      this.handleError("A login token is required unless --auth is specified")
     }
     this.log(`Successful login to namespace '${credentials.namespace}' on host '${apihost}'`)
   }
