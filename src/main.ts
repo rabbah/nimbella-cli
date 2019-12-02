@@ -22,35 +22,21 @@ import { fileSystemPersister } from './deployer/login';
  * from Nimbella Corp.
  */
 
-// List of commands to be delegated to aio runtime plugin
-const aioCommands = ['action', 'actions', 'activation', 'activations', 'namespace',
-    'package', 'packages', 'route', 'routes', 'rule', 'rules', 'trigger', 'triggers' ]
+// List of plural commands to be replaced by singular equivalentsdelegated to aio runtime plugin
+const pluralCommands = ['actions', 'activations', 'packages', 'routes', 'rules', 'triggers' ]
 
-// A screening function called at top level (before the real oclif dispatching begins).  Decides whether to call our own oclif multi command
-// stack or delegate to Apache I/O.  Note that we declare dependency on the entire Apache I/O in order to get clean dispatching but we only
-// use the "runtime" branch.   We shadow the aio runtime tree to a small extent in order to give correct help.
+// A screening function called at top level (before the real oclif dispatching begins).  Does various fixups.
 export async function run() {
+    // Remove __OW stuff from environment
     cleanEnvironment()
-    const isHelp = makeCanonical() || process.argv.length < 4
-    // Examine command to classify it as aio or not and apply 'plurals relaxation'.
-    // To decide if it's an aio command we use a list of aio subtrees and also a
-    // short list of our own commands that extend the aio subtrees.  Right now, the
-    // only command in that "short list" is 'namespace clean' so we don't even use a list.
-    const cmd = process.argv[2]
-    let aioCmd = aioCommands.includes(cmd)  && (cmd != 'namespace' || process.argv[3] != 'clean')
+    // Make the argv array canonical by splitting on colons
+    makeCanonical()
     // Apply simple "plurals" fix
-    if (aioCmd && cmd.endsWith('s')) {
+    const cmd = process.argv[2]
+    if (pluralCommands.includes(cmd)) {
         process.argv[2] = cmd.slice(0, -1)
     }
-    // Even if it's an aio command we don't delegate if it's an explicit or implicit help request
-    if (aioCmd && !isHelp) {
-        // A non-help aio command
-        // console.log('delegating to aio')
-        fixAioCredentials()
-        await require('@adobe/aio-cli/src').run(['runtime'].concat(process.argv.slice(2)))
-        return
-    }
-    // console.log("not delegating")
+    fixAioCredentials()
     colonize()
     await require('@oclif/command').run()
 }
@@ -69,7 +55,7 @@ function cleanEnvironment() {
 // Change the user's presented command into a canonical form:
 // 1.  Colon-seperated commands are split into tokens as if blank-separated
 // 2.  If a flag requesting help is present, remove it, note it, and add `--help` at the end.
-function makeCanonical(): boolean {
+function makeCanonical() {
     let argvbase = process.argv.slice(0, 2)
     const oldargv = process.argv.slice(2)
     const cmdTokens: string[] = []
@@ -97,7 +83,6 @@ function makeCanonical(): boolean {
         cmdTokens.push('--help')
     }
     process.argv = argvbase.concat(cmdTokens)
-    return haveHelp
 }
 
 // Stuff the current namespace, API host, and AUTH key into the environment so that AIO does not look in .wskprops when invoked by nim
