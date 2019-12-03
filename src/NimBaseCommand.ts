@@ -76,7 +76,7 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   // Generic oclif run() implementation.   Parses and then invokes the abstract runCommand method
   async run() {
     const { argv, args, flags } = this.parse(this.constructor as typeof NimBaseCommand)
-    this.runCommand(argv, args, flags, this)
+    await this.runCommand(argv, args, flags, this)
   }
 
   // Generic kui runner.   Accepts args and flags, instantiates the command, and captures the output
