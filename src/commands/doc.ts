@@ -18,7 +18,7 @@
  * from Nimbella Corp.
  */
 
-import { NimBaseCommand } from '../NimBaseCommand'
+import { NimBaseCommand, NimLogger } from '../NimBaseCommand'
 import * as open from 'open'
 
 export default class Doc extends NimBaseCommand {
@@ -30,13 +30,13 @@ export default class Doc extends NimBaseCommand {
 
   static aliases = [ 'docs' ]
 
-  async run() {
+  async runCommand(argv: string[], args: any, flags: any, logger: NimLogger) {
     try {
       const html = require.resolve('../../nim.html')
       await open(html)
     } catch (err) {
-      this.displayError(err.message, err)
-      this.log("Packaging error: cannot locate documentation")
+      logger.displayError(err.message, err)
+      logger.log("Packaging error: cannot locate documentation")
     }
  }
 }

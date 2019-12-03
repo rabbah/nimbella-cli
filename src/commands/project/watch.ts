@@ -18,7 +18,7 @@
  * from Nimbella Corp.
  */
 
-import { NimBaseCommand } from '../../NimBaseCommand'
+import { NimBaseCommand, NimLogger } from '../../NimBaseCommand'
 import { ProjectDeploy, processCredentials, doDeploy } from './deploy'
 import { Flags, Credentials, OWOptions } from '../../deployer/deploy-struct'
 import * as fs from 'fs'
@@ -42,18 +42,17 @@ export default class ProjectWatch extends NimBaseCommand {
   static args = ProjectDeploy.args
   static strict = false
 
-  async run() {
-    const {argv, flags} = this.parse(ProjectWatch)
+  async runCommand(argv: string[], args: any, flags: any, logger: NimLogger) {
     const { target, env, apihost, auth, insecure, yarn } = flags
     const cmdFlags: Flags = { verboseBuild: flags['verbose-build'], verboseZip: flags['verboseZip'], production: false, incremental: true, env, yarn }
     this.debug('cmdFlags', cmdFlags)
-    const { creds, owOptions } = await processCredentials(insecure, apihost, auth, target, this)
-    argv.forEach(project => watch(project, cmdFlags, creds, owOptions, this))
+    const { creds, owOptions } = await processCredentials(insecure, apihost, auth, target, logger)
+    argv.forEach(project => watch(project, cmdFlags, creds, owOptions, logger))
   }
 }
 
 // Validate a project and start watching it if it actually looks like a project
-function watch(project: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions, logger: NimBaseCommand) {
+function watch(project: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions, logger: NimLogger) {
     const msg = validateProject(project)
     if (msg) {
         logger.handleError(msg, new Error(msg))
@@ -77,7 +76,7 @@ function watch(project: string, cmdFlags: Flags, creds: Credentials|undefined, o
 // Fire a deploy cycle.  Suspends the watcher so that mods made to the project by the deployer won't cause a spurious re-trigger.
 // Displays an informative message before deploying.
 async function fireDeploy(project: string, filename: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions,
-        logger: NimBaseCommand, reset: ()=>void, watch: ()=>void) {
+        logger: NimLogger, reset: ()=>void, watch: ()=>void) {
     if (excluded(filename)) {
         return
     }

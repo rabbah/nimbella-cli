@@ -18,7 +18,7 @@
  * from Nimbella Corp.
  */
 
-import { NimBaseCommand } from '../../NimBaseCommand'
+import { NimBaseCommand, NimLogger } from '../../NimBaseCommand'
 import { flags } from '@oclif/command'
 import { fileSystemPersister, getCredentials } from '../../deployer/login';
 
@@ -37,8 +37,7 @@ export default class AuthInspect extends NimBaseCommand {
 
   static args = [ ]
 
-  async run() {
-    const { flags } = this.parse(AuthInspect)
+  async runCommand(argv: string[], args: any, flags: any, logger: NimLogger) {
     let { all, name, apihost, auth, storage, redis } = flags
     if (all) {
         name = apihost = auth = storage = redis = true
@@ -63,9 +62,9 @@ export default class AuthInspect extends NimBaseCommand {
         ans.redis = creds.redis
     }
     if (Object.keys(ans).length == 1) {
-        this.log(String(Object.values(ans)[0]))
+        logger.log(String(Object.values(ans)[0]))
     } else {
-        this.log(JSON.stringify(ans))
+        logger.log(JSON.stringify(ans))
     }
   }
 }

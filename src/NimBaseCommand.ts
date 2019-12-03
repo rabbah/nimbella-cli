@@ -35,10 +35,55 @@ governing permissions and limitations under the License.
 
 import { Command, flags } from '@oclif/command'
 import * as createDebug  from 'debug'
+import { format } from 'util'
 
 const debug = createDebug('nimbella-cli')
 
-export abstract class NimBaseCommand extends Command {
+// Common behavior expected by runCommand implementations ... abstracts some features of
+// oclif.Command.
+export interface NimLogger {
+  log: (msg: string, args?: any[]) => void
+  handleError: (msg: string, err?: Error) => never
+  displayError: (msg: string, err?: Error) => void
+}
+
+// An alternative NimLogger when not using the oclif stack
+class CaptureLogger implements NimLogger {
+    captured: string[] = []
+    log(msg: string, args?: any[]) {
+      this.captured.push(format(msg, ...args))
+    }
+    handleError(msg: string, err?: Error): never {
+      if (err) throw err
+      throw new Error(msg)
+    }
+    displayError(msg: string, err?: Error) {
+      // TODO: should we do better than this?
+      this.log(msg)
+    }
+}
+
+// The base for all our commands, including the ones that delegate to aio.  There are methods designed to be called from the
+// kui repl as well as ones that implement the oclif command model.
+export abstract class NimBaseCommand extends Command  implements NimLogger {
+  // Superclass must implement for dual invocation by kui and oclif
+  abstract runCommand(argv: string[], args: any, flags: any, logger: NimLogger)
+
+  // Generic oclif run() implementation.   Parses and then invokes the abstract runCommand method
+  async run() {
+    const { argv, args, flags } = this.parse(this.constructor as typeof NimBaseCommand)
+    this.runCommand(argv, args, flags, this)
+  }
+
+  // Generic kui runner.   Accepts args and flags, instantiates the command, and captures the output
+  static dispatch(this, argv: string[], args: any, flags: any): string[] {
+    const instance = new this(args, {})
+    const logger = new CaptureLogger()
+    instance.runCommand(argv, args, flags, logger)
+    return logger.captured
+  }
+
+  // Do oclif initialization (only used when invoked via the oclif dispatcher)
   async init () {
     const { flags } = this.parse(this.constructor as typeof NimBaseCommand)
 
@@ -51,22 +96,7 @@ export abstract class NimBaseCommand extends Command {
     }
   }
 
-  parseAPIHost (host: string|undefined): string|undefined {
-    if (!host) {
-      return undefined
-    }
-    if (host.includes(':')) {
-      return host
-    }
-    if (host.includes('.')) {
-      return 'https://' + host
-    }
-    if (!host.startsWith('api')) {
-      host = 'api' + host
-    }
-    return 'https://' + host + ".nimbella.io"
-  }
-
+  // Error handling.  As of now, this is only likely to work under oclif.   Providing the right behavior for kui is TBD.
   handleError (msg: string, err?: any) {
     this.parse(this.constructor as typeof NimBaseCommand)
 
@@ -78,6 +108,7 @@ export abstract class NimBaseCommand extends Command {
     return this.error(msg, { exit: 1 })
   }
 
+  // For non-terminal errors
   displayError (msg: string, err?: any) {
     this.parse(this.constructor as typeof NimBaseCommand)
 
@@ -88,9 +119,27 @@ export abstract class NimBaseCommand extends Command {
     return this.error(msg, { exit: false })
   }
 
+  static args = []
   static flags = {
     debug: flags.string({ description: 'Debug level output' }),
     verbose: flags.boolean({ char: 'v', description: 'Verbose output' }),
     help: flags.boolean({ description: 'Show help' })
   }
+}
+
+// Utility to parse the value of an --apihost flag, permitting certain abbreviations
+export function parseAPIHost (host: string|undefined): string|undefined {
+  if (!host) {
+    return undefined
+  }
+  if (host.includes(':')) {
+    return host
+  }
+  if (host.includes('.')) {
+    return 'https://' + host
+  }
+  if (!host.startsWith('api')) {
+    host = 'api' + host
+  }
+  return 'https://' + host + ".nimbella.io"
 }

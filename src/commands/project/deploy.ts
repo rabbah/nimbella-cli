@@ -19,7 +19,7 @@
  */
 
 import { flags } from '@oclif/command'
-import { NimBaseCommand } from '../../NimBaseCommand'
+import { NimBaseCommand, NimLogger, parseAPIHost } from '../../NimBaseCommand'
 import { readAndPrepare, buildProject, deploy } from '../../deployer/api'
 import { Flags, OWOptions, DeployResponse, Credentials, DeployStructure } from '../../deployer/deploy-struct'
 import { getCredentialList, switchNamespace, fileSystemPersister } from '../../deployer/login'
@@ -46,8 +46,7 @@ export class ProjectDeploy extends NimBaseCommand {
   static args = [ { name: 'projects', description: 'one or more paths to projects'} ]
   static strict = false
 
-  async run() {
-    const {argv, flags} = this.parse(ProjectDeploy)
+  async runCommand(argv: string[], args: any, flags: any, logger: NimLogger) {
     const { target, env, apihost, auth, insecure, production, yarn, incremental } = flags
     const cmdFlags: Flags = { verboseBuild: flags['verbose-build'], verboseZip: flags['verbose-zip'], production, incremental, env, yarn }
     this.debug('cmdFlags', cmdFlags)
@@ -62,7 +61,7 @@ export class ProjectDeploy extends NimBaseCommand {
     // Deploy each project
     let success = true
     for (const project of argv) {
-      success = success && await doDeploy(project, cmdFlags, creds, owOptions, false, this)
+      success = success && await doDeploy(project, cmdFlags, creds, owOptions, false, logger)
     }
     if (!success) {
       this.exit(1)
@@ -74,10 +73,10 @@ export class ProjectDeploy extends NimBaseCommand {
 
 // Process credentials, possibly switch namespace
 export async function processCredentials(ignore_certs: boolean, apihost: string|undefined, auth: string|undefined, target: string|undefined,
-    logger: NimBaseCommand): Promise<{ creds: Credentials|undefined, owOptions: OWOptions }> {
+    logger: NimLogger): Promise<{ creds: Credentials|undefined, owOptions: OWOptions }> {
   const owOptions: OWOptions = { ignore_certs }  // No explicit undefined
   if (apihost) {
-    owOptions.apihost = logger.parseAPIHost(apihost)
+    owOptions.apihost = parseAPIHost(apihost)
   }
   if (auth) {
     owOptions.api_key = auth
@@ -98,7 +97,7 @@ export async function processCredentials(ignore_certs: boolean, apihost: string|
 
 // Deploy one project
 export async function doDeploy(project: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions, watching: boolean,
-    logger: NimBaseCommand): Promise<boolean> {
+    logger: NimLogger): Promise<boolean> {
   const todeploy = await readAndPrepare(project, owOptions, creds, fileSystemPersister, cmdFlags)
     .catch(err => logger.handleError(err.message, err))
   if (!watching) {
@@ -138,7 +137,7 @@ export async function disambiguateNamespace(namespace: string, apihost: string|u
 }
 
 // Display the deployment "header" (what we are about to deploy)
-function displayHeader(project: string, creds: Credentials, logger: NimBaseCommand) {
+function displayHeader(project: string, creds: Credentials, logger: NimLogger) {
   let namespaceClause = ""
   if (creds && creds.namespace) {
       namespaceClause = `\n  to namespace '${creds.namespace}'`
@@ -151,7 +150,7 @@ function displayHeader(project: string, creds: Credentials, logger: NimBaseComma
 }
 
 // Display the result of a successful run
-function displayResult(result: DeployResponse, watching: boolean, logger: NimBaseCommand): boolean {
+function displayResult(result: DeployResponse, watching: boolean, logger: NimLogger): boolean {
   let success = true
   if (result.successes.length == 0 && result.failures.length == 0) {
       logger.log("\nNothing deployed")

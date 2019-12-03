@@ -19,7 +19,7 @@
  */
 
 import { flags } from '@oclif/command'
-import { NimBaseCommand } from '../../NimBaseCommand'
+import { NimBaseCommand, NimLogger } from '../../NimBaseCommand'
 import { cli } from 'cli-ux'
 import { getCredentialsForNamespace, fileSystemPersister, getCredentials } from '../../deployer/login'
 import { wipeNamespace } from '../../deployer/api'
@@ -40,8 +40,7 @@ export default class NamespaceClean extends NimBaseCommand {
 
      static args = [{name: 'namespace', description: 'the namespace to clean (current namespace if omitted)', required: false}]
 
-     async run() {
-        const { args, flags } = this.parse(NamespaceClean)
+    async runCommand(argv: string[], args: any, flags: any, logger: NimLogger) {
         let namespace = args.namespace
         let creds: Credentials = undefined
         if (!namespace) {
@@ -52,7 +51,7 @@ export default class NamespaceClean extends NimBaseCommand {
             const ow = flags.justwhisk ? " openwhisk" : ""
             const ans = await cli.prompt(`Type '${namespace}' to remove all${ow} content from namespace '${namespace}'`)
             if (ans !== namespace) {
-                this.log('Doing nothing')
+                logger.log('Doing nothing')
                 return
             }
         }
@@ -73,7 +72,7 @@ export default class NamespaceClean extends NimBaseCommand {
             storageKey = creds.storageKey
         }
         await wipeNamespace(apihost, auth)
-        this.log(`OpenWhisk entities removed from namespace '${namespace}' on host '${apihost}'`)
+        logger.log(`OpenWhisk entities removed from namespace '${namespace}' on host '${apihost}'`)
         if (flags.justwhisk || !storageKey) {
             return
         }
@@ -81,6 +80,6 @@ export default class NamespaceClean extends NimBaseCommand {
         const storage = new Storage(storageKey)
         const client = storage.bucket(bucketName)
         await cleanBucket(client, undefined)
-        this.log(`Web content removed from https://${bucketName}`)
+        logger.log(`Web content removed from https://${bucketName}`)
      }
 }
