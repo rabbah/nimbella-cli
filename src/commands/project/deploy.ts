@@ -50,7 +50,7 @@ export class ProjectDeploy extends NimBaseCommand {
     const { target, env, apihost, auth, insecure, production, yarn, incremental } = flags
     const cmdFlags: Flags = { verboseBuild: flags['verbose-build'], verboseZip: flags['verbose-zip'], production, incremental, env, yarn }
     this.debug('cmdFlags', cmdFlags)
-    const { creds, owOptions } = await processCredentials(insecure, apihost, auth, target, this)
+    const { creds, owOptions } = await processCredentials(insecure, apihost, auth, target, logger)
     this.debug('creds', creds)
 
     // If no projects specified, display help
@@ -64,7 +64,7 @@ export class ProjectDeploy extends NimBaseCommand {
       success = success && await doDeploy(project, cmdFlags, creds, owOptions, false, logger)
     }
     if (!success) {
-      this.exit(1)
+      logger.exit(1)
     }
   }
 }
