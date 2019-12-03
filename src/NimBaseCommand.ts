@@ -44,6 +44,7 @@ const debug = createDebug('nimbella-cli')
 export interface NimLogger {
   log: (msg: string, args?: any[]) => void
   handleError: (msg: string, err?: Error) => never
+  exit: (code: number) => void  // don't use never here because exit doesn't exit under kui
   displayError: (msg: string, err?: Error) => void
 }
 
@@ -60,6 +61,9 @@ class CaptureLogger implements NimLogger {
     displayError(msg: string, err?: Error) {
       // TODO: should we do better than this?
       this.log(msg)
+    }
+    exit(code: number) {
+      // a no-op
     }
 }
 
@@ -96,7 +100,7 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
     }
   }
 
-  // Error handling.  As of now, this is only likely to work under oclif.   Providing the right behavior for kui is TBD.
+  // Error handling.  This is for oclif; the CaptureLogger has a more generic implementation suitable for kui inclusion
   handleError (msg: string, err?: any) {
     this.parse(this.constructor as typeof NimBaseCommand)
 
@@ -108,7 +112,7 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
     return this.error(msg, { exit: 1 })
   }
 
-  // For non-terminal errors
+  // For non-terminal errors.  The CaptureLogger has a simpler equivalent.
   displayError (msg: string, err?: any) {
     this.parse(this.constructor as typeof NimBaseCommand)
 
