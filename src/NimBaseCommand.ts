@@ -34,6 +34,7 @@ governing permissions and limitations under the License.
 */
 
 import { Command, flags } from '@oclif/command'
+import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
 import * as createDebug  from 'debug'
 import { format } from 'util'
 
@@ -77,6 +78,15 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   async run() {
     const { argv, args, flags } = this.parse(this.constructor as typeof NimBaseCommand)
     await this.runCommand(argv, args, flags, this)
+  }
+
+  // Helper used in the runCommand methods of aio shim classes to modify logger behavior
+  async runAio(argv: string[], logger: NimLogger, aioClass: typeof RuntimeBaseCommand) {
+    const proto = aioClass.prototype
+    proto.log = logger.log
+    proto.exit = logger.exit
+    proto.handleError = logger.handleError
+    await aioClass.run(argv)
   }
 
   // Generic kui runner.   Accepts args and flags, instantiates the command, and captures the output

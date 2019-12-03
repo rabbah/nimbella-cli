@@ -18,12 +18,13 @@
  * from Nimbella Corp.
  */
 
-import { Command } from '@oclif/command'
-const AioCommand: typeof Command = require('@adobe/aio-cli-plugin-runtime/src/commands/runtime/route/delete')
+import { NimBaseCommand, NimLogger } from '../../NimBaseCommand'
+import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
+const AioCommand: typeof RuntimeBaseCommand = require('@adobe/aio-cli-plugin-runtime/src/commands/runtime/route/delete')
 
-export default class RouteDelete extends Command {
-  async run () {
-    await AioCommand.run(this.argv)
+export default class RouteDelete extends NimBaseCommand {
+  async runCommand(argv: string[], args: any, flags: any, logger: NimLogger) {
+    await this.runAio(argv, logger, AioCommand)
   }
 
   static args = AioCommand.args

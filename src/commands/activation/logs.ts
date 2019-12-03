@@ -18,12 +18,13 @@
  * from Nimbella Corp.
  */
 
-import { Command } from '@oclif/command'
-const AioCommand: typeof Command = require('@adobe/aio-cli-plugin-runtime/src/commands/runtime/activation/logs')
+import { NimBaseCommand, NimLogger } from '../../NimBaseCommand'
+import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
+const AioCommand: typeof RuntimeBaseCommand = require('@adobe/aio-cli-plugin-runtime/src/commands/runtime/activation/logs')
 
-export default class ActivationLogs extends Command {
-  async run () {
-    await AioCommand.run(this.argv)
+export default class ActivationLogs extends NimBaseCommand {
+  async runCommand(argv: string[], args: any, flags: any, logger: NimLogger) {
+    await this.runAio(argv, logger, AioCommand)
   }
 
   static args = AioCommand.args
