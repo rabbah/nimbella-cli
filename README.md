@@ -47,9 +47,9 @@ A comprehensive CLI for the Nimbella stack
 ### Co-requisite repositories
 **main** should be a sibling and should be up-to-date.  It need not be built.
 
-**aio-cli-plugin-runtime** contains our modifications to a major dependency which we get from Adobe I/O.  It does _not_ need to be present just to build the current version of `nim` for internal use.  However, it _does_ need to be present if making further modifications to that dependency or if creating a stable version of the deployer.
+**aio-cli-plugin-runtime** contains our modifications to a major dependency which we get from Adobe I/O.  It does _not_ need to be present just to build the current version of `nim` for internal use.  However, it _does_ need to be present if making further modifications to that dependency or if creating a stable version of `nim'.
 
-**workbench** is needed only if you are building the stable deployer
+**workbench** is needed only if you are building a stable version of `nim`.
 
 
 ### Routine Building
