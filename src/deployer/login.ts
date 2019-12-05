@@ -25,6 +25,8 @@ import * as path from 'path'
 import { XMLHttpRequest } from 'xmlhttprequest'
 import { CredentialStore, CredentialStorageEntry, CredentialEntry, CredentialHostMap, CredentialNSMap, Credentials,
     CredentialRow, OWOptions } from './deploy-struct'
+import * as createDebug from 'debug'
+const debug = createDebug('nimbella.cli')
 
 // Local types
 
@@ -41,6 +43,7 @@ interface ExpectedResponse {
     key?: string,
     storage?: string
     redis?: boolean
+    namespace?: string
 }
 
 // Format of input piped to stdin from `nim user get`
@@ -109,8 +112,9 @@ export async function doLogin(token: string, persister: Persister, host: string 
     } else if (response.status == "failed")  {
         throw new Error("The Nimbella Service responded '" + (response.error || "unknown failure") + "'")
     } else {
+        debug('authorize response: %O', response)
         const auth = response.uuid + ':' + response.key
-        const credentials = await addCredentialAndSave(response.apihost, auth, response.storage, response.redis, persister, undefined)
+        const credentials = await addCredentialAndSave(response.apihost, auth, response.storage, response.redis, persister, response.namespace)
         persister.saveLegacyInfo(response.apihost, auth)
         return credentials
     }
