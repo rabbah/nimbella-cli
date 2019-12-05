@@ -18,8 +18,8 @@
  * from Nimbella Corp.
  */
 
-// A simplified version of RuntimeBaseCommand.js from aio-cli-plugin-runtime (translated to TypeScript)
-// The aio plugins are covered by the following copyright:
+// Some behavior of this class was initially populated from RuntimeBaseCommand.js in
+// aio-cli-plugin-runtime (translated to TypeScript), govened by the following license:
 
 /*
 Copyright 2019 Adobe Inc. All rights reserved.
@@ -34,6 +34,8 @@ governing permissions and limitations under the License.
 */
 
 import { Command, flags } from '@oclif/command'
+import { Arg } from '@oclif/parser/lib/args'
+import * as Errors from '@oclif/errors'
 import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
 import * as createDebug  from 'debug'
 import { format } from 'util'
@@ -41,30 +43,32 @@ import { format } from 'util'
 const debug = createDebug('nimbella-cli')
 
 // Common behavior expected by runCommand implementations ... abstracts some features of
-// oclif.Command.
+// oclif.Command.  The NimBaseCommand class implements this interface using its own
+// methods
 export interface NimLogger {
-  log: (msg: string, args?: any[]) => void
+  log: (msg: string, ...args: any[]) => void
   handleError: (msg: string, err?: Error) => never
-  exit: (code: number) => void  // don't use never here because exit doesn't exit under kui
+  exit: (code: number) => void  // don't use 'never' here because 'exit' doesn't always exit
   displayError: (msg: string, err?: Error) => void
 }
 
 // An alternative NimLogger when not using the oclif stack
 class CaptureLogger implements NimLogger {
     captured: string[] = []
-    log(msg: string, args?: any[]) {
+    log(msg = '', ...args: any[]) {
       this.captured.push(format(msg, ...args))
     }
     handleError(msg: string, err?: Error): never {
       if (err) throw err
+      msg = improveErrorMsg(msg, err)
       throw new Error(msg)
     }
     displayError(msg: string, err?: Error) {
-      // TODO: should we do better than this?
-      this.log(msg)
+      msg = improveErrorMsg(msg, err)
+      Errors.error(msg, { exit: false })
     }
     exit(code: number) {
-      // a no-op
+      // a no-op here
     }
 }
 
@@ -72,7 +76,7 @@ class CaptureLogger implements NimLogger {
 // kui repl as well as ones that implement the oclif command model.
 export abstract class NimBaseCommand extends Command  implements NimLogger {
   // Superclass must implement for dual invocation by kui and oclif
-  abstract runCommand(argv: string[], args: any, flags: any, logger: NimLogger)
+  abstract runCommand(argv: string[], args: any, flags: any, logger: NimLogger): Promise<any>
 
   // Generic oclif run() implementation.   Parses and then invokes the abstract runCommand method
   async run() {
@@ -81,6 +85,7 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   }
 
   // Helper used in the runCommand methods of aio shim classes to modify logger behavior
+  // Not used by 'normal' command classes
   async runAio(argv: string[], logger: NimLogger, aioClass: typeof RuntimeBaseCommand) {
     const proto = aioClass.prototype
     proto.log = logger.log
@@ -89,11 +94,27 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
     await aioClass.run(argv)
   }
 
-  // Generic kui runner.   Accepts args and flags, instantiates the command, and captures the output
-  static dispatch(this, argv: string[], args: any, flags: any): string[] {
-    const instance = new this(args, {})
+  // Generic kui runner.  Unlike run(), this gets partly pre-parsed input and doesn't do a full oclif parse.
+  // It also uses the CaptureLogger so it can return the output as an array of text lines.   The 'argTemplates'
+  // argument is the static args member of the concrete subclass of this class that is being dispatched to.
+  // It is passed in as a convenience since it is clearer code to grab it at the call site where the class
+  // identity is manifest
+  async dispatch(argv: string[], argTemplates: Arg<string>[], flags: any): Promise<string[]> {
+    // Duplicate oclif's args parsing conventions.  The flags have already been parsed in kui
+    debug('dispatch argv: %O', argv)
+    debug('dispatch argTemplates: %O', argTemplates)
+    debug('dispatch flags: %O', flags)
+    if (argv.length > argTemplates.length) {
+      argv = argv.slice(argv.length - argTemplates.length)
+    }
+    const args = {} as any
+    for (let i = 0; i < argv.length; i++) {
+      args[argTemplates[i].name] = argv[i]
+    }
+    // Make a capture logger and run the command
     const logger = new CaptureLogger()
-    instance.runCommand(argv, args, flags, logger)
+    await this.runCommand(argv, args, flags, logger)
+    debug('captured result: %O', logger.captured)
     return logger.captured
   }
 
@@ -113,10 +134,7 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   // Error handling.  This is for oclif; the CaptureLogger has a more generic implementation suitable for kui inclusion
   handleError (msg: string, err?: any) {
     this.parse(this.constructor as typeof NimBaseCommand)
-
-    if (err && err.name === 'OpenWhiskError' && err.error && err.error.error) {
-        msg = "[OpenWhisk] " + err.error.error
-    }
+    msg = improveErrorMsg(msg, err)
     debug(err)
     msg = msg + '\n specify --verbose flag for more information'
     return this.error(msg, { exit: 1 })
@@ -125,10 +143,7 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   // For non-terminal errors.  The CaptureLogger has a simpler equivalent.
   displayError (msg: string, err?: any) {
     this.parse(this.constructor as typeof NimBaseCommand)
-
-    if (err && err.name === 'OpenWhiskError' && err.error && err.error.error) {
-        msg = "[OpenWhisk] " + err.error.error
-    }
+    msg = improveErrorMsg(msg, err)
     debug(err)
     return this.error(msg, { exit: false })
   }
@@ -139,6 +154,14 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
     verbose: flags.boolean({ char: 'v', description: 'Verbose output' }),
     help: flags.boolean({ description: 'Show help' })
   }
+}
+
+// Improves an error message based on analyzing the accompanying Error object (based on similar code in RuntimeBaseCommand)
+function improveErrorMsg(msg: string, err?: any): string {
+    if (err && err.name === 'OpenWhiskError' && err.error && err.error.error) {
+        msg = "[OpenWhisk] " + err.error.error
+    }
+    return msg
 }
 
 // Utility to parse the value of an --apihost flag, permitting certain abbreviations
