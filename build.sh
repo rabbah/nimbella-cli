@@ -31,6 +31,8 @@ elif [ "$1" == "--stable" ]; then
 		PKG=true
 elif [ "$1" == "--testaio" ]; then
 		TESTAIO=true
+elif [ "$1" == "--no-install" ]; then
+		NOINSTALL=true
 elif [ -n "$1" ]; then
 		echo "Illegal argument '$1'"
 		exit 1
@@ -110,14 +112,19 @@ pandoc -o thirdparty-licenses.html -f markdown_strict -t html < thirdparty-licen
 # Full install
 npm install
 
-# Build (includes making a link for use on the present machine) TODO: if we move to using
-#   only stable versions in the main build we might stop making a symlink
+# Build and pack
 npx tsc
-npm link
+npm pack
+mv nimbella-cli-*.tgz nimbella-cli.tgz
 
 # Cleanup alteration for -testaio
 if [ -n "$TESTAIO" ]; then
 		mv saved-package.json package.json
+fi
+
+# Unless told not to, do a global install of the result
+if [ -z "$NOINSTALL" ]; then
+	 npm install -g nimbella-cli.tgz
 fi
 
 # Optionally package
@@ -145,7 +152,7 @@ if [ -n "$PKG" ]; then
 		URL=$(jq -r .gz dist/linux-x64)
 		sed -e 's+URL=+URL='$URL'+' < nim-install-linux.sh > dist/nim-install-linux.sh
 
-		# Create a minimal tarball for dependent installs
+		# Create a minimal tarball for dependent installs.  This is not identical to our internal use one, though close.
 		npm pack
 		mv nimbella-cli-*.tgz dist/nimbella-cli.tgz
 
