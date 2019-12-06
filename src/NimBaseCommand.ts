@@ -34,7 +34,7 @@ governing permissions and limitations under the License.
 */
 
 import { Command, flags } from '@oclif/command'
-import { Arg } from '@oclif/parser/lib/args'
+import { IArg } from '@oclif/parser/lib/args'
 import * as Errors from '@oclif/errors'
 import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
 import * as createDebug  from 'debug'
@@ -99,7 +99,7 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   // argument is the static args member of the concrete subclass of this class that is being dispatched to.
   // It is passed in as a convenience since it is clearer code to grab it at the call site where the class
   // identity is manifest
-  async dispatch(argv: string[], argTemplates: Arg<string>[], flags: any): Promise<string[]> {
+  async dispatch(argv: string[], argTemplates: IArg<string>[], flags: any): Promise<string[]> {
     // Duplicate oclif's args parsing conventions.  The flags have already been parsed in kui
     debug('dispatch argv: %O', argv)
     debug('dispatch argTemplates: %O', argTemplates)
