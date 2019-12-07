@@ -23,8 +23,8 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { XMLHttpRequest } from 'xmlhttprequest'
-import { CredentialStore, CredentialStorageEntry, CredentialEntry, CredentialHostMap, CredentialNSMap, Credentials,
-    CredentialRow, OWOptions } from './deploy-struct'
+import { CredentialStore, CredentialStorageEntry, CredentialEntry, CredentialHostMap, Credentials,
+    CredentialRow } from './deploy-struct'
 import * as createDebug from 'debug'
 const debug = createDebug('nimbella.cli')
 
@@ -62,21 +62,17 @@ const AUTHORIZE_URL_PATH = '/api/v1/web/nimbella/user/authorize.json'
 const NAMESPACE_URL_PATH = '/api/v1/namespaces'
 const DEFAULT_API_HOST = 'https://apigcp.nimbella.io'
 const NIMBELLA_DIR = '.nimbella'
-const WSK_PROPS = '.wskprops'
+const WSK_PROPS = 'wskprops'
 const CREDENTIAL_STORE = 'credentials.json'
-const STORAGE_CREDENTIALS = '.objectstorecreds'
 // Function indirection needed for webpack
 function nimbellaDir() {
     return path.join(HOME, NIMBELLA_DIR)
 }
 function wskProps() {
-    return path.join(HOME, WSK_PROPS)
+    return path.join(nimbellaDir(), WSK_PROPS)
 }
 function credentialStore() {
     return path.join(nimbellaDir(), CREDENTIAL_STORE)
-}
-function storageCredentials() {
-    return path.join(HOME, STORAGE_CREDENTIALS)
 }
 
 // Exports
@@ -219,8 +215,7 @@ export async function getCredentialsForNamespace(namespace: string, apihost: str
     return getUniqueCredentials(namespace, apihost, store)
 }
 
-// Get the current credentials.  This will succeed iff the user has a credential store
-// or there was enough information in .wskprops / .objectstorecreds to bootstrap one.
+// Get the current credentials.  This will succeed iff the user has a credential store.
 // Otherwise, we throw an error.
 export async function getCredentials(persister: Persister): Promise<Credentials> {
     const store = await persister.loadCredentialStore()
@@ -337,7 +332,7 @@ function initialCredentialStore(): CredentialStore {
     return { currentHost: undefined, currentNamespace: undefined, credentials: {}}
 }
 
-// Write ~/.wskprops.  Used when the default api host or api key change (TODO: this never saves the 'insecure' flag; that should
+// Write ~/.nimbella/wskprops.  Used when the default api host or api key change (TODO: this never saves the 'insecure' flag; that should
 // probably be correlated with the api host)
 function saveWskProps(apihost: string, auth: string) {
     const wskPropsContents = `APIHOST=${apihost}\nAUTH=${auth}\n`

@@ -132,7 +132,7 @@ The `action`, `activation`, `namespace`, `package`, `route`, `rule` and `trigger
 
 #### Supporting commands
 
-The `autocomplete`, `doc`, `help`, `info` and `update` commands provide supporting services in either explaining how to do things or updating the CLI to a later version.  Note that `nim update` works only on `mac` and `windows`you installed `nim` with one of the provided installers for `mac` or `windows`.
+The `autocomplete`, `doc`, `help`, `info` and `update` commands provide supporting services in either explaining how to do things or updating the CLI to a later version.  Note that `nim update` works only when `nim` was installed using the recommended installation method for use from a shell (it does not work when `nim` was installed using `npm` or `yarn`).
 
 #### Credential Management
 
@@ -158,7 +158,13 @@ Notice the use of colon separators between segments of a command name.  This hap
  > nim auth list
 ```
 
-The `nim` command does not regard `~/.wskprops` as canonical, the way the `wsk` binary does, but replaces it with a more flexible "credential store."  The `nim` command _does_ update `~/.wskprops` in synch with the credential store, but does not support other configuration options set via the process environment, such as `WSK_CONFIG_FILE`.  Although `nim` uses the OpenWhisk `nodejs` client internally, it takes steps to nullify the effect of any `__OW_*` variables in the environment to prevent collisions with other uses of the client.  By keeping `~/.wskprops` in synch, `nim` permits you to also use the `wsk` binary, if you like, without further configuration fiddling.  The flexibility of the credential store replaces the other configuration mechanisms.  For more information on managing the credential store see [Nimbella Accounts and Login](#Login) and [Managing Multiple Namespaces](#MultiNS).
+The `nim` command never reads or writes `~/.wskprops`, the way the `wsk` binary does, but replaces it with a more flexible "credential store."  The `nim` command _does_ maintain the file `~/.nimbella/wskprops` in synch with the credential store.  This file has the same format as `~/.wskprops` and applies to the currently selected namespace.
+
+Thus, if you are using `wsk` with some other `OpenWhisk` installation and using `nim` with the Nimbella stack, they will not interfere.  If you want to use `wsk` with the Nimbella stack, you can, but you should set the environment variable `WSK_CONFIG_FILE=$HOME/.nimbella/wskprops` so that `wsk` will use it instead of the `~/.wskprops`.  This will not affect `nim`, which ignores `WSK_CONFIG_FILE`.  If you sometimes use `wsk` with a different installation and sometimes with Nimbella you will have to change the environment accordingly.
+
+Although `nim` uses the OpenWhisk `nodejs` client internally, it takes steps to nullify the effect of any `__OW_*` variables in the environment to prevent collisions with other uses of the client.
+
+For more information on managing the credential store see [Nimbella Accounts and Login](#Login) and [Managing Multiple Namespaces](#MultiNS).
 
 #### Project Level Deployment
 
@@ -291,26 +297,23 @@ stored a credential set for namespace '...' and API host '...'
 
 ```
 
-The place where `nim` stores credential will be called _the credential store_ in this document.  It is shared between `nim` and the workbench.  You should only need to do login once for each namespace (whether this is in the workbench or `nim`).
+The place where `nim` stores credentials will be called _the credential store_ in this document.  It is shared between `nim` and the workbench.  You should only need to do login once for each namespace (whether this is in the workbench or `nim`).
 
 Assuming nothing goes wrong you should be able to view the credential store as follows.
 
 ```
  > nim auth list
-Namespace            Current Storage API Host
-<your namespace>        yes     yes  https://...
+Namespace            Current Storage  Redis API Host
+<your namespace>        yes     yes    yes   https://...
 ```
 
-As the format implies, you can have multiple namespaces as detailed further in  [Managing Multiple Namespaces](#MultiNS).  The `Current` column will contain a `yes` for just one namespace, which is the one the deployer will deploy to in the absence of other directives.  The `Storage` column indicates whether the namespace has provision for web content storage as discussed in [Adding static web content](#AddinsgWeb).  The initial namespaces provided by Nimbella have storage by default.
+As the format implies, you can have multiple namespaces as detailed further in  [Managing Multiple Namespaces](#MultiNS).
 
-If you prefer to use the Apache `wsk` binary (e.g. `wsk activation ...` instead of `nim activation ...`), that should work fine because `nim auth` also updates the file called `~/.wskprops` as needed by `wsk`.  It will look something like this.
+- The `Current` column will contain a `yes` for just one namespace, which is the one the deployer will deploy to in the absence of other directives.
+- The `Storage` column indicates whether the namespace has provision for web content storage as discussed in [Adding static web content](#AddinsgWeb) (also a second object storage bucket available for general use and not connected to the web).
+- The `Redis` column indicates whether the namespace has a `Redis` key-value storage instance available for use by actions).
 
-```
-APIHOST=<a URL>
-AUTH=<a long hexidecimal string>
-```
-
-The APIHOST field will be match the entry in the API host column for the namespace marked current.  The AUTH field duplicates information that is also found in the credential store for the namespace marked current.
+The initial namespaces provided by Nimbella have storage and redis by default.
 
 -----
 
@@ -1194,7 +1197,7 @@ It is also possible to change the remembered target namespace without deploying 
 nim auth switch <namespace>
 ```
 
-If you use the `wsk` command in conjunction with `nim`, note that its configuration file (`~/.wskprops`) is updated on every switch of the target namespace via `nim auth`.
+If you use the `wsk` command in conjunction with `nim`, note that the file `~/.nimbella/wskprops` (_not_ `~/.wskprops`) is updated on every switch of the target namespace via `nim auth`.  You can connect your `wsk` this Nimbella-maintained property file using the `WSK_CONFIG_FILE` environment variable.
 
 If you need the deployment of a project to have different characteristics depending on the target namespace (e.g. parameters that might differ between test and production), you might prefer to use [symbolic substitution](#SymbolicVars), e.g. `targetNamespace: ${NAMESPACE}`, and provide the value of `NAMESPACE` in an environment file along with other substitutions.
 
