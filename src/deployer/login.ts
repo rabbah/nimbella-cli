@@ -282,8 +282,10 @@ function saveLegacyInfo(apihost: string, auth: string) {
 }
 
 function loadCredentialStore(): Promise<CredentialStore> {
+    // Returns a promise for historical reasons.  Could be tweaked since
+    // the promise is no longer needed.
     if (!fs.existsSync(credentialStore())) {
-        return initialCredentialStore()
+        return Promise.resolve(initialCredentialStore())
     }
     const contents = fs.readFileSync(credentialStore())
     return Promise.resolve(JSON.parse(String(contents)))
@@ -326,54 +328,13 @@ function browserSaveLegacyInfo(apihost: string, auth: string) {
 
 // Utility functions (not exported)
 
-// Make the initial credential store when none exists.  We first ensure that the NIMBELLA_DIR exists.
-// Then we check for the existence of ~/.wskprops.  If it exists, we make an initial CredentialStore from it,
-// retrieving the namespace name from the host.  If ~/.objectstorecreds also exists, we add information from it.
-// If ~/.wskprops does not exist, we return a vacuous CredentialStore
-async function initialCredentialStore(): Promise<CredentialStore> {
+// Make the initial credential store when none exists.  It always starts out empty.  This also makes
+// the parent directory prepartory to the first write.  It does not actually write the credential store.
+function initialCredentialStore(): CredentialStore {
     if (!fs.existsSync(nimbellaDir())) {
         fs.mkdirSync(nimbellaDir())
     }
-    //console.log("Reading wskprops")
-    const { apihost, api_key } = readWskProps()
-    if (apihost && api_key) {
-        //console.log("Have valid wskprops")
-        let storage = undefined
-        if (fs.existsSync(storageCredentials())) {
-            //console.log("Reading storage credentials")
-            storage = fs.readFileSync(storageCredentials())
-        }
-        //console.log("converting storage credentials")
-        const currentNamespace = await getNamespace(apihost, api_key)
-        let storageKey: CredentialStorageEntry = storage ? parseStorageString(storage, currentNamespace, apihost) : undefined
-        const credentials: CredentialHostMap = {}
-        const nsMap: CredentialNSMap = {}
-        nsMap[currentNamespace] = { api_key, storageKey, redis: false }
-        credentials[apihost] = nsMap
-        const ans = { currentHost: apihost, currentNamespace, credentials }
-        //console.log("returning initialzed credential store", ans)
-        return ans
-    }
-    //console.log("returning vacuous credential store")
     return { currentHost: undefined, currentNamespace: undefined, credentials: {}}
-}
-
-// Read ~/.wskprops if present.  Used when initializing the CredentialStore
-function readWskProps(): OWOptions {
-    const wskpropsFile = wskProps()
-    if (!fs.existsSync(wskpropsFile)) {
-        return {}
-    }
-    const propertiesParser = require('properties-parser')
-    const wskpropsContents = propertiesParser.read(wskpropsFile)
-    const options: OWOptions = {}
-    if (wskpropsContents && wskpropsContents.AUTH) {
-        options.api_key = wskpropsContents.AUTH
-    }
-    if (wskpropsContents && wskpropsContents.APIHOST) {
-        options.apihost = wskpropsContents.APIHOST
-    }
-    return options
 }
 
 // Write ~/.wskprops.  Used when the default api host or api key change (TODO: this never saves the 'insecure' flag; that should
