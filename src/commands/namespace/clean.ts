@@ -72,6 +72,6 @@ export default class NamespaceClean extends NimBaseCommand {
         const storage = new Storage(storageKey)
         const client = storage.bucket(bucketName)
         await cleanBucket(client, undefined)
-        this.log(`Web content removed from namespace '${args.namespace}' on host '${apihost}'`)
+        this.log(`Web content removed from https://${bucketName}`)
      }
 }
