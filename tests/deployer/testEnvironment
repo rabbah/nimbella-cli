@@ -45,10 +45,10 @@ if [ "$RESULT" != "nodejs:8" ]; then
 fi
 
 echo "Deploying using an environment variable"
-RUNTIME=tessjs:8 nim project deploy environ
+RUNTIME=tessjs:10 nim project deploy environ
 RESULT=$(nim action get variable | tail -n +2 | jq -r .exec.kind)
-if [ "$RESULT" != "tessjs:8" ]; then
-	 echo "Expected 'tessjs:8' but got '$RESULT'"
+if [ "$RESULT" != "tessjs:10" ]; then
+	 echo "Expected 'tessjs:10' but got '$RESULT'"
 	 exit 1
 fi
 
