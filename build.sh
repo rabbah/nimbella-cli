@@ -124,7 +124,11 @@ fi
 
 # Unless told not to, do a global install of the result
 if [ -z "$NOINSTALL" ]; then
-	 npm install -g nimbella-cli.tgz
+		if [ -z "$TESTAIO" ]; then
+				npm install -g nimbella-cli.tgz
+		else
+				npm link
+		fi
 fi
 
 # Optionally package
