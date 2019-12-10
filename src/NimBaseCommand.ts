@@ -87,10 +87,12 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   // Helper used in the runCommand methods of aio shim classes to modify logger behavior
   // Not used by 'normal' command classes
   async runAio(argv: string[], logger: NimLogger, aioClass: typeof RuntimeBaseCommand) {
+    debug('runAio taking over logger methods')
     const proto = aioClass.prototype
     proto.log = logger.log
     proto.exit = logger.exit
     proto.handleError = logger.handleError
+    debug('runAio running with argv %O', argv)
     await aioClass.run(argv)
   }
 
@@ -104,8 +106,8 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
     debug('dispatch argv: %O', argv)
     debug('dispatch argTemplates: %O', argTemplates)
     debug('dispatch flags: %O', flags)
-    if (argv.length > argTemplates.length) {
-      argv = argv.slice(argv.length - argTemplates.length)
+    if (!argTemplates) {
+      argTemplates = []
     }
     const args = {} as any
     for (let i = 0; i < argv.length; i++) {
