@@ -53,10 +53,6 @@ export default class ProjectWatch extends NimBaseCommand {
 }
 
 // Validate a project and start watching it if it actually looks like a project
-// Note: we can't just watch the project directory but have to watch what's in it, skipping the .nimbella directory.
-// Otherwise, we go into an infinite loop because every deploy modifies that directory.
-// As it is, mini-builds usually do modifications and so we might get two deploys (the second hopefully vacuous) after
-// a modification that causes a build.
 function watch(project: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions, logger: NimBaseCommand) {
     const msg = validateProject(project)
     if (msg) {
@@ -84,13 +80,13 @@ async function fireDeploy(project: string, filename: string, cmdFlags: Flags, cr
         logger: NimBaseCommand, reset: ()=>void, watch: ()=>void) {
     reset()
     logger.log(`Deploying '${project}' due to change in '${filename}'`)
-    await doDeploy(project, cmdFlags, creds, owOptions, logger).catch(err => logger.handleError(err.message, err))
+    await doDeploy(project, cmdFlags, creds, owOptions, true, logger).catch(err => logger.handleError(err.message, err))
     logger.log("Deployment complete.  Resuming watch.")
     await delay().then(() => watch())
 }
 
 // Validate a project argument to ensure that it denotes an actual directory that "looks like a project".
-// Returns an error message when there is a problem, undefined
+// Returns an error message when there is a problem, undefined otherwise
 function validateProject(project: string): string|undefined {
     if (!fs.existsSync(project)) {
         return `${project} does not exist`

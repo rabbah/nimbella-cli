@@ -61,7 +61,7 @@ export class ProjectDeploy extends NimBaseCommand {
     // Deploy each project
     let success = true
     for (const project of argv) {
-      success = success && await doDeploy(project, cmdFlags, creds, owOptions, this)
+      success = success && await doDeploy(project, cmdFlags, creds, owOptions, false, this)
     }
     if (!success) {
       this.exit(1)
@@ -96,11 +96,14 @@ export async function processCredentials(ignore_certs: boolean, apihost: string|
 }
 
 // Deploy one project
-export async function doDeploy(project: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions, logger: NimBaseCommand): Promise<boolean> {
+export async function doDeploy(project: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions, watching: boolean,
+    logger: NimBaseCommand): Promise<boolean> {
   const todeploy = await readAndPrepare(project, owOptions, creds, fileSystemPersister, cmdFlags)
-  displayHeader(project, todeploy.credentials, logger)
+  if (!watching) {
+    displayHeader(project, todeploy.credentials, logger)
+  }
   return buildProject(todeploy).then(deploy)
-    .then((result: DeployResponse) => displayResult(result, project, logger))
+    .then((result: DeployResponse) => displayResult(result, watching, logger))
     .catch((err: Error) => {
       logger.displayError(err.message, err)
       return false
@@ -146,7 +149,7 @@ function displayHeader(project: string, creds: Credentials, logger: NimBaseComma
 }
 
 // Display the result of a successful run
-function displayResult(result: DeployResponse, project: string, logger: NimBaseCommand): boolean {
+function displayResult(result: DeployResponse, watching: boolean, logger: NimBaseCommand): boolean {
   let success = true
   if (result.successes.length == 0 && result.failures.length == 0) {
       logger.log("\nNothing deployed")
@@ -183,7 +186,11 @@ function displayResult(result: DeployResponse, project: string, logger: NimBaseC
           logger.log(`Deployed ${deployedWeb} web content items${bucketClause}`)
       }
       if (skippedWeb > 0) {
-          logger.log(`Skipped ${skippedWeb} unchanged web resources`)
+          let bucketClause = ""
+          if (watching && result.apihost) {
+              bucketClause = ` on\n  https://${computeBucketName(result.apihost, result.namespace)}`
+          }
+          logger.log(`Skipped ${skippedWeb} unchanged web resources${bucketClause}`)
       }
       if (actions.length > 0) {
           logger.log('Deployed actions:')
@@ -196,7 +203,7 @@ function displayResult(result: DeployResponse, project: string, logger: NimBaseC
       }
       if (result.failures.length > 0) {
           success = false
-          console.error('Failures:')
+          logger.displayError('Failures:')
           for (const err of result.failures) {
               success = false
               const context = (err as any)['context']
