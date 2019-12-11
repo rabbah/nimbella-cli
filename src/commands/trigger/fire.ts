@@ -30,5 +30,6 @@ export default class TriggerFire extends Command {
 
   static flags = AioCommand.flags
 
-  static description = AioCommand.description
+  // Exception to usual pattern
+  static description = 'Fire a trigger'
 }

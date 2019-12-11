@@ -30,5 +30,6 @@ export default class TriggerDelete extends Command {
 
   static flags = AioCommand.flags
 
-  static description = AioCommand.description
+  // Exception to usual pattern
+  static description = 'Delete a Trigger'
 }

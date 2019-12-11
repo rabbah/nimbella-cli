@@ -30,5 +30,6 @@ export default class NamespaceList extends Command {
 
   static flags = AioCommand.flags
 
-  static description = AioCommand.description
+  // Exception to usual pattern
+  static description = 'Lists all of your namespaces'
 }
