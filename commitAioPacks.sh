@@ -26,14 +26,17 @@ SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SELFDIR
 MAINDIR=$SELFDIR/../main
 
-# Check that aio-cli-plugin-runtime has no uncommitted changes.  Grab hash while there.
-# (makeAioPacks.sh will further check that it is on the dev branch)
+# Check that aio-cli-plugin-runtime is on the dev branch with no uncommitted changes.
 pushd ../aio-cli-plugin-runtime
-HASH=$(git rev-parse HEAD)
 DIRTY=$(git status --porcelain)
+BR=$(git symbolic-ref HEAD --short)
 popd
 if [ -n "$DIRTY" ]; then
 		echo "aio-cli-plugin-runtime has uncommitted changes"
+		exit 1
+fi
+if [ "$BR" != "dev" ]; then
+		echo "aio-cli-plugin-runtime is not on the 'dev' branch"
 		exit 1
 fi
 
@@ -45,7 +48,7 @@ fi
 HASH=$(cat aio.hash)
 TARBALL_NAME="adobe-aio-cli-plugin-runtime-$HASH.tgz"
 
-# Copy the tarball into the deployer project
+# Copy the tarball into the aiodeploy deployer project
 rm -fr aiodeploy/web
 mkdir -p aiodeploy/web
 cp adobe-aio-cli-plugin-runtime.tgz aiodeploy/web/$TARBALL_NAME

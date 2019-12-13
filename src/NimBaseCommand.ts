@@ -39,6 +39,7 @@ import * as Errors from '@oclif/errors'
 import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
 import * as createDebug  from 'debug'
 import { format } from 'util'
+import { table } from 'cli-ux/lib/styled/table'
 
 const debug = createDebug('nimbella-cli')
 
@@ -51,6 +52,9 @@ export interface NimLogger {
   exit: (code: number) => void  // don't use 'never' here because 'exit' doesn't always exit
   displayError: (msg: string, err?: Error) => void
 }
+
+// Print function type
+type LinePrinter = (s:any) => any
 
 // An alternative NimLogger when not using the oclif stack
 class CaptureLogger implements NimLogger {
@@ -89,12 +93,23 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   async runAio(argv: string[], logger: NimLogger, aioClass: typeof RuntimeBaseCommand) {
     debug('runAio taking over logger methods')
     const proto = aioClass.prototype
-    proto.log = logger.log
-    proto.exit = logger.exit
-    proto.handleError = logger.handleError
+    proto.log = logger.log.bind(logger)
+    proto.exit = logger.exit.bind(logger)
+    proto.handleError = logger.handleError.bind(logger)
+    proto.table = this.tableHandler(this.makePrinter(logger))
     debug('runAio running with argv %O', argv)
     await aioClass.run(argv)
   }
+
+  // Replacement for RuntimeBaseCommand.table, which is just a funnel-point for calls to cli.table in cli-ux
+  // Uses a logger for output
+  tableHandler = (printLine: LinePrinter) => (data: object[], columns: table.Columns<object>, options: table.Options = {}) => {
+    const modOptions = Object.assign({}, options, { printLine })
+    table(data, columns, modOptions)
+  }
+
+  // Initialization helper for tableHandler
+  makePrinter = (logger: NimLogger) => (r: any) => logger.log(String(r))
 
   // Generic kui runner.  Unlike run(), this gets partly pre-parsed input and doesn't do a full oclif parse.
   // It also uses the CaptureLogger so it can return the output as an array of text lines.   The 'argTemplates'
