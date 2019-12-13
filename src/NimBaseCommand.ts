@@ -40,6 +40,7 @@ import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
 import * as createDebug  from 'debug'
 import { format } from 'util'
 import { table } from 'cli-ux/lib/styled/table'
+import { fileSystemPersister } from './deployer/login';
 
 const debug = createDebug('nimbella-cli')
 
@@ -88,16 +89,15 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
     await this.runCommand(argv, args, flags, this)
   }
 
-  // Helper used in the runCommand methods of aio shim classes to modify logger behavior
-  // Not used by 'normal' command classes
+  // Helper used in the runCommand methods of aio shim classes to modify logger behavior and fix up credentials prior
+  // to invoking an aio-sourced command.  Not used by Nimbella-sourced command classes
   async runAio(argv: string[], logger: NimLogger, aioClass: typeof RuntimeBaseCommand) {
-    debug('runAio taking over logger methods')
     const proto = aioClass.prototype
     proto.log = logger.log.bind(logger)
     proto.exit = logger.exit.bind(logger)
     proto.handleError = logger.handleError.bind(logger)
     proto.table = this.tableHandler(this.makePrinter(logger))
-    debug('runAio running with argv %O', argv)
+    fixAioCredentials()
     await aioClass.run(argv)
   }
 
@@ -197,3 +197,42 @@ export function parseAPIHost (host: string|undefined): string|undefined {
   }
   return 'https://' + host + ".nimbella.io"
 }
+
+
+// Purge the process environment of entries that match __OW_*.   These are not attempting to influence 'nim' because
+// we specifically document that that doesn't work.  If they are there at all they are strays from some other usage but
+// they can do mischief via their effect on the node client.
+export function cleanEnvironment() {
+    for (const item in process.env) {
+        if (item.startsWith('__OW_')) {
+            delete process.env[item]
+        }
+    }
+}
+
+// Stuff the current namespace, API host, and AUTH key into the environment so that AIO does not look in .wskprops when invoked by nim
+export function fixAioCredentials() {
+    let store = fileSystemPersister.loadCredentialStoreIfPresent()
+    let currentHost: string
+    let currentNamespace: string
+    let currentAuth: string
+    if (store) {
+        currentHost = store.currentHost
+        currentNamespace = store.currentNamespace
+    } else {
+        // No credential store (brand new user who's never done a login?).   Not much we can do, other than using our default API host in place of AIO's
+        currentHost = 'https://apigcp.nimbella.io'
+    }
+    if (store && currentHost && currentNamespace) {
+        const creds = store.credentials[currentHost][currentNamespace]
+        if (creds) {
+            currentAuth = creds.api_key
+        } else {
+            debug(`Error retrieving credentials for '${currentNamespace}' on host '${currentHost}'`)
+        }
+    }
+    process.env.AIO_RUNTIME_APIHOST = currentHost
+    process.env.AIO_RUNTIME_AUTH = currentAuth
+    process.env.AIO_RUNTIME_NAMESPACE = currentNamespace
+}
+
