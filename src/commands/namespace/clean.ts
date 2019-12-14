@@ -19,9 +19,9 @@
  */
 
 import { flags } from '@oclif/command'
-import { NimBaseCommand, NimLogger } from '../../NimBaseCommand'
+import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
 import { cli } from 'cli-ux'
-import { getCredentialsForNamespace, fileSystemPersister, getCredentials } from '../../deployer/login'
+import { getCredentialsForNamespace, getCredentials } from '../../deployer/login'
 import { wipeNamespace } from '../../deployer/api'
 import { computeBucketName, cleanBucket } from '../../deployer/deploy-to-bucket'
 import { Credentials } from '../../deployer/deploy-struct'
@@ -44,7 +44,7 @@ export default class NamespaceClean extends NimBaseCommand {
         let namespace = args.namespace
         let creds: Credentials = undefined
         if (!namespace) {
-            creds = await getCredentials(fileSystemPersister)
+            creds = await getCredentials(authPersister)
             namespace = creds.namespace
         }
         if (!flags.force) {
@@ -65,7 +65,7 @@ export default class NamespaceClean extends NimBaseCommand {
             storageKey = undefined
         } else {
             if (!creds) {
-                creds = await getCredentialsForNamespace(namespace, flags.apihost, fileSystemPersister)
+                creds = await getCredentialsForNamespace(namespace, flags.apihost, authPersister)
             }
             auth = creds.ow.api_key
             apihost = creds.ow.apihost

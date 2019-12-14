@@ -18,8 +18,8 @@
  * from Nimbella Corp.
  */
 
-import { NimBaseCommand, NimLogger } from '../../NimBaseCommand'
-import { getCredentialList, fileSystemPersister } from '../../deployer/login'
+import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
+import { getCredentialList } from '../../deployer/login'
 import { CredentialRow } from '../../deployer/deploy-struct'
 
 // Constants used in formatting the credential list
@@ -39,7 +39,7 @@ export default class AuthList extends NimBaseCommand {
   static args = []
 
   async runCommand(argv: string[], args: any, flags: any, logger: NimLogger) {
-    const list = getCredentialList(fileSystemPersister)
+    const list = getCredentialList(authPersister)
     await this.formatCredentialList(list, logger)
   }
 

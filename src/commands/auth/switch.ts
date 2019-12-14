@@ -19,8 +19,8 @@
  */
 
 import { flags } from '@oclif/command'
-import { NimBaseCommand, NimLogger, parseAPIHost } from '../../NimBaseCommand'
-import { switchNamespace, fileSystemPersister } from '../../deployer/login'
+import { NimBaseCommand, NimLogger, parseAPIHost, authPersister } from '../../NimBaseCommand'
+import { switchNamespace } from '../../deployer/login'
 import { disambiguateNamespace } from '../project/deploy'
 
 export default class AuthSwitch extends NimBaseCommand {
@@ -36,7 +36,7 @@ export default class AuthSwitch extends NimBaseCommand {
   async runCommand(argv: string[], args: any, flags: any, logger: NimLogger) {
     const host = parseAPIHost(flags.apihost)
     const namespace = await disambiguateNamespace(args.namespace, host).catch(err => logger.handleError(err.message, err))
-    const creds = await switchNamespace(namespace, host, fileSystemPersister).catch(err => logger.handleError(err.message, err))
+    const creds = await switchNamespace(namespace, host, authPersister).catch(err => logger.handleError(err.message, err))
     logger.log(`Successful switch to namespace '${namespace}' on API host '${creds.ow.apihost}'`)
   }
 }

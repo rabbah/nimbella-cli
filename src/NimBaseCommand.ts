@@ -40,9 +40,12 @@ import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
 import * as createDebug  from 'debug'
 import { format } from 'util'
 import { table } from 'cli-ux/lib/styled/table'
-import { fileSystemPersister } from './deployer/login';
+import { fileSystemPersister, browserPersister } from './deployer/login';
 
 const debug = createDebug('nimbella-cli')
+
+// The persister to use throughout CLI code
+export const authPersister = (typeof process !== 'undefined') && (process.release.name === 'node') ? fileSystemPersister : browserPersister
 
 // Common behavior expected by runCommand implementations ... abstracts some features of
 // oclif.Command.  The NimBaseCommand class implements this interface using its own
@@ -212,7 +215,7 @@ export function cleanEnvironment() {
 
 // Stuff the current namespace, API host, and AUTH key into the environment so that AIO does not look in .wskprops when invoked by nim
 export function fixAioCredentials() {
-    let store = fileSystemPersister.loadCredentialStoreIfPresent()
+    let store = authPersister.loadCredentialStoreIfPresent()
     let currentHost: string
     let currentNamespace: string
     let currentAuth: string

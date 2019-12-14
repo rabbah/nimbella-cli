@@ -19,10 +19,10 @@
  */
 
 import { flags } from '@oclif/command'
-import { NimBaseCommand, NimLogger, parseAPIHost } from '../../NimBaseCommand'
+import { NimBaseCommand, NimLogger, authPersister, parseAPIHost } from '../../NimBaseCommand'
 import { readAndPrepare, buildProject, deploy } from '../../deployer/api'
 import { Flags, OWOptions, DeployResponse, Credentials, DeployStructure } from '../../deployer/deploy-struct'
-import { getCredentialList, switchNamespace, fileSystemPersister } from '../../deployer/login'
+import { getCredentialList, switchNamespace } from '../../deployer/login'
 import { computeBucketName } from '../../deployer/deploy-to-bucket'
 import * as path from 'path'
 
@@ -85,7 +85,7 @@ export async function processCredentials(ignore_certs: boolean, apihost: string|
   let creds: Credentials|undefined = undefined
   if (target) {
     target = await disambiguateNamespace(target, owOptions.apihost).catch((err: Error) => logger.handleError(err.message, err))
-    creds = await switchNamespace(target, owOptions.apihost, fileSystemPersister).catch((err: Error) => logger.handleError(err.message, err))
+    creds = await switchNamespace(target, owOptions.apihost, authPersister).catch((err: Error) => logger.handleError(err.message, err))
   } else if (apihost && auth) {
     // For backward compatibility with `wsk`, we accept the absence of target when both apihost and auth are
     // provided on the command line.  We synthesize credentials with (as yet) unknown namespace; if it later
@@ -98,7 +98,7 @@ export async function processCredentials(ignore_certs: boolean, apihost: string|
 // Deploy one project
 export async function doDeploy(project: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions, watching: boolean,
     logger: NimLogger): Promise<boolean> {
-  const todeploy = await readAndPrepare(project, owOptions, creds, fileSystemPersister, cmdFlags)
+  const todeploy = await readAndPrepare(project, owOptions, creds, authPersister, cmdFlags)
     .catch(err => logger.handleError(err.message, err))
   if (!watching) {
     displayHeader(project, todeploy.credentials, logger)
@@ -118,7 +118,7 @@ export async function doDeploy(project: string, cmdFlags: Flags, creds: Credenti
 // If the match is not unique up to the apihost, throw error
 export async function disambiguateNamespace(namespace: string, apihost: string|undefined): Promise<string> {
     if (namespace.endsWith('-')) {
-      const allCreds = await getCredentialList(fileSystemPersister)
+      const allCreds = await getCredentialList(authPersister)
       namespace = namespace.slice(0, -1)
       let matches = allCreds.filter(cred => cred.namespace.startsWith(namespace))
       if (apihost) {

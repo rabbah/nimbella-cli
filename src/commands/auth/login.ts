@@ -19,8 +19,8 @@
  */
 
 import { flags } from '@oclif/command'
-import { NimBaseCommand, NimLogger, parseAPIHost } from '../../NimBaseCommand'
-import { doLogin, doAdminLogin, fileSystemPersister, addCredentialAndSave } from '../../deployer/login'
+import { NimBaseCommand, NimLogger, parseAPIHost, authPersister } from '../../NimBaseCommand'
+import { doLogin, doAdminLogin, addCredentialAndSave } from '../../deployer/login'
 import { Credentials } from '../../deployer/deploy-struct'
 
 export default class AuthLogin extends NimBaseCommand {
@@ -46,7 +46,7 @@ export default class AuthLogin extends NimBaseCommand {
       if (flags.admin || flags.namespace) {
         logger.handleError("Internal error: incorrect use of administrative flags")
       }
-      credentials = await doLogin(args.token, fileSystemPersister, apihost).catch((err: Error) => this.handleError(err.message, err))
+      credentials = await doLogin(args.token, authPersister, apihost).catch((err: Error) => this.handleError(err.message, err))
     } else if (flags.admin) {
       if (flags.auth || flags.namespace || !apihost) {
         logger.handleError("Internal error: incorrect use of administrative flags")
@@ -54,9 +54,9 @@ export default class AuthLogin extends NimBaseCommand {
       await doAdminLogin(apihost)
       return
     } else if (flags.auth) {
-      credentials = await addCredentialAndSave(apihost, flags.auth, undefined, false, fileSystemPersister, flags.namespace)
+      credentials = await addCredentialAndSave(apihost, flags.auth, undefined, false, authPersister, flags.namespace)
         .catch((err: Error) => logger.handleError(err.message, err))
-      fileSystemPersister.saveLegacyInfo(apihost, flags.auth)
+      authPersister.saveLegacyInfo(apihost, flags.auth)
     } else {
       logger.handleError("A login token is required unless --auth is specified")
     }

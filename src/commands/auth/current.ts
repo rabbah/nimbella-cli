@@ -18,9 +18,9 @@
  * from Nimbella Corp.
  */
 
-import { NimBaseCommand, NimLogger } from '../../NimBaseCommand'
+import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
 import { flags } from '@oclif/command'
-import { fileSystemPersister, getCredentials } from '../../deployer/login';
+import { getCredentials } from '../../deployer/login'
 
 export default class AuthInspect extends NimBaseCommand {
   static description = 'Get current namespace with optional details'
@@ -44,7 +44,7 @@ export default class AuthInspect extends NimBaseCommand {
     } else if (!apihost && !auth && !storage && !redis) {
         name = true
     }
-    const creds = await getCredentials(fileSystemPersister)
+    const creds = await getCredentials(authPersister)
     const ans: { name?: string, apihost?: string, auth?: string, storage?: boolean, redis?: boolean } = {}
     if (name) {
         ans.name = creds.namespace
