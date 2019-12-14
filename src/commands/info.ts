@@ -43,9 +43,9 @@ export default class Info extends NimBaseCommand {
       }
     } else {
       const cli = require('../../version.json')
-      const aio = require('@adobe/aio-cli/package.json')
-      logger.log(`nim command version: ${cli.version}`)
-      logger.log(`Adobe I/O version:   ${aio.version}`)
+      const aio = require('@adobe/aio-cli-plugin-runtime/package.json')
+      logger.log(`Nimbella CLI version: ${cli.version}`)
+      logger.log(`Adobe I/O version:    ${aio.version}`)
       logger.log("'nim info --license' to display the license")
     }
   }
