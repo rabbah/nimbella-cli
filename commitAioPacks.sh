@@ -48,20 +48,8 @@ fi
 HASH=$(cat aio.hash)
 TARBALL_NAME="adobe-aio-cli-plugin-runtime-$HASH.tgz"
 
-# Copy the tarball into the aiodeploy deployer project
-rm -fr aiodeploy/web
-mkdir -p aiodeploy/web
-cp adobe-aio-cli-plugin-runtime.tgz aiodeploy/web/$TARBALL_NAME
-
-# Perform the deployment to make the tarball visible by https
-PROJECT=nimdev
-if [ -f $MAINDIR/config/nimconfig.json ]; then
-	PROJECT=$(jq -r .current < "$MAINDIR/config/nimconfig.json")
-fi
-nimadmin project set nimgcp
-echo yes | nimadmin user set nimbella nimaio
-nimadmin project set $PROJECT
-nim project deploy aiodeploy
+# Upload the tarball
+gsutil cp adobe-aio-cli-plugin-runtime.tgz gs://nimaio-apigcp.nimbella.io/$TARBALL_NAME
 
 # Edit package.json so that the correct dependency is declared there
 URL="https://nimaio-apigcp.nimbella.io/$TARBALL_NAME"
