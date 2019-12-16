@@ -1,0 +1,23 @@
+{
+  "annotations": {
+    "exec": "tessjs:10",
+    "final": false,
+    "provide-api-key": false,
+    "raw-http": false,
+    "web-export": false
+  },
+  "exec": {
+    "kind": "tessjs:10",
+    "binary": false
+  },
+  "limits": {
+    "concurrency": 1,
+    "logs": 10,
+    "memory": 256,
+    "timeout": 60000
+  },
+  "name": "tess10",
+  "namespace": "nimbella/hellos",
+  "parameters": {},
+  "publish": false
+}
