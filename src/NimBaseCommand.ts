@@ -93,15 +93,20 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   }
 
   // Helper used in the runCommand methods of aio shim classes to modify logger behavior and fix up credentials prior
-  // to invoking an aio-sourced command.  Not used by Nimbella-sourced command classes
-  async runAio(argv: string[], logger: NimLogger, aioClass: typeof RuntimeBaseCommand) {
-    const proto = aioClass.prototype
-    proto.log = logger.log.bind(logger)
-    proto.exit = logger.exit.bind(logger)
-    proto.handleError = logger.handleError.bind(logger)
-    proto.table = this.tableHandler(this.makePrinter(logger))
+  // to invoking an aio-sourced command.  Not used by Nimbella-sourced command classes.
+  // When running under node / normal oclif, the 'logger' is the class itself, so the change to table should
+  // have no effect.   Storing the parsed arguments will also have no effect (because the real oclif parse method
+  // will parse all over again).   When running under kui / dummy oclif, the 'logger' will be a capture logger and
+  // the dummy command class has an implementation of parse that returns the already parsed material.
+  async runAio(argv: string[], args: any, flags: any, logger: NimLogger, aioClass: typeof RuntimeBaseCommand) {
+    debug("runAio argv: %O", argv)
+    debug("runAio args: %O", args)
+    debug("runAio flags: %O", flags)
     fixAioCredentials()
-    await aioClass.run(argv)
+    const cmd = new aioClass([], {})
+    cmd.table = this.tableHandler(this.makePrinter(logger))
+    cmd.parsed = { argv, args, flags }
+    await cmd.run()
   }
 
   // Replacement for RuntimeBaseCommand.table, which is just a funnel-point for calls to cli.table in cli-ux
@@ -121,9 +126,6 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   // identity is manifest
   async dispatch(argv: string[], argTemplates: IArg<string>[], flags: any): Promise<string[]> {
     // Duplicate oclif's args parsing conventions.  The flags have already been parsed in kui
-    debug('dispatch argv: %O', argv)
-    debug('dispatch argTemplates: %O', argTemplates)
-    debug('dispatch flags: %O', flags)
     if (!argTemplates) {
       argTemplates = []
     }
@@ -238,4 +240,3 @@ export function fixAioCredentials() {
     process.env.AIO_RUNTIME_AUTH = currentAuth
     process.env.AIO_RUNTIME_NAMESPACE = currentNamespace
 }
-

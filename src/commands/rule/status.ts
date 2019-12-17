@@ -24,7 +24,7 @@ const AioCommand: typeof RuntimeBaseCommand = require('@adobe/aio-cli-plugin-run
 
 export default class RuleStatus extends NimBaseCommand {
   async runCommand(argv: string[], args: any, flags: any, logger: NimLogger) {
-    await this.runAio(argv, logger, AioCommand)
+    await this.runAio(argv, args, flags, logger, AioCommand)
   }
 
   static args = AioCommand.args
