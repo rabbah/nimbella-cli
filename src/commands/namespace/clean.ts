@@ -20,12 +20,13 @@
 
 import { flags } from '@oclif/command'
 import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
-import { cli } from 'cli-ux'
 import { getCredentialsForNamespace, getCredentials } from '../../deployer/login'
 import { wipeNamespace } from '../../deployer/api'
 import { computeBucketName, cleanBucket } from '../../deployer/deploy-to-bucket'
 import { Credentials } from '../../deployer/deploy-struct'
 import { Storage } from '@google-cloud/storage'
+
+let cli
 
 export default class NamespaceClean extends NimBaseCommand {
      static description = 'Remove content from a namespace'
@@ -49,6 +50,9 @@ export default class NamespaceClean extends NimBaseCommand {
         }
         if (!flags.force) {
             const ow = flags.justwhisk ? " openwhisk" : ""
+            if (!cli) {
+                cli = require('cli_ux').cli
+            }
             const ans = await cli.prompt(`Type '${namespace}' to remove all${ow} content from namespace '${namespace}'`)
             if (ans !== namespace) {
                 logger.log('Doing nothing')

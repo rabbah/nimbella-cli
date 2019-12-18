@@ -39,7 +39,6 @@ import * as Errors from '@oclif/errors'
 import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
 import * as createDebug  from 'debug'
 import { format } from 'util'
-import { table } from 'cli-ux/lib/styled/table'
 import { fileSystemPersister, browserPersister } from './deployer/login';
 
 const debug = createDebug('nimbella-cli')
@@ -59,6 +58,7 @@ export interface NimLogger {
 
 // Print function type
 type LinePrinter = (s:any) => any
+type TableHandler = (data: object[], columns: object, options?: object) => void
 
 // An alternative NimLogger when not using the oclif stack
 class CaptureLogger implements NimLogger {
@@ -104,14 +104,14 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
     debug("runAio flags: %O", flags)
     fixAioCredentials()
     const cmd = new aioClass([], {})
-    cmd.table = this.tableHandler(this.makePrinter(logger))
+    cmd.table = this.tableHandler(cmd.table, this.makePrinter(logger))
     cmd.parsed = { argv, args, flags }
     await cmd.run()
   }
 
   // Replacement for RuntimeBaseCommand.table, which is just a funnel-point for calls to cli.table in cli-ux
   // Uses a logger for output
-  tableHandler = (printLine: LinePrinter) => (data: object[], columns: table.Columns<object>, options: table.Options = {}) => {
+  tableHandler = (table: TableHandler, printLine: LinePrinter) => (data: object[], columns: object, options: object = {}) => {
     const modOptions = Object.assign({}, options, { printLine })
     table(data, columns, modOptions)
   }
