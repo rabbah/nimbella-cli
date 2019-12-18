@@ -47,7 +47,8 @@ export interface PackageSpec {
     actions?: ActionSpec[]
     shared: boolean // Indicates that the package is intended to be shared (public)
     annotations?: Dict // package annotations
-    parameters?: Dict // Bound parameters at package level
+    parameters?: Dict // Bound parameters for all actions in the package, passed in the usual way
+    environment?: Dict // Bound parameters for all actions in the package, destined to go in the environment of each action
     clean?: boolean   // Indicates that the package is to be deleted (with its contained actions) before deployment
 }
 
@@ -65,7 +66,8 @@ export interface ActionSpec {
     web?: any // like --web on the CLI; expands to multiple annotations.  Project reader assigns true unless overridden.
     webSecure?: any // like --web-secure on the CLI.  False unless overridden
     annotations?: Dict // 'web' and 'webSecure' are merged with what's here iff present
-    parameters?: Dict // Bound parameters for the action
+    parameters?: Dict // Bound parameters for the action passed in the usual way
+    environment?: Dict // Bound parameters for the action destined to go in the environment
     limits?: Limits    // Action limits (time, memory, logs)
     clean?: boolean // Indicates that an old copy of the action should be removed before deployment
     // Build information (not specifiable in the config)

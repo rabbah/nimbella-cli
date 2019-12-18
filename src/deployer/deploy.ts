@@ -174,6 +174,7 @@ export async function deployPackage(pkg: PackageSpec, wsk: openwhisk.Client,
         deployer.digest = digest.substring(0, 8)
         const annotDict = Object.assign({}, oldAnnots, pkg.annotations, { deployer })
         const annotations = keyVal(annotDict)
+        const params = encodeParameters(pkg.parameters, pkg.environment)
         const mergedParams = Object.assign({}, projectParams, pkg.parameters)
         const owPkg: openwhisk.Package = { parameters: keyVal(mergedParams), annotations, publish: pkg.shared }
         await wsk.packages.update({name: pkg.name, package: owPkg}).then(result => {
@@ -209,6 +210,19 @@ function  deployAction(action: ActionSpec, wsk: openwhisk.Client, prefix: string
         })
     }).then((code: string) => deployActionFromCode(action, prefix, code, wsk, deplAnnot, actionIsClean, versions))
     .catch(err => Promise.resolve(wrapError(err, `action '${prefix}${action.name}'`)))
+}
+
+function encodeParameters(normalParms: openwhisk.Dict, envParms: openwhisk.Dict): openwhisk.KeyVal[] {
+    let ans: openwhisk.KeyVal[] = []
+    if (normalParms) {
+        ans = keyVal(normalParms)
+    }
+    if (envParms) {
+        const envs = keyVal(envParms)
+        envs.forEach(env => env['init'] = true)
+        ans = ans.concat(envs)
+    }
+    return ans
 }
 
  // Deploy an action when the code has already been read from a file or constructed programmatically.  The code and file members
@@ -268,8 +282,9 @@ function  deployAction(action: ActionSpec, wsk: openwhisk.Client, prefix: string
         delete annotDict['require-whisk-auth']
     }
     // Compute the complete Action value for the call
+    const params = encodeParameters(action.parameters, action.environment)
     const exec = { code, binary: action.binary,  kind: runtime, main: action.main } // Actually legal but openwhisk.Exec doesn't think so
-    const actionBody: openwhisk.Action = { annotations: keyVal(annotDict), parameters: keyVal(action.parameters), exec: exec as openwhisk.Exec }
+    const actionBody: openwhisk.Action = { annotations: keyVal(annotDict), parameters: params, exec: exec as openwhisk.Exec }
     if (action.limits) {
         actionBody.limits = action.limits
     }

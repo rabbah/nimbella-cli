@@ -222,7 +222,7 @@ function validatePackageSpec(arg: {}): string {
             } else if (isDefault) {
                 return `'${item}' may not be used in the default package`
             }
-        } else if (item != 'parameters' && item != 'annotations') { // Can't meaningfully validate parameters or annotations
+        } else if (item != 'parameters' && item != 'annotations' && item != 'environment') { // Can't meaningfully validate parameters or annotations
             return `Invalid key '${item}' found in 'package' in project.yml`
         } else if (isDefault) {
             return `'${item}' may not be used in the default package`
@@ -264,6 +264,7 @@ function validateActionSpec(arg: {}): string {
                 break
             case 'annotations':
             case 'parameters':
+            case 'environment':
                 // No meaningful validation for these
                 break
             case 'limits':
