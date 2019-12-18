@@ -44,7 +44,7 @@ import { fileSystemPersister, browserPersister } from './deployer/login';
 const debug = createDebug('nimbella-cli')
 
 // The persister to use throughout CLI code
-export const authPersister = (typeof process !== 'undefined') && (process.release.name === 'node') ? fileSystemPersister : browserPersister
+export const authPersister = (typeof process !== 'undefined') && (process.release) && (process.release.name === 'node') ? fileSystemPersister : browserPersister
 
 // Common behavior expected by runCommand implementations ... abstracts some features of
 // oclif.Command.  The NimBaseCommand class implements this interface using its own
