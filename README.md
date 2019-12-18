@@ -25,6 +25,7 @@
 A comprehensive CLI for the Nimbella stack
 
 ### Prerequisites
+##### For Local Builds
  - **node**
    * version 10 or later is required
  - **npm**
@@ -34,22 +35,40 @@ A comprehensive CLI for the Nimbella stack
  - **jq**
    * on mac you can use `brew install jq`.
    * for other platforms, [look here](https://stedolan.github.io/jq/download/)
+ - **permissions in /usr/local**
+   * you will require write permission to at least `bin` and `lib` and the directories under them.
+   * Set up group membership and permissions to make this possible on your machine without the need to use `sudo` routinely.
+
+##### For stable builds (must be on mac)
+You also need
+
  - **p7zip**
    * needed for windows packager only
    * on mac you can use `brew install p7zip`
  - **makensis**
    * needed for windows packager only
    * on mac you can use `brew install makensis`
- - **permissions in /usr/local**
-   * you will require write permission to at least `bin` and `lib` and the directories under them.
-   * Set up group membership and permissions to make this possible on your machine without the need to use `sudo` routinely.
+ - **xcode 11 or later**
+   * specifically need `altool`, `pkgbuild` and `spctl` in your path.  At least the first of these requires a full Xcode install
+ - **Apple Developer ID**
+   * consult Rodric Rabbah, who is our account owner in the Apple Developer program
+ - **a certificate of type 'Developer ID Installer' and a private key for same**
+   * consult Rodric or Josh Auerbach
 
 ### Co-requisite repositories
-**main** should be a sibling and should be up-to-date.  It need not be built.
+##### For Local Builds
+- **main** should be a sibling and should be up-to-date.  It need not be built.
 
-**aio-cli-plugin-runtime** contains our modifications to a major dependency which we get from Adobe I/O.  It does _not_ need to be present just to build the current version of `nim` for internal use.  However, it _does_ need to be present if making further modifications to that dependency or if creating a stable version of `nim'.
+##### For Stable Builds or when modifying the `aio runtime` dependency
+You also need
 
-**workbench** is needed only if you are building a stable version of `nim`.
+- **aio-cli-plugin-runtime**
+
+  * This is a fork of an Adobe open source project.   It should be checked out on the `dev` branch.
+
+- **workbench**
+
+  * Need not be built.  It is where the stable versions are stored.
 
 
 ### Routine Building
@@ -102,9 +121,15 @@ Building a stable version requires `aio-cli-plugin-runtime` (for checking; it is
 
 1. Commit this repo (there can be no uncommitted changes).
 2. Issue `npm version patch`
-3. In the `main` repo issue `./build.sh newstablecli`
+3. Enter your Apple Developer Id and password in the environment variables `APPLE_ID` and `APPLE_PWD`
+   * You can use a keychain reference for the password if you don't want to put it directly in the environment
+4. In the `main` repo issue `./build.sh newstablecli`
+5. The script will attempt to sign the MacOS installer and submit it to Apple for notarization.
+   * If that fails, you may be able to restart at that point by directly calling the sub-script `signAndNotarize.sh`
+   * If the sign and submit process succeeds, you will still have to wait for an email from Apple telling you whether notarization was successful.
+6. Once notarization has succeeded, check that the MacOS installer is fully acceptable by issuing `./build.sh --check-stable`
 
-The script will check that you did the first two steps and will also check that the two repos are in synch with each other.  The new stable version will be in `workbench/stable`
+The script will check that you did the first three steps and will also check that the repos are in synch with each other.  The new stable version will be in `workbench/stable`
 
 ### Usage
 

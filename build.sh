@@ -33,6 +33,8 @@ elif [ "$1" == "--testaio" ]; then
 		TESTAIO=true
 elif [ "$1" == "--no-install" ]; then
 		NOINSTALL=true
+elif [ "$1" == "--check-stable" ]; then
+		CHECK_STABLE=true
 elif [ -n "$1" ]; then
 		echo "Illegal argument '$1'"
 		exit 1
@@ -42,6 +44,12 @@ fi
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 STABLEDIR=$SELFDIR/../workbench/stable
 cd $SELFDIR
+
+# Check a signed and notarized stable release installer (for macos)
+if [ -n "$CHECK_STABLE" ]; then
+		spctl -a -vvv --type install dist/macos/nim.pkg
+	  exit 0
+fi
 
 # Check prereqs for --stable
 if [ -n "$STABLE" ]; then
@@ -64,6 +72,14 @@ if [ -n "$STABLE" ]; then
         echo "The nim CLI version number was not changed: a new stable version cannot be declared"
         exit 1
     fi
+		if [ -z "$APPLE_ID" ]; then
+				echo "You did not specify the APPLE_ID environment variable with your Apple developer id"
+			  exit 1
+		fi
+		if [ -z "$APPLE_PWD" ]; then
+				echo "You did not specify the APPLE_PWD environment variable with your Apple developer account password"
+			  exit 1
+		fi
 fi
 
 # Store version info
@@ -166,16 +182,27 @@ if [ -n "$PKG" ]; then
 		# Clean up
 		git checkout userREADME.md
 		mv devREADME.md README.md
-
-		# Wrap into a single tarball for subsequent deployment
-		pushd dist
-		tar czf ../nim-cli.tgz *
-		popd
 fi
 
 # Optionally make stable version
 if [ -n "$STABLE" ]; then
+		# Sign and notarize the macos installer
+		set +e
+		./signAndNotarize.sh ./tmp ./dist/macos/nim.pkg $VERSION FU8M787PV7 $APPLE_ID $APPLE_PWD
+		if [ $? -ne 0 ]; then
+				echo "Something went wrong with the sign/notarize step.  Do not commit this stable version until that is corrected."
+				exit 1
+		fi
+		set -e
+		# Wrap into a single tarball for subsequent deployment
+		pushd dist
+		tar czf ../nim-cli.tgz *
+		popd
+    # Move to stable
     mv nim-cli.tgz $STABLEDIR
     cd $STABLEDIR/..
     ./setStableVersions.sh
+		echo "The new stable version is built and ready.  Wait for an email from Apple stating that the notarization succeeded.  Then do"
+		echo "   ./build.sh --check-stable"
+		echo "to make sure the installer is 'accepted' before committing."
 fi
