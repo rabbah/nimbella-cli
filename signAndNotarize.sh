@@ -20,14 +20,14 @@
 #
 
 #
-# A script to sign and submit the build to Apple for notorization.
+# A script to sign and submit the build to Apple for notarization.
 # The script makes the following assumptions:
 # - 'pkgbuild' and 'altool' and are in your path.
 # - a signing certificate is in your keychain for your Apple developer team id
 # - a developer ID and Apple app-specific password also in your keychain (override the default via parameters)
 #
-# When this script is successful, the package is submitted to Apple for notorization
-# and a tracking id is issued and logged to the console. Once Apple notorizes the
+# When this script is successful, the package is submitted to Apple for notarization
+# and a tracking id is issued and logged to the console. Once Apple notarizes the
 # application, it will notify the developer who submitted the request by email.
 # A few minutes later, you can verify the package with this command:
 # > spctl -a -vvv --type install <pkg name>
