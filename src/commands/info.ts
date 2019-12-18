@@ -20,7 +20,8 @@
 
 import { flags } from '@oclif/command'
 import { NimBaseCommand, NimLogger } from '../NimBaseCommand'
-import * as open from 'open'
+
+let open
 
 export default class Info extends NimBaseCommand {
   static description = "show information about this version of 'nim'"
@@ -36,6 +37,9 @@ export default class Info extends NimBaseCommand {
     if (flags.license) {
       try {
         const html = require.resolve('../../license.html')
+        if (!open) {
+          open = require('open')
+        }
         await open(html)
       } catch (err) {
         logger.displayError(err.message, err)
