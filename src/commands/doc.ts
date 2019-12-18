@@ -19,7 +19,8 @@
  */
 
 import { NimBaseCommand, NimLogger } from '../NimBaseCommand'
-import * as open from 'open'
+
+let open
 
 export default class Doc extends NimBaseCommand {
 	static description = "display the full documentation of this CLI"
@@ -33,6 +34,9 @@ export default class Doc extends NimBaseCommand {
   async runCommand(argv: string[], args: any, flags: any, logger: NimLogger) {
     try {
       const html = require.resolve('../../nim.html')
+      if (!open) {
+        open = require('open')
+      }
       await open(html)
     } catch (err) {
       logger.displayError(err.message, err)
