@@ -1,0 +1,60 @@
+#
+# Nimbella CONFIDENTIAL
+# ---------------------
+#
+#   2018 - present Nimbella Corp
+#   All Rights Reserved.
+#
+# NOTICE:
+#
+# All information contained herein is, and remains the property of
+# Nimbella Corp and its suppliers, if any.  The intellectual and technical
+# concepts contained herein are proprietary to Nimbella Corp and its
+# suppliers and may be covered by U.S. and Foreign Patents, patents
+# in process, and are protected by trade secret or copyright law.
+#
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Nimbella Corp.
+#
+
+# This tests the feature whereby an 'environment' clause of project.yml
+# translates to 'parameters' with init=true
+
+function testResult() {
+  if [ "$1" != "doghouse" ] || [ "$2" != "null" ] || [ "$3" != "special" ] || [ "$4" != "birdhouse" ] || [ "$5" != "true" ]; then
+	  echo "Results were not as expected"
+		exit 1
+  fi
+}
+
+SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+cd $SELFDIR
+set -e
+pushd ../../../main
+nimadmin user set demos test
+popd
+
+nim project deploy splitParams
+RESULT=$(nim action get authorize | tail -n +2 | jq -r '.parameters')
+echo $RESULT
+
+ONE=$(echo "$RESULT" | jq -r .[0])
+ONE_KEY=$(echo "$ONE" | jq -r .key)
+ONE_VALUE=$(echo "$ONE" | jq -r .value)
+ONE_INIT=$(echo "$ONE" | jq -r .init)
+TWO=$(echo "$RESULT" | jq -r .[1])
+TWO_KEY=$(echo "$TWO" | jq -r .key)
+TWO_VALUE=$(echo "$TWO" | jq -r .value)
+TWO_INIT=$(echo "$TWO" | jq -r .init)
+
+if [ "$ONE_KEY" == "regular" ]; then
+  testResult $ONE_VALUE $ONE_INIT $TWO_KEY $TWO_VALUE $TWO_INIT
+elif [ "TWO_KEY" == "regular" ]; then
+  testResult $TWO_VALUE $TWO_INIT $ONE_KEY $ONE_VALUE $ONE_INIT
+else
+  echo "Results were not as expected"
+	exit 1
+fi
+echo "Test Succeeded"

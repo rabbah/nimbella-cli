@@ -733,6 +733,7 @@ The action modifiers that can go in the configuration are as follows.
     action (see example below).
   - **parameters**, a nested map providing parameters that should be
     bound to the action and passed on each invocation
+  - **environment**, a nested map providing parameters that are placed in the environment of the action before each invocation
   - **clean**, which may be `true` or `false`, indicating whether you want any previous action with the same name to be removed before deploying a new one.  The default is `false`.
   - **limits**, a nested map in which you can set limits for the `timeout` (in milliseconds), `memory` (in megabytes) and `logs` (the number thereof).  All three of these must be numbers.  They must be within the range permitted by the Nimbella cloud.  Those not specified assume the defaults as defined by the Nimbella cloud.
 
@@ -773,6 +774,8 @@ The package modifiers that can go in the configuration are as follows.
   - **parameters**, a nested map providing parameters that should be
     bound to all the actions of the package and passed on each
     invocation
+  - **environment**, a nested map providing parameters that should be
+    placed in the environment of all the actions of the package before each invocation
   - **clean**, which may be `true` or `false`, indicating whether you want any previous package with the same name (and all of its contained actions) to be removed before deploying a new one.  The default is `false`.
 
 Note that `clean` at package level is _not_ the same as specifying `clean` on each action of the package.   At package level, the `clean` flag will remove all actions from the package before deploying, even ones that are not being deployed by the present project and will remove package parameters and annotations.  The `clean` flag at package level is only appropriate when you want the project to "own" a particular package outright.

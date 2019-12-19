@@ -18,23 +18,11 @@
 # from Nimbella Corp.
 #
 
-# This runs those tests that are self-verifying.  
-# Currently a single cmdline argument is passed to testMainActions only.  This is undoubtedly temporary
-
-SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd $SELFDIR
-
-set -e
-
-function runTest() {
-    echo "------------------------"
-    echo "Starting test$1"
-    ./test$1 $2
-    echo "test$1 succeeded"
-}
-
-for i in SplitParams SharedBuild Filtering WebInclude Ignoring EmptyReduce Incremental Environment Errors Unweb ValidateRuntime LoginAuth; do
-   runTest $i
-done
-runTest MainActions $1
-runTest Demos $1
+packages:
+  - name: default
+    actions:
+      - name: authorize
+        environment:
+          special: birdhouse
+        parameters:
+          regular: doghouse
