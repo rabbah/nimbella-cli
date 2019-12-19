@@ -92,9 +92,10 @@ BUILDINFO=${HASH:0:8}${DIRTY}
 VERSION=$(jq -r .version package.json)
 echo '{ "version": "'$VERSION '('$BUILDINFO')" }' | jq . > version.json
 
-# Copy in the latest runtimes.json and productionProjects.json
+# Copy in the latest runtimes.json, productionProjects.json, and 404.html
 cp $SELFDIR/../main/config/runtimes.json .
 cp $SELFDIR/../main/config/productionProjects.json .
+cp $SELFDIR/../main/deploy/embed/404_html.html 404.html
 
 # Process --testaio flag by temp-altering package.json
 if [ -n "$TESTAIO" ]; then

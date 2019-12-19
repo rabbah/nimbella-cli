@@ -69,7 +69,8 @@
     "/version.json",
     "/runtimes.json",
     "/sensitiveNamespaces.json",
-    "/productionProjects.json"
+    "/productionProjects.json",
+    "/404.html"
   ],
   "oclif": {
     "commands": "./lib/commands",

@@ -13,6 +13,7 @@ package-lock.json
 version.json
 runtimes.json
 productionProjects.json
+404.html
 *.tgz
 nim.html
 deployer/minified/

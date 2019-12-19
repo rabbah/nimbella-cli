@@ -120,23 +120,21 @@ export async function cleanBucket(client: Bucket, spec: BucketSpec) {
        prefix += '/'
    }
    //console.log("Cleaning up old web content")
-   const old404 = prefix ? undefined : await get404Page(client)
    const options = prefix ? { force: true, prefix } : { force: true }
    await client.deleteFiles(options).catch(() => {
        console.log("Note: one or more old web resources could not be deleted")
        return Promise.resolve(undefined)
    })
-   if (old404) {
-       return restore404Page(client, old404)
+   if (!prefix) {
+       return restore404Page(client)
    }
 }
 
-// Read the 404.html page from the bucket prior to clearing at the root so it can be restored
-function get404Page(client: Bucket): Promise<Buffer[]> {
-    return client.file('404.html').download()
-}
-
 // Restore the 404.html page after wiping the bucket
-function restore404Page(client: Bucket, old404: Buffer[]) {
-    return client.file('404.html').save(old404[0])
+async function restore404Page(client: Bucket) {
+    const our404 = require.resolve('../../404.html')
+    await client.upload(our404, { destination: '404.html'}).catch(() => {
+        console.log("Standard 404.html page could not be restored")
+        return Promise.resolve(undefined)
+    })
 }
