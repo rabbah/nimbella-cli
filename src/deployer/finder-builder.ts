@@ -25,6 +25,7 @@ import * as path from 'path'
 import * as fs from 'fs'
 import ignore from 'ignore'
 import * as archiver from 'archiver'
+import * as touch from 'touch'
 
 // Type to use with the ignore package.
 interface Ignore {
@@ -578,6 +579,17 @@ function npmPackageAppearsBuilt(filepath: string): boolean {
     return lockTime >= packageJsonTime && nodeModulesTime >= packageJsonTime
 }
 
+// To avoid getting 'stuck' when package.json changes in a way that does not cause an update to the lock file or node_modules,
+// we touch these resources after every npm build
+function makeNpmPackageAppearBuilt(filepath: string) {
+    const packageLockJson = path.join(filepath, "package-lock.json")
+    if (fs.existsSync(packageLockJson)) touch(packageLockJson)
+    const yarnLock = path.join(filepath, 'yarn.lock')
+    if (fs.existsSync(yarnLock)) touch(yarnLock)
+    let nodeModules = path.join(filepath, 'node_modules')
+    if (fs.existsSync(nodeModules)) touch(nodeModules)
+}
+
 // The builder for npm|yarn install --production
 function npmBuilder(filepath: string, flags: Flags): Promise<any> {
     const cmd = flags.yarn ? 'yarn' : 'npm'
@@ -589,7 +601,8 @@ function npmBuilder(filepath: string, flags: Flags): Promise<any> {
     }
     // A package.json must be present since this builder wouldn't have been invoked otherwise.
     // This doesn't mean that npm|yarn install will succeed, just that, if it fails it is for some other reason
-    return build(cmd, [ 'install', '--production' ], filepath, `Running '${cmd} install --production'`, `${cmd} install`, flags.verboseBuild)
+    return build(cmd, [ 'install', '--production' ], filepath, `Running '${cmd} install --production'`, `${cmd} install`,
+        flags.verboseBuild).then(() => makeNpmPackageAppearBuilt(filepath))
 }
 
 // Get the Ignore object for screening files.  This always has the fixed entries for .ignore itself, .build, build.sh, and .build.cmd
