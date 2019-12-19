@@ -47,7 +47,6 @@ export default class ProjectWatch extends NimBaseCommand {
     const cmdFlags: Flags = { verboseBuild: flags['verbose-build'], production: false, incremental: true, env, yarn }
     this.debug('cmdFlags', cmdFlags)
     const { creds, owOptions } = await processCredentials(insecure, apihost, auth, target, this)
-        .catch(err => this.handleError(err.message, err))
     argv.forEach(project => watch(project, cmdFlags, creds, owOptions, this))
   }
 }
@@ -80,7 +79,13 @@ async function fireDeploy(project: string, filename: string, cmdFlags: Flags, cr
         logger: NimBaseCommand, reset: ()=>void, watch: ()=>void) {
     reset()
     logger.log(`Deploying '${project}' due to change in '${filename}'`)
-    await doDeploy(project, cmdFlags, creds, owOptions, true, logger).catch(err => logger.handleError(err.message, err))
+    let error = false
+    await doDeploy(project, cmdFlags, creds, owOptions, true, logger).catch(err => {
+        logger.displayError(err.message, err)
+        error = true
+    })
+    if (error)
+        return
     logger.log("Deployment complete.  Resuming watch.")
     await delay().then(() => watch())
 }

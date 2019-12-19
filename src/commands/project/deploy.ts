@@ -99,6 +99,7 @@ export async function processCredentials(ignore_certs: boolean, apihost: string|
 export async function doDeploy(project: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions, watching: boolean,
     logger: NimBaseCommand): Promise<boolean> {
   const todeploy = await readAndPrepare(project, owOptions, creds, fileSystemPersister, cmdFlags)
+    .catch(err => logger.handleError(err.message, err))
   if (!watching) {
     displayHeader(project, todeploy.credentials, logger)
   }
