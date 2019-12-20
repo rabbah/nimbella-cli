@@ -23,8 +23,8 @@ import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
 const AioCommand: typeof RuntimeBaseCommand = require('@adobe/aio-cli-plugin-runtime/src/commands/runtime/package/update')
 
 export default class PackageUpdate extends NimBaseCommand {
-  async runCommand(argv: string[], args: any, flags: any, logger: NimLogger) {
-    await this.runAio(argv, args, flags, logger, AioCommand)
+  async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
+    await this.runAio(rawArgv, argv, args, flags, logger, AioCommand)
   }
 
   static args = AioCommand.args

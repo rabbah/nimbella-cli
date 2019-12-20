@@ -31,7 +31,7 @@ export default class Doc extends NimBaseCommand {
 
   static aliases = [ 'docs' ]
 
-  async runCommand(argv: string[], args: any, flags: any, logger: NimLogger) {
+  async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
     try {
       const html = require.resolve('../../nim.html')
       if (!open) {

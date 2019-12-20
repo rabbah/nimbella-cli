@@ -46,7 +46,7 @@ export class ProjectDeploy extends NimBaseCommand {
   static args = [ { name: 'projects', description: 'one or more paths to projects'} ]
   static strict = false
 
-  async runCommand(argv: string[], args: any, flags: any, logger: NimLogger) {
+  async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
     const { target, env, apihost, auth, insecure, production, yarn, incremental } = flags
     const cmdFlags: Flags = { verboseBuild: flags['verbose-build'], verboseZip: flags['verbose-zip'], production, incremental, env, yarn }
     this.debug('cmdFlags', cmdFlags)

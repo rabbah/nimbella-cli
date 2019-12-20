@@ -37,7 +37,7 @@ export default class AuthInspect extends NimBaseCommand {
 
   static args = [ ]
 
-  async runCommand(argv: string[], args: any, flags: any, logger: NimLogger) {
+  async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
     let { all, name, apihost, auth, storage, redis } = flags
     if (all) {
         name = apihost = auth = storage = redis = true

@@ -38,7 +38,7 @@ export default class AuthList extends NimBaseCommand {
 
   static args = []
 
-  async runCommand(argv: string[], args: any, flags: any, logger: NimLogger) {
+  async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
     const list = getCredentialList(authPersister)
     await this.formatCredentialList(list, logger)
   }

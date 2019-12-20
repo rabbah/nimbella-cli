@@ -58,13 +58,14 @@ export interface NimLogger {
   displayError: (msg: string, err?: Error) => void
 }
 
-// Print function type
-type LinePrinter = (s:any) => any
-type TableHandler = (data: object[], columns: object, options?: object) => void
-
 // An alternative NimLogger when not using the oclif stack
-class CaptureLogger implements NimLogger {
+export class CaptureLogger implements NimLogger {
+    tableData: object[]
+    tableColumns: object
+    tableOptions: object
     captured: string[] = []
+    jsonMsg: string
+    jsonObject: object
     log(msg = '', ...args: any[]) {
       this.captured.push(format(msg, ...args))
     }
@@ -85,46 +86,62 @@ class CaptureLogger implements NimLogger {
 // The base for all our commands, including the ones that delegate to aio.  There are methods designed to be called from the
 // kui repl as well as ones that implement the oclif command model.
 export abstract class NimBaseCommand extends Command  implements NimLogger {
-  // Superclass must implement for dual invocation by kui and oclif
-  abstract runCommand(argv: string[], args: any, flags: any, logger: NimLogger): Promise<any>
+  // Superclass must implement for dual invocation by kui and oclif.  Arguments are
+  //  - rawArgv -- what the process would call argv
+  //  - argv -- what oclif calls argv and kui calls argvNoOptions (rawArgv with flags stripped out)
+  //  - args -- the args (oclif's argv) reorganized as a dictionary based on assigning names (oclif calls this 'args')
+  //  - flags -- oclif's flags object (we can reuse parsedOptions for this)
+  //  - logger -- the NimLogger to use
+  // Our own classes ignore rawArgv.  The aio shims call runAio which needs the rawArgv, since aio classes will re-parse
+  abstract runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger): Promise<any>
 
   // Generic oclif run() implementation.   Parses and then invokes the abstract runCommand method
   async run() {
     const { argv, args, flags } = this.parse(this.constructor as typeof NimBaseCommand)
-    await this.runCommand(argv, args, flags, this)
+    await this.runCommand(this.argv, argv, args, flags, this)
   }
 
-  // Helper used in the runCommand methods of aio shim classes to modify logger behavior and fix up credentials prior
-  // to invoking an aio-sourced command.  Not used by Nimbella-sourced command classes.
-  // When running under node / normal oclif, the 'logger' is the class itself, so the change to table should
-  // have no effect.   Storing the parsed arguments will also have no effect (because the real oclif parse method
-  // will parse all over again).   When running under kui / dummy oclif, the 'logger' will be a capture logger and
-  // the dummy command class has an implementation of parse that returns the already parsed material.
-  async runAio(argv: string[], args: any, flags: any, logger: NimLogger, aioClass: typeof RuntimeBaseCommand) {
+  // Helper used in the runCommand methods of aio shim classes.  Not used by Nimbella-sourced command classes.
+  // When running under node / normal oclif, this just uses the normal run(argv) method.  But, when running under
+  // kui in a browser, it takes steps to avoid a second real parse and also captures all output.  The
+  // logger argument is a CaptureLogger in fact.
+  async runAio(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger, aioClass: typeof RuntimeBaseCommand) {
     fixAioCredentials()
-    const cmd = new aioClass([], {})
-    cmd.table = this.tableHandler(cmd.table, this.makePrinter(logger))
-    cmd.parsed = { argv, args, flags }
-    await cmd.run()
+    const cmd = new aioClass(rawArgv, {})
+    if (inBrowser) {
+      cmd.logger = logger
+      cmd.parsed = { argv, args, flags }
+      cmd.logJSON = this.logJSON(logger as CaptureLogger)
+      cmd.table = this.saveTable(logger as CaptureLogger)
+      await cmd.run()
+    } else
+      cmd.run(rawArgv)
   }
 
-  // Replacement for RuntimeBaseCommand.table, which is just a funnel-point for calls to cli.table in cli-ux
-  // Uses a logger for output
-  tableHandler = (table: TableHandler, printLine: LinePrinter) => (data: object[], columns: object, options: object = {}) => {
-    const modOptions = Object.assign({}, options, { printLine })
-    table(data, columns, modOptions)
+  // Replacement for logJSON function in RuntimeBaseCommand when running in browser
+  logJSON = (logger: CaptureLogger) => (msg: string, json: object) => {
+    logger.jsonMsg = msg
+    logger.jsonObject = json
   }
 
-  // Initialization helper for tableHandler
-  makePrinter = (logger: NimLogger) => (r: any) => logger.log(String(r))
+  // Replacement for table function in RuntimeBaseCommand when running in browser
+  // TODO this will not work for namespace get, which produces multiple tables.  Should generalize to a list.
+  saveTable = (logger: CaptureLogger) => (data: object[], columns: object, options: object = {}) => {
+    logger.tableData = data
+    logger.tableColumns = columns
+    logger.tableOptions = options
+  }
 
   // Generic kui runner.  Unlike run(), this gets partly pre-parsed input and doesn't do a full oclif parse.
-  // It also uses the CaptureLogger so it can return the output as an array of text lines.   The 'argTemplates'
-  // argument is the static args member of the concrete subclass of this class that is being dispatched to.
-  // It is passed in as a convenience since it is clearer code to grab it at the call site where the class
-  // identity is manifest
-  async dispatch(argv: string[], argTemplates: IArg<string>[], flags: any): Promise<string[]> {
-    // Duplicate oclif's args parsing conventions.  The flags have already been parsed in kui
+  // It also uses the CaptureLogger so it can return the output in the forms appropriate for kui display
+  // (worst case, just an array of text lines).  In addition to kui's 'argv' and 'parsedOptions' values,
+  // it gets a 'skip' value (the number of arguments consumed by the command itself), and the static
+  // args member of the concrete subclass of this class that is being dispatched to.   That could probably
+  // be computed here but would require more introspective code; easier for the caller to do it.
+  async dispatch(argv: string[], skip: number, argTemplates: IArg<string>[], parsedOptions: any): Promise<CaptureLogger> {
+    // Duplicate oclif's args parsing conventions.  Some parsing has already been done by kui
+    const rawArgv = argv.slice(skip)
+    argv = parsedOptions._.slice(skip)
     if (!argTemplates) {
       argTemplates = []
     }
@@ -134,9 +151,8 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
     }
     // Make a capture logger and run the command
     const logger = new CaptureLogger()
-    await this.runCommand(argv, args, flags, logger)
-    debug('captured result: %O', logger.captured)
-    return logger.captured
+    await this.runCommand(rawArgv, argv, args, parsedOptions, logger)
+    return logger
   }
 
   // Do oclif initialization (only used when invoked via the oclif dispatcher)

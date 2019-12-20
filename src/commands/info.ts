@@ -33,7 +33,7 @@ export default class Info extends NimBaseCommand {
 
   static args = []
 
-  async runCommand(argv: string[], args: any, flags: any, logger: NimLogger) {
+  async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
     if (flags.license) {
       try {
         const html = require.resolve('../../license.html')

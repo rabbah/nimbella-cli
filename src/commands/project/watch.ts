@@ -42,7 +42,7 @@ export default class ProjectWatch extends NimBaseCommand {
   static args = ProjectDeploy.args
   static strict = false
 
-  async runCommand(argv: string[], args: any, flags: any, logger: NimLogger) {
+  async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
     const { target, env, apihost, auth, insecure, yarn } = flags
     const cmdFlags: Flags = { verboseBuild: flags['verbose-build'], verboseZip: flags['verboseZip'], production: false, incremental: true, env, yarn }
     this.debug('cmdFlags', cmdFlags)
