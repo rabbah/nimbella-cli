@@ -43,8 +43,10 @@ import { fileSystemPersister, browserPersister } from './deployer/login';
 
 const debug = createDebug('nimbella-cli')
 
-// The persister to use throughout CLI code
-export const authPersister = (typeof process !== 'undefined') && (process.release) && (process.release.name === 'node') ? fileSystemPersister : browserPersister
+// Flag indicating running in browser
+export const inBrowser = (typeof process === 'undefined') || (!process.release) || (process.release.name !== 'node')
+// The persister to use for all auth code
+export const authPersister = inBrowser ? browserPersister : fileSystemPersister
 
 // Common behavior expected by runCommand implementations ... abstracts some features of
 // oclif.Command.  The NimBaseCommand class implements this interface using its own
@@ -99,9 +101,6 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   // will parse all over again).   When running under kui / dummy oclif, the 'logger' will be a capture logger and
   // the dummy command class has an implementation of parse that returns the already parsed material.
   async runAio(argv: string[], args: any, flags: any, logger: NimLogger, aioClass: typeof RuntimeBaseCommand) {
-    debug("runAio argv: %O", argv)
-    debug("runAio args: %O", args)
-    debug("runAio flags: %O", flags)
     fixAioCredentials()
     const cmd = new aioClass([], {})
     cmd.table = this.tableHandler(cmd.table, this.makePrinter(logger))
