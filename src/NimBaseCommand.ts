@@ -60,12 +60,10 @@ export interface NimLogger {
 
 // An alternative NimLogger when not using the oclif stack
 export class CaptureLogger implements NimLogger {
-    tableData: object[]
-    tableColumns: object
-    tableOptions: object
-    captured: string[] = []
-    jsonMsg: string
-    jsonObject: object
+    command: string[]  // The oclif command sequence being captured (aio only)
+    table: object[]    // The output table (array of entity) if that kind of output was produced
+    captured: string[] = [] // Captured line by line output (flowing via Logger.log)
+    entity: object     // An output entity if that kind of output was produced
     log(msg = '', ...args: any[]) {
       this.captured.push(format(msg, ...args))
     }
@@ -95,6 +93,9 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   // Our own classes ignore rawArgv.  The aio shims call runAio which needs the rawArgv, since aio classes will re-parse
   abstract runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger): Promise<any>
 
+  // Saved command for the case of aio under a browser
+  command: string[]
+
   // Generic oclif run() implementation.   Parses and then invokes the abstract runCommand method
   async run() {
     const { argv, args, flags } = this.parse(this.constructor as typeof NimBaseCommand)
@@ -111,25 +112,24 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
     if (inBrowser) {
       cmd.logger = logger
       cmd.parsed = { argv, args, flags }
-      cmd.logJSON = this.logJSON(logger as CaptureLogger)
-      cmd.table = this.saveTable(logger as CaptureLogger)
+      const capture = logger as CaptureLogger
+      cmd.logJSON = this.logJSON(capture)
+      cmd.table = this.saveTable(capture)
+      capture.command = this.command
       await cmd.run()
     } else
       cmd.run(rawArgv)
   }
 
   // Replacement for logJSON function in RuntimeBaseCommand when running in browser
-  logJSON = (logger: CaptureLogger) => (msg: string, json: object) => {
-    logger.jsonMsg = msg
-    logger.jsonObject = json
+  logJSON = (logger: CaptureLogger) => (ignored: string, entity: object) => {
+    logger.entity = entity
   }
 
   // Replacement for table function in RuntimeBaseCommand when running in browser
   // TODO this will not work for namespace get, which produces multiple tables.  Should generalize to a list.
   saveTable = (logger: CaptureLogger) => (data: object[], columns: object, options: object = {}) => {
-    logger.tableData = data
-    logger.tableColumns = columns
-    logger.tableOptions = options
+    logger.table = data
   }
 
   // Generic kui runner.  Unlike run(), this gets partly pre-parsed input and doesn't do a full oclif parse.
@@ -141,6 +141,7 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   async dispatch(argv: string[], skip: number, argTemplates: IArg<string>[], parsedOptions: any): Promise<CaptureLogger> {
     // Duplicate oclif's args parsing conventions.  Some parsing has already been done by kui
     const rawArgv = argv.slice(skip)
+    this.command = argv.slice(0, skip)
     argv = parsedOptions._.slice(skip)
     if (!argTemplates) {
       argTemplates = []
