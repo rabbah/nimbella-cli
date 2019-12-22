@@ -29,8 +29,6 @@ if [ "$1" == "--pack" ]; then
 elif [ "$1" == "--stable" ]; then
 		STABLE=true
 		PKG=true
-elif [ "$1" == "--testaio" ]; then
-		TESTAIO=true
 elif [ "$1" == "--no-install" ]; then
 		NOINSTALL=true
 elif [ "$1" == "--check-stable" ]; then
@@ -97,12 +95,6 @@ cp $SELFDIR/../main/config/runtimes.json .
 cp $SELFDIR/../main/config/productionProjects.json .
 cp $SELFDIR/../main/deploy/embed/404_html.html 404.html
 
-# Process --testaio flag by temp-altering package.json
-if [ -n "$TESTAIO" ]; then
-		cp package.json saved-package.json
-		jq -r '.dependencies."@adobe/aio-cli-plugin-runtime" = "file:adobe-aio-cli-plugin-runtime.tgz"' < saved-package.json > package.json
-fi
-
 # Generate the license-notices.md file.  Note: to avoid unnecessary entries
 # this step requires a clean production install.  We do a full install later.
 # Failures of this step are terminal when building a stable version but are
@@ -134,17 +126,13 @@ npx tsc
 npm pack
 mv nimbella-cli-*.tgz nimbella-cli.tgz
 
-# Cleanup alteration for -testaio
-if [ -n "$TESTAIO" ]; then
-		mv saved-package.json package.json
-fi
-
 # Unless told not to, do a global install of the result
 if [ -z "$NOINSTALL" ]; then
-		if [ -z "$TESTAIO" ]; then
-				npm install -g nimbella-cli.tgz
-		else
+		if [ -f saved-package.json ]; then
+				echo "Using 'npm link' for AIO testing"
 				npm link
+		else
+				npm install -g nimbella-cli.tgz
 		fi
 fi
 

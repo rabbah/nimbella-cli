@@ -100,13 +100,23 @@ Build it with
 ```
 in this repo.  The result should be a tarball in the root of this repo.
 
-Test it with
+Prior to testing, issue
 
 ```
-./build.sh --testaio
+./testaio.sh
 ```
 
-The `--testaio` flag causes the local tarball to be used for the dependency, rather than the deployed version that is normally used.
+This changes `package.json` so that the local tarball is used for the `aio` dependency, rather than the deployed version that is normally used.
+
+Once this has been done, use the normal build procedure for testing.
+
+When finished with testing, issue
+
+```
+./testaio.sh --reset
+```
+
+This restores `package.json` from a backup.
 
 ### Committing a new (tested) version of the Adobe I/O dependency
 
