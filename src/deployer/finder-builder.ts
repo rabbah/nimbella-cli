@@ -493,7 +493,7 @@ function autozipBuilder(pairs: string[][], action: ActionSpec, incremental: bool
         const [oldPath, newPath ] = pair
         //console.log("Zipping file with old path", oldPath, "and new path", newPath)
         const mode = fs.lstatSync(oldPath).mode
-        zip.append(fs.createReadStream(oldPath), { name: newPath, mode: mode })
+        zip.file(oldPath, { name: newPath, mode: mode })
     }
     zip.finalize()
     return outputPromise.then(() => singleFileBuilder(action, ZIP_TARGET))
