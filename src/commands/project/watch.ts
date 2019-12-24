@@ -57,7 +57,7 @@ function watch(project: string, cmdFlags: Flags, creds: Credentials|undefined, o
     if (msg) {
         logger.handleError(msg, new Error(msg))
     }
-    logger.log(`Watching ${project}`)
+    logger.log(`Watching '${project}' [use Control-C to terminate]`)
     let watcher: fs.FSWatcher|undefined = undefined
     const reset = () => {
         if (watcher) {
@@ -77,8 +77,11 @@ function watch(project: string, cmdFlags: Flags, creds: Credentials|undefined, o
 // Displays an informative message before deploying.
 async function fireDeploy(project: string, filename: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions,
         logger: NimBaseCommand, reset: ()=>void, watch: ()=>void) {
+    if (excluded(filename)) {
+        return
+    }
     reset()
-    logger.log(`Deploying '${project}' due to change in '${filename}'`)
+    logger.log(`\nDeploying '${project}' due to change in '${filename}'`)
     let error = false
     await doDeploy(project, cmdFlags, creds, owOptions, true, logger).catch(err => {
         logger.displayError(err.message, err)
@@ -86,8 +89,19 @@ async function fireDeploy(project: string, filename: string, cmdFlags: Flags, cr
     })
     if (error)
         return
-    logger.log("Deployment complete.  Resuming watch.")
+    logger.log("Deployment complete.  Resuming watch.\n")
     await delay().then(() => watch())
+}
+
+// Decide if a file name should be excluded from consideration when firing a deploy.
+// TODO Someday this might be based on a list of patterns but the number of rules right now are small enough to
+// not bother with that.
+function excluded(filename: string): boolean {
+    return filename.split('/').includes('.nimbella')
+        || filename.endsWith('~')
+        || filename.includes('_tmp_')
+        || filename.endsWith('.swx')
+        || filename.includes('.#')
 }
 
 // Validate a project argument to ensure that it denotes an actual directory that "looks like a project".
