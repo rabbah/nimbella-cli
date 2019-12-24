@@ -96,16 +96,21 @@ function buildAction(action: ActionSpec, buildTable: BuildTable, flags: Flags): 
     }
     switch (action.build) {
         case 'build.sh':
-            return scriptBuilder('./build.sh', action.file, flags).then(() => identifyActionFiles(action, flags.incremental))
+            return scriptBuilder('./build.sh', action.file, flags).then(() => identifyActionFiles(action,
+                flags.incremental, flags.verboseZip))
         case 'build.cmd':
-            return scriptBuilder('build.cmd', action.file, flags).then(() => identifyActionFiles(action, flags.incremental))
+            return scriptBuilder('build.cmd', action.file, flags).then(() => identifyActionFiles(action,
+                flags.incremental, flags.verboseZip))
         case '.build':
-            return outOfLineBuilder(action.file, buildTable, true, flags).then(() => identifyActionFiles(action, flags.incremental))
+            return outOfLineBuilder(action.file, buildTable, true, flags).then(() => identifyActionFiles(action,
+                flags.incremental, flags.verboseZip))
         case 'package.json':
-            return npmBuilder(action.file, flags).then(() => identifyActionFiles(action, flags.incremental))
+            return npmBuilder(action.file, flags).then(() => identifyActionFiles(action,
+                flags.incremental, flags.verboseZip))
         case '.include':
         case 'identify':
-            return identifyActionFiles(action, flags.incremental)
+            return identifyActionFiles(action,
+                 flags.incremental, flags.verboseZip)
         default:
             throw new Error("Unknown build type in ActionSpec: " + action.build)
     }
@@ -158,7 +163,7 @@ function processIncludeFileItems(items: string[], dirPath: string): Promise<stri
 
 // Identify the files that make up an action directory, based on the files in the directory and .include. .source, or .ignore if present.
 // If there is more than one file, perform autozipping.
-function identifyActionFiles(action: ActionSpec, incremental: boolean): Promise<ActionSpec> {
+function identifyActionFiles(action: ActionSpec, incremental: boolean, verboseZip: boolean): Promise<ActionSpec> {
     let includesPath = path.join(action.file, '.include')
     if (!fs.existsSync(includesPath)) {
         // Backward compatibility: try .source also
@@ -170,7 +175,7 @@ function identifyActionFiles(action: ActionSpec, incremental: boolean): Promise<
             if (pairs.length == 0) {
                 return Promise.reject(includesPath + " is empty")
             } else if (pairs.length > 1) {
-                return autozipBuilder(pairs, action, incremental)
+                return autozipBuilder(pairs, action, incremental, verboseZip)
             } else {
                 return singleFileBuilder(action, pairs[0][0])
             }
@@ -193,7 +198,7 @@ function identifyActionFiles(action: ActionSpec, incremental: boolean): Promise<
                     const shortName = item.substring(action.file.length + 1)
                     return [ item, shortName ]
                 })
-                return autozipBuilder(pairs, action, incremental)
+                return autozipBuilder(pairs, action, incremental, verboseZip)
             }
         })
     })
@@ -466,7 +471,9 @@ function singleFileBuilder(action: ActionSpec, singleItem: string): Promise<Acti
 //     - an item is zipped as is otherwise
 //     - directories are zipped recursively
 // 4.  Return an ActionSpec promise describing the result.
-function autozipBuilder(pairs: string[][], action: ActionSpec, incremental: boolean): Promise<ActionSpec> {
+function autozipBuilder(pairs: string[][], action: ActionSpec, incremental: boolean, verboseZip: boolean): Promise<ActionSpec> {
+    if (verboseZip)
+        console.log('Zipping action contents in', action.file )
     const targetZip = path.join(action.file, ZIP_TARGET)
     if (!action.runtime) {
         action.runtime = agreeOnRuntime(pairs.map(pair => pair[0]))
@@ -496,13 +503,15 @@ function autozipBuilder(pairs: string[][], action: ActionSpec, incremental: bool
         zip.file(oldPath, { name: newPath, mode: mode })
     }
     zip.finalize()
+    if (verboseZip)
+        console.log('Zipping complete in', action.file )
     return outputPromise.then(() => singleFileBuilder(action, ZIP_TARGET))
 }
 
 // Subroutine for performing a "real" build requiring a spawn.
 function build(cmd: string, args: string[], filepath: string, infoMsg: string, errorTag: string, verbose: boolean): Promise<any> {
     return new Promise(function(resolve, reject) {
-        console.log(infoMsg, 'in', filepath)
+        console.log('Started running', infoMsg, 'in', filepath)
         const shell = process.platform == 'win32' ? true : process.env['shell'] || "/bin/bash"
         const child = spawn(cmd, args, { cwd: filepath, shell })
         let result = ''
@@ -510,17 +519,27 @@ function build(cmd: string, args: string[], filepath: string, infoMsg: string, e
             child.stdout.on('data', (data) => console.log(String(data)))
             child.stderr.on('data', (data) => console.error(String(data)))
         } else {
-            child.stdout.on('data', (data) => result += data.toString())
-            child.stderr.on('data', (data) => result += data.toString())
+            let time = Date.now()
+            function statusUpdate(data: { toString: () => string; }) {
+                result += data.toString()
+                const newTime = Date.now()
+                if ((newTime - time) > 5000) {
+                    console.log('Still running', infoMsg, 'in', filepath)
+                    time = newTime
+                }
+            }
+            child.stdout.on('data', statusUpdate)
+            child.stderr.on('data', statusUpdate)
         }
         child.on('close', (code) => {
             if (code != 0) {
                 if (!verbose) {
-                    console.log('Output of failed build')
+                    console.log('Output of failed build in', filepath)
                     console.log(result)
                 }
                 reject(`'${errorTag}' exited with code ${code}`)
             } else  {
+                console.log('Finished running', infoMsg, 'in', filepath)
                 resolve(undefined)
             }
         })
@@ -538,7 +557,7 @@ function scriptBuilder(script: string, filepath: string, flags: Flags): Promise<
         }
         return Promise.resolve(undefined)
     }
-    return build(script, [ ], filepath, `Running '${script}`, script, flags.verboseBuild)
+    return build(script, [ ], filepath, script, script, flags.verboseBuild)
 }
 
 // Determine if a shell-script style build appears to have been run.  For this we just check for the presence of a `.built` file since
@@ -601,7 +620,7 @@ function npmBuilder(filepath: string, flags: Flags): Promise<any> {
     }
     // A package.json must be present since this builder wouldn't have been invoked otherwise.
     // This doesn't mean that npm|yarn install will succeed, just that, if it fails it is for some other reason
-    return build(cmd, [ 'install', '--production' ], filepath, `Running '${cmd} install --production'`, `${cmd} install`,
+    return build(cmd, [ 'install', '--production' ], filepath, `'${cmd} install --production'`, `${cmd} install`,
         flags.verboseBuild).then(() => makeNpmPackageAppearBuilt(filepath))
 }
 

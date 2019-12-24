@@ -78,6 +78,7 @@ export interface ActionSpec {
 // Information of various kinds typically specified on the command line
 export interface Flags {
     verboseBuild: boolean
+    verboseZip: boolean
     production: boolean
     incremental: boolean
     yarn: boolean

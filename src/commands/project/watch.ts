@@ -34,6 +34,7 @@ export default class ProjectWatch extends NimBaseCommand {
     auth: ProjectDeploy.flags.auth,
     insecure: ProjectDeploy.flags.insecure,
     'verbose-build': ProjectDeploy.flags['verbose-build'],
+    'verbose-zip': ProjectDeploy.flags['verbose-zip'],
     yarn: ProjectDeploy.flags.yarn,
     ...NimBaseCommand.flags
   }
@@ -44,7 +45,7 @@ export default class ProjectWatch extends NimBaseCommand {
   async run() {
     const {argv, flags} = this.parse(ProjectWatch)
     const { target, env, apihost, auth, insecure, yarn } = flags
-    const cmdFlags: Flags = { verboseBuild: flags['verbose-build'], production: false, incremental: true, env, yarn }
+    const cmdFlags: Flags = { verboseBuild: flags['verbose-build'], verboseZip: flags['verboseZip'], production: false, incremental: true, env, yarn }
     this.debug('cmdFlags', cmdFlags)
     const { creds, owOptions } = await processCredentials(insecure, apihost, auth, target, this)
     argv.forEach(project => watch(project, cmdFlags, creds, owOptions, this))

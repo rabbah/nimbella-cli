@@ -35,7 +35,8 @@ export class ProjectDeploy extends NimBaseCommand {
     apihost: flags.string({ description: 'API host to use' }),
     auth: flags.string({ description: 'OpenWhisk auth token to use' }),
     insecure: flags.boolean({ description: 'Ignore SSL Certificates', default: false }),
-    "verbose-build": flags.boolean({ description: 'Display build details' }),
+    'verbose-build': flags.boolean({ description: 'Display build details' }),
+    'verbose-zip': flags.boolean({ description: 'Display start/end of zipping phase for each action'}),
     production: flags.boolean({ hidden: true }),
     yarn: flags.boolean({ description: 'Use yarn instead of npm for node builds' }),
     incremental: flags.boolean({ description: 'Deploy only changes since last deploy' }),
@@ -48,7 +49,7 @@ export class ProjectDeploy extends NimBaseCommand {
   async run() {
     const {argv, flags} = this.parse(ProjectDeploy)
     const { target, env, apihost, auth, insecure, production, yarn, incremental } = flags
-    const cmdFlags: Flags = { verboseBuild: flags['verbose-build'], production, incremental, env, yarn }
+    const cmdFlags: Flags = { verboseBuild: flags['verbose-build'], verboseZip: flags['verbose-zip'], production, incremental, env, yarn }
     this.debug('cmdFlags', cmdFlags)
     const { creds, owOptions } = await processCredentials(insecure, apihost, auth, target, this)
     this.debug('creds', creds)
