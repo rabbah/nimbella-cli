@@ -112,7 +112,6 @@ COMMANDS
   action        work with actions
   activation    work with activations
   auth          manage Nimbella namespace credentials
-  autocomplete  display autocomplete installation instructions
   doc           display the full documentation of this CLI
   help          display help for nim
   info          show information about this version of 'nim'
@@ -132,7 +131,7 @@ The `action`, `activation`, `namespace`, `package`, `route`, `rule` and `trigger
 
 #### Supporting commands
 
-The `autocomplete`, `doc`, `help`, `info` and `update` commands provide supporting services in either explaining how to do things or updating the CLI to a later version.  Note that `nim update` works only when `nim` was installed using the recommended installation method for use from a shell (it does not work when `nim` was installed using `npm` or `yarn`).
+The `doc`, `help`, `info` and `update` commands provide supporting services in either explaining how to do things or updating the CLI to a later version.  Note that `nim update` works only when `nim` was installed using the recommended installation method for use from a shell (it does not work when `nim` was installed using `npm` or `yarn`).
 
 #### Credential Management
 
