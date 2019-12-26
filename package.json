@@ -97,6 +97,9 @@
       "auth": {
         "description": "manage Nimbella namespace credentials"
       },
+      "autocomplete": {
+        "hidden": true
+      },
       "project": {
         "description": "manage and deploy Nimbella projects"
       },
