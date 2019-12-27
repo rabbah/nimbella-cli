@@ -235,15 +235,16 @@ function outOfLineBuilder(filepath: string, sharedBuilds: BuildTable, isAction: 
             return readDirectory(redirected).then(items => {
                 const special = findSpecialFile(items, filepath, isAction)
                 let build: () => Promise<any> = undefined
+                const cwd = path.resolve(redirected)
                 switch (special) {
                     case 'build.sh':
                     case 'build.cmd':
                         const script = path.resolve(redirected, special)
                         // Like the direct link case, just a different way of doing it
-                        build = () => scriptBuilder(script, filepath, flags)
+                        build = () => scriptBuilder(script, cwd, flags)
                         break
                     case 'package.json':
-                        build = () => npmBuilder(path.resolve(redirected), flags)
+                        build = () => npmBuilder(cwd, flags)
                         break
                     default:
                         return Promise.reject(new Error(redirected + ' is a directory but contains no build information'))
