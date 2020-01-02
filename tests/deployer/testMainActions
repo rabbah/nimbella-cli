@@ -236,7 +236,6 @@ if [ -z "$POSTDEPLOY" ]; then
   for act in ${QRACTIONS[*]}; do
     nim action delete $act
 	done
-  nim package delete demo
   setuser demos chatdemo
   for act in ${CHATACTIONS[*]}; do
     nim action delete $act
