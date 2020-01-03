@@ -118,7 +118,7 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
       capture.command = this.command
       await cmd.run()
     } else
-      cmd.run(rawArgv)
+      await cmd.run(rawArgv)
   }
 
   // Replacement for logJSON function in RuntimeBaseCommand when running in browser
