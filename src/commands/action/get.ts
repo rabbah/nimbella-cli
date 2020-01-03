@@ -18,14 +18,12 @@
  * from Nimbella Corp.
  */
 
-import { NimBaseCommand, NimLogger, inBrowser } from '../../NimBaseCommand'
-import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
-const AioCommand: typeof RuntimeBaseCommand = require('@adobe/aio-cli-plugin-runtime/src/commands/runtime/action/get')
+import { Command } from '@oclif/command'
+const AioCommand: typeof Command = require('@adobe/aio-cli-plugin-runtime/src/commands/runtime/action/get')
 
-export default class ActionGet extends NimBaseCommand {
-  async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
-    AioCommand.fullGet = inBrowser
-    await this.runAio(rawArgv, argv, args, flags, logger, AioCommand)
+export default class ActionGet extends Command {
+  async run () {
+    await AioCommand.run(this.argv)
   }
 
   static args = AioCommand.args

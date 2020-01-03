@@ -18,13 +18,12 @@
  * from Nimbella Corp.
  */
 
-import { NimBaseCommand, NimLogger } from '../../NimBaseCommand'
-import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
-const AioCommand: typeof RuntimeBaseCommand = require('@adobe/aio-cli-plugin-runtime/src/commands/runtime/route/create')
+import { Command } from '@oclif/command'
+const AioCommand: typeof Command = require('@adobe/aio-cli-plugin-runtime/src/commands/runtime/route/create')
 
-export default class RouteCreate extends NimBaseCommand {
-  async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
-    await this.runAio(rawArgv, argv, args, flags, logger, AioCommand)
+export default class RouteCreate extends Command {
+  async run () {
+    await AioCommand.run(this.argv)
   }
 
   static args = AioCommand.args

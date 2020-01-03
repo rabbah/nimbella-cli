@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { fileSystemPersister } from './deployer/login';
+
 /*
  * Nimbella CONFIDENTIAL
  * ---------------------
@@ -20,8 +22,6 @@
  * from Nimbella Corp.
  */
 
- import { cleanEnvironment, fixAioCredentials } from './NimBaseCommand'
-
 // List of plural commands to be replaced by singular equivalentsdelegated to aio runtime plugin
 const pluralCommands = ['actions', 'activations', 'packages', 'routes', 'rules', 'triggers' ]
 
@@ -39,6 +39,17 @@ export async function run() {
     fixAioCredentials()
     colonize()
     await require('@oclif/command').run()
+}
+
+// Purge the process environment of entries that match __OW_*.   These are not attempting to influence 'nim' because
+// we specifically document that that doesn't work.  If they are there at all they are strays from some other usage but
+// they can do mischief.
+function cleanEnvironment() {
+    for (const item in process.env) {
+        if (item.startsWith('__OW_')) {
+            delete process.env[item]
+        }
+    }
 }
 
 // Change the user's presented command into a canonical form:
@@ -72,6 +83,32 @@ function makeCanonical() {
         cmdTokens.push('--help')
     }
     process.argv = argvbase.concat(cmdTokens)
+}
+
+// Stuff the current namespace, API host, and AUTH key into the environment so that AIO does not look in .wskprops when invoked by nim
+function fixAioCredentials() {
+    let store = fileSystemPersister.loadCredentialStoreIfPresent()
+    let currentHost: string
+    let currentNamespace: string
+    let currentAuth: string
+    if (store) {
+        currentHost = store.currentHost
+        currentNamespace = store.currentNamespace
+    } else {
+        // No credential store (brand new user who's never done a login?).   Not much we can do, other than using our default API host in place of AIO's
+        currentHost = 'https://apigcp.nimbella.io'
+    }
+    if (store && currentHost && currentNamespace) {
+        const creds = store.credentials[currentHost][currentNamespace]
+        if (creds) {
+            currentAuth = creds.api_key
+        } else {
+            console.log(`Error retrieving credentials for '${currentNamespace}' on host '${currentHost}'`)
+        }
+    }
+    process.env.AIO_RUNTIME_APIHOST = currentHost
+    process.env.AIO_RUNTIME_AUTH = currentAuth
+    process.env.AIO_RUNTIME_NAMESPACE = currentNamespace
 }
 
 // Check whether a token is a flag

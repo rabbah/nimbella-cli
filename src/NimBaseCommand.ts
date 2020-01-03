@@ -18,8 +18,8 @@
  * from Nimbella Corp.
  */
 
-// Some behavior of this class was initially populated from RuntimeBaseCommand.js in
-// aio-cli-plugin-runtime (translated to TypeScript), govened by the following license:
+// A simplified version of RuntimeBaseCommand.js from aio-cli-plugin-runtime (translated to TypeScript)
+// The aio plugins are covered by the following copyright:
 
 /*
 Copyright 2019 Adobe Inc. All rights reserved.
@@ -34,129 +34,11 @@ governing permissions and limitations under the License.
 */
 
 import { Command, flags } from '@oclif/command'
-import { IArg } from '@oclif/parser/lib/args'
-import * as Errors from '@oclif/errors'
-import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
 import * as createDebug  from 'debug'
-import { format } from 'util'
-import { fileSystemPersister, browserPersister } from './deployer/login';
 
 const debug = createDebug('nimbella-cli')
 
-// Flag indicating running in browser
-export const inBrowser = (typeof process === 'undefined') || (!process.release) || (process.release.name !== 'node')
-// The persister to use for all auth code
-export const authPersister = inBrowser ? browserPersister : fileSystemPersister
-
-// Common behavior expected by runCommand implementations ... abstracts some features of
-// oclif.Command.  The NimBaseCommand class implements this interface using its own
-// methods
-export interface NimLogger {
-  log: (msg: string, ...args: any[]) => void
-  handleError: (msg: string, err?: Error) => never
-  exit: (code: number) => void  // don't use 'never' here because 'exit' doesn't always exit
-  displayError: (msg: string, err?: Error) => void
-}
-
-// An alternative NimLogger when not using the oclif stack
-export class CaptureLogger implements NimLogger {
-    command: string[]  // The oclif command sequence being captured (aio only)
-    table: object[]    // The output table (array of entity) if that kind of output was produced
-    captured: string[] = [] // Captured line by line output (flowing via Logger.log)
-    entity: object     // An output entity if that kind of output was produced
-    log(msg = '', ...args: any[]) {
-      this.captured.push(format(msg, ...args))
-    }
-    handleError(msg: string, err?: Error): never {
-      if (err) throw err
-      msg = improveErrorMsg(msg, err)
-      throw new Error(msg)
-    }
-    displayError(msg: string, err?: Error) {
-      msg = improveErrorMsg(msg, err)
-      Errors.error(msg, { exit: false })
-    }
-    exit(code: number) {
-      // a no-op here
-    }
-}
-
-// The base for all our commands, including the ones that delegate to aio.  There are methods designed to be called from the
-// kui repl as well as ones that implement the oclif command model.
-export abstract class NimBaseCommand extends Command  implements NimLogger {
-  // Superclass must implement for dual invocation by kui and oclif.  Arguments are
-  //  - rawArgv -- what the process would call argv
-  //  - argv -- what oclif calls argv and kui calls argvNoOptions (rawArgv with flags stripped out)
-  //  - args -- the args (oclif's argv) reorganized as a dictionary based on assigning names (oclif calls this 'args')
-  //  - flags -- oclif's flags object (we can reuse parsedOptions for this)
-  //  - logger -- the NimLogger to use
-  // Our own classes ignore rawArgv.  The aio shims call runAio which needs the rawArgv, since aio classes will re-parse
-  abstract runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger): Promise<any>
-
-  // Saved command for the case of aio under a browser
-  command: string[]
-
-  // Generic oclif run() implementation.   Parses and then invokes the abstract runCommand method
-  async run() {
-    const { argv, args, flags } = this.parse(this.constructor as typeof NimBaseCommand)
-    await this.runCommand(this.argv, argv, args, flags, this)
-  }
-
-  // Helper used in the runCommand methods of aio shim classes.  Not used by Nimbella-sourced command classes.
-  // When running under node / normal oclif, this just uses the normal run(argv) method.  But, when running under
-  // kui in a browser, it takes steps to avoid a second real parse and also captures all output.  The
-  // logger argument is a CaptureLogger in fact.
-  async runAio(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger, aioClass: typeof RuntimeBaseCommand) {
-    fixAioCredentials()
-    const cmd = new aioClass(rawArgv, {})
-    if (inBrowser) {
-      cmd.logger = logger
-      cmd.parsed = { argv, args, flags }
-      const capture = logger as CaptureLogger
-      cmd.logJSON = this.logJSON(capture)
-      cmd.table = this.saveTable(capture)
-      capture.command = this.command
-      await cmd.run()
-    } else
-      cmd.run(rawArgv)
-  }
-
-  // Replacement for logJSON function in RuntimeBaseCommand when running in browser
-  logJSON = (logger: CaptureLogger) => (ignored: string, entity: object) => {
-    logger.entity = entity
-  }
-
-  // Replacement for table function in RuntimeBaseCommand when running in browser
-  // TODO this will not work for namespace get, which produces multiple tables.  Should generalize to a list.
-  saveTable = (logger: CaptureLogger) => (data: object[], columns: object, options: object = {}) => {
-    logger.table = data
-  }
-
-  // Generic kui runner.  Unlike run(), this gets partly pre-parsed input and doesn't do a full oclif parse.
-  // It also uses the CaptureLogger so it can return the output in the forms appropriate for kui display
-  // (worst case, just an array of text lines).  In addition to kui's 'argv' and 'parsedOptions' values,
-  // it gets a 'skip' value (the number of arguments consumed by the command itself), and the static
-  // args member of the concrete subclass of this class that is being dispatched to.   That could probably
-  // be computed here but would require more introspective code; easier for the caller to do it.
-  async dispatch(argv: string[], skip: number, argTemplates: IArg<string>[], parsedOptions: any): Promise<CaptureLogger> {
-    // Duplicate oclif's args parsing conventions.  Some parsing has already been done by kui
-    const rawArgv = argv.slice(skip)
-    this.command = argv.slice(0, skip)
-    argv = parsedOptions._.slice(skip)
-    if (!argTemplates) {
-      argTemplates = []
-    }
-    const args = {} as any
-    for (let i = 0; i < argv.length; i++) {
-      args[argTemplates[i].name] = argv[i]
-    }
-    // Make a capture logger and run the command
-    const logger = new CaptureLogger()
-    await this.runCommand(rawArgv, argv, args, parsedOptions, logger)
-    return logger
-  }
-
-  // Do oclif initialization (only used when invoked via the oclif dispatcher)
+export abstract class NimBaseCommand extends Command {
   async init () {
     const { flags } = this.parse(this.constructor as typeof NimBaseCommand)
 
@@ -169,90 +51,46 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
     }
   }
 
-  // Error handling.  This is for oclif; the CaptureLogger has a more generic implementation suitable for kui inclusion
+  parseAPIHost (host: string|undefined): string|undefined {
+    if (!host) {
+      return undefined
+    }
+    if (host.includes(':')) {
+      return host
+    }
+    if (host.includes('.')) {
+      return 'https://' + host
+    }
+    if (!host.startsWith('api')) {
+      host = 'api' + host
+    }
+    return 'https://' + host + ".nimbella.io"
+  }
+
   handleError (msg: string, err?: any) {
     this.parse(this.constructor as typeof NimBaseCommand)
-    msg = improveErrorMsg(msg, err)
+
+    if (err && err.name === 'OpenWhiskError' && err.error && err.error.error) {
+        msg = "[OpenWhisk] " + err.error.error
+    }
     debug(err)
     msg = msg + '\n specify --verbose flag for more information'
     return this.error(msg, { exit: 1 })
   }
 
-  // For non-terminal errors.  The CaptureLogger has a simpler equivalent.
   displayError (msg: string, err?: any) {
     this.parse(this.constructor as typeof NimBaseCommand)
-    msg = improveErrorMsg(msg, err)
+
+    if (err && err.name === 'OpenWhiskError' && err.error && err.error.error) {
+        msg = "[OpenWhisk] " + err.error.error
+    }
     debug(err)
     return this.error(msg, { exit: false })
   }
 
-  static args = []
   static flags = {
     debug: flags.string({ description: 'Debug level output' }),
     verbose: flags.boolean({ char: 'v', description: 'Verbose output' }),
     help: flags.boolean({ description: 'Show help' })
   }
-}
-
-// Improves an error message based on analyzing the accompanying Error object (based on similar code in RuntimeBaseCommand)
-function improveErrorMsg(msg: string, err?: any): string {
-    if (err && err.name === 'OpenWhiskError' && err.error && err.error.error) {
-        msg = "[OpenWhisk] " + err.error.error
-    }
-    return msg
-}
-
-// Utility to parse the value of an --apihost flag, permitting certain abbreviations
-export function parseAPIHost (host: string|undefined): string|undefined {
-  if (!host) {
-    return undefined
-  }
-  if (host.includes(':')) {
-    return host
-  }
-  if (host.includes('.')) {
-    return 'https://' + host
-  }
-  if (!host.startsWith('api')) {
-    host = 'api' + host
-  }
-  return 'https://' + host + ".nimbella.io"
-}
-
-
-// Purge the process environment of entries that match __OW_*.   These are not attempting to influence 'nim' because
-// we specifically document that that doesn't work.  If they are there at all they are strays from some other usage but
-// they can do mischief via their effect on the node client.
-export function cleanEnvironment() {
-    for (const item in process.env) {
-        if (item.startsWith('__OW_')) {
-            delete process.env[item]
-        }
-    }
-}
-
-// Stuff the current namespace, API host, and AUTH key into the environment so that AIO does not look in .wskprops when invoked by nim
-export function fixAioCredentials() {
-    let store = authPersister.loadCredentialStoreIfPresent()
-    let currentHost: string
-    let currentNamespace: string
-    let currentAuth: string
-    if (store) {
-        currentHost = store.currentHost
-        currentNamespace = store.currentNamespace
-    } else {
-        // No credential store (brand new user who's never done a login?).   Not much we can do, other than using our default API host in place of AIO's
-        currentHost = 'https://apigcp.nimbella.io'
-    }
-    if (store && currentHost && currentNamespace) {
-        const creds = store.credentials[currentHost][currentNamespace]
-        if (creds) {
-            currentAuth = creds.api_key
-        } else {
-            debug(`Error retrieving credentials for '${currentNamespace}' on host '${currentHost}'`)
-        }
-    }
-    process.env.AIO_RUNTIME_APIHOST = currentHost
-    process.env.AIO_RUNTIME_AUTH = currentAuth
-    process.env.AIO_RUNTIME_NAMESPACE = currentNamespace
 }

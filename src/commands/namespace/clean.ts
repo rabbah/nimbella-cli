@@ -19,14 +19,13 @@
  */
 
 import { flags } from '@oclif/command'
-import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
-import { getCredentialsForNamespace, getCredentials } from '../../deployer/login'
+import { NimBaseCommand } from '../../NimBaseCommand'
+import { cli } from 'cli-ux'
+import { getCredentialsForNamespace, fileSystemPersister, getCredentials } from '../../deployer/login'
 import { wipeNamespace } from '../../deployer/api'
 import { computeBucketName, cleanBucket } from '../../deployer/deploy-to-bucket'
 import { Credentials } from '../../deployer/deploy-struct'
 import { Storage } from '@google-cloud/storage'
-
-let cli
 
 export default class NamespaceClean extends NimBaseCommand {
      static description = 'Remove content from a namespace'
@@ -41,21 +40,19 @@ export default class NamespaceClean extends NimBaseCommand {
 
      static args = [{name: 'namespace', description: 'the namespace to clean (current namespace if omitted)', required: false}]
 
-    async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
+     async run() {
+        const { args, flags } = this.parse(NamespaceClean)
         let namespace = args.namespace
         let creds: Credentials = undefined
         if (!namespace) {
-            creds = await getCredentials(authPersister)
+            creds = await getCredentials(fileSystemPersister)
             namespace = creds.namespace
         }
         if (!flags.force) {
             const ow = flags.justwhisk ? " openwhisk" : ""
-            if (!cli) {
-                cli = require('cli-ux').cli
-            }
             const ans = await cli.prompt(`Type '${namespace}' to remove all${ow} content from namespace '${namespace}'`)
             if (ans !== namespace) {
-                logger.log('Doing nothing')
+                this.log('Doing nothing')
                 return
             }
         }
@@ -69,14 +66,14 @@ export default class NamespaceClean extends NimBaseCommand {
             storageKey = undefined
         } else {
             if (!creds) {
-                creds = await getCredentialsForNamespace(namespace, flags.apihost, authPersister)
+                creds = await getCredentialsForNamespace(namespace, flags.apihost, fileSystemPersister)
             }
             auth = creds.ow.api_key
             apihost = creds.ow.apihost
             storageKey = creds.storageKey
         }
         await wipeNamespace(apihost, auth)
-        logger.log(`OpenWhisk entities removed from namespace '${namespace}' on host '${apihost}'`)
+        this.log(`OpenWhisk entities removed from namespace '${namespace}' on host '${apihost}'`)
         if (flags.justwhisk || !storageKey) {
             return
         }
@@ -84,6 +81,6 @@ export default class NamespaceClean extends NimBaseCommand {
         const storage = new Storage(storageKey)
         const client = storage.bucket(bucketName)
         await cleanBucket(client, undefined)
-        logger.log(`Web content removed from https://${bucketName}`)
+        this.log(`Web content removed from https://${bucketName}`)
      }
 }
