@@ -28,15 +28,6 @@ SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SELFDIR
 MAINDIR=$SELFDIR/../main
 
-# Check that aio-cli-plugin-runtime is on the dev branch
-pushd ../aio-cli-plugin-runtime
-BR=$(git symbolic-ref HEAD --short)
-popd
-if [ "$BR" != "dev" ]; then
-		echo "aio-cli-plugin-runtime is not on the 'dev' branch"
-		exit 1
-fi
-
 # First run a clean build in aio
 pushd ../aio-cli-plugin-runtime
 git clean -fdx

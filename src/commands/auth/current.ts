@@ -18,9 +18,9 @@
  * from Nimbella Corp.
  */
 
-import { NimBaseCommand } from '../../NimBaseCommand'
+import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
 import { flags } from '@oclif/command'
-import { fileSystemPersister, getCredentials } from '../../deployer/login';
+import { getCredentials } from '../../deployer/login'
 
 export default class AuthInspect extends NimBaseCommand {
   static description = 'Get current namespace with optional details'
@@ -37,15 +37,14 @@ export default class AuthInspect extends NimBaseCommand {
 
   static args = [ ]
 
-  async run() {
-    const { flags } = this.parse(AuthInspect)
+  async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
     let { all, name, apihost, auth, storage, redis } = flags
     if (all) {
         name = apihost = auth = storage = redis = true
     } else if (!apihost && !auth && !storage && !redis) {
         name = true
     }
-    const creds = await getCredentials(fileSystemPersister)
+    const creds = await getCredentials(authPersister)
     const ans: { name?: string, apihost?: string, auth?: string, storage?: boolean, redis?: boolean } = {}
     if (name) {
         ans.name = creds.namespace
@@ -63,9 +62,9 @@ export default class AuthInspect extends NimBaseCommand {
         ans.redis = creds.redis
     }
     if (Object.keys(ans).length == 1) {
-        this.log(String(Object.values(ans)[0]))
+        logger.log(String(Object.values(ans)[0]))
     } else {
-        this.log(JSON.stringify(ans))
+        logger.log(JSON.stringify(ans))
     }
   }
 }

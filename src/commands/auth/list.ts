@@ -18,8 +18,8 @@
  * from Nimbella Corp.
  */
 
-import { NimBaseCommand } from '../../NimBaseCommand'
-import { getCredentialList, fileSystemPersister } from '../../deployer/login'
+import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
+import { getCredentialList } from '../../deployer/login'
 import { CredentialRow } from '../../deployer/deploy-struct'
 
 // Constants used in formatting the credential list
@@ -38,15 +38,15 @@ export default class AuthList extends NimBaseCommand {
 
   static args = []
 
-  async run() {
-    const list = getCredentialList(fileSystemPersister)
-    await this.formatCredentialList(list)
+  async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
+    const list = getCredentialList(authPersister)
+    await this.formatCredentialList(list, logger)
   }
 
-  async formatCredentialList(credentialPromise: Promise<CredentialRow[]>) {
+  async formatCredentialList(credentialPromise: Promise<CredentialRow[]>, logger: NimLogger) {
     //console.log("formatting credentials")
     return credentialPromise.then(credentialList => {
-        this.log(LIST_HEADER)
+        logger.log(LIST_HEADER)
         for (const row of credentialList) {
             let ns = row.namespace
             let pad = ''
@@ -58,8 +58,8 @@ export default class AuthList extends NimBaseCommand {
             const curr = row.current ? YES : NO
             const stor = row.storage ? YES : NO
             const redis = row.redis ? YES : row.redis === false ? NO : MAYBE
-            this.log(ns + pad + curr + stor + redis + row.apihost)
+            logger.log(ns + pad + curr + stor + redis + row.apihost)
         }
-    }).catch((err: Error) => this.handleError(err.message, err))
+    }).catch((err: Error) => logger.handleError(err.message, err))
   }
 }

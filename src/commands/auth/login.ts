@@ -19,8 +19,8 @@
  */
 
 import { flags } from '@oclif/command'
-import { NimBaseCommand } from '../../NimBaseCommand'
-import { doLogin, doAdminLogin, fileSystemPersister, addCredentialAndSave } from '../../deployer/login'
+import { NimBaseCommand, NimLogger, parseAPIHost, authPersister } from '../../NimBaseCommand'
+import { doLogin, doAdminLogin, addCredentialAndSave } from '../../deployer/login'
 import { Credentials } from '../../deployer/deploy-struct'
 
 export default class AuthLogin extends NimBaseCommand {
@@ -36,31 +36,30 @@ export default class AuthLogin extends NimBaseCommand {
 
   static args = [{name: 'token', description: 'string provided by Nimbella Corp', required: false}]
 
-  async run() {
-    const {args, flags} = this.parse(AuthLogin)
+  async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
     let credentials: Credentials
-    const apihost = this.parseAPIHost(flags.apihost) || (flags.admin ? undefined : 'https://apigcp.nimbella.io')
+    const apihost = parseAPIHost(flags.apihost) || (flags.admin ? undefined : 'https://apigcp.nimbella.io')
     if (args.token) {
       if (flags.auth) {
-        this.handleError('You cannot specify both a login token and an auth key.  Use one or the other')
+        logger.handleError('You cannot specify both a login token and an auth key.  Use one or the other')
       }
       if (flags.admin || flags.namespace) {
-        this.handleError("Internal error: incorrect use of administrative flags")
+        logger.handleError("Internal error: incorrect use of administrative flags")
       }
-      credentials = await doLogin(args.token, fileSystemPersister, apihost).catch((err: Error) => this.handleError(err.message, err))
+      credentials = await doLogin(args.token, authPersister, apihost).catch((err: Error) => this.handleError(err.message, err))
     } else if (flags.admin) {
       if (flags.auth || flags.namespace || !apihost) {
-        this.handleError("Internal error: incorrect use of administrative flags")
+        logger.handleError("Internal error: incorrect use of administrative flags")
       }
       await doAdminLogin(apihost)
       return
     } else if (flags.auth) {
-      credentials = await addCredentialAndSave(apihost, flags.auth, undefined, false, fileSystemPersister, flags.namespace)
-        .catch((err: Error) => this.handleError(err.message, err))
-      fileSystemPersister.saveLegacyInfo(apihost, flags.auth)
+      credentials = await addCredentialAndSave(apihost, flags.auth, undefined, false, authPersister, flags.namespace)
+        .catch((err: Error) => logger.handleError(err.message, err))
+      authPersister.saveLegacyInfo(apihost, flags.auth)
     } else {
-      this.handleError("A login token is required unless --auth is specified")
+      logger.handleError("A login token is required unless --auth is specified")
     }
-    this.log(`Successful login to namespace '${credentials.namespace}' on host '${apihost}'`)
+    logger.log(`Successful login to namespace '${credentials.namespace}' on host '${apihost}'`)
   }
 }

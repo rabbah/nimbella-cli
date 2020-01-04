@@ -18,12 +18,13 @@
  * from Nimbella Corp.
  */
 
-import { Command } from '@oclif/command'
-const AioCommand: typeof Command = require('@adobe/aio-cli-plugin-runtime/src/commands/runtime/trigger/delete')
+import { NimBaseCommand, NimLogger } from '../../NimBaseCommand'
+import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
+const AioCommand: typeof RuntimeBaseCommand = require('@adobe/aio-cli-plugin-runtime/src/commands/runtime/trigger/delete')
 
-export default class TriggerDelete extends Command {
-  async run () {
-    await AioCommand.run(this.argv)
+export default class TriggerDelete extends NimBaseCommand {
+  async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
+    await this.runAio(rawArgv, argv, args, flags, logger, AioCommand)
   }
 
   static args = AioCommand.args
