@@ -43,3 +43,4 @@ popd
 # Give the tarball a stable name
 TARBALL=$(echo adobe-aio-cli-plugin-runtime-*.tgz)
 mv $TARBALL adobe-aio-cli-plugin-runtime.tgz
+npm install adobe-aio-cli-plugin-runtime.tgz
