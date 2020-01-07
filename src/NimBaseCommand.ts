@@ -40,6 +40,7 @@ import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
 import * as createDebug  from 'debug'
 import { format } from 'util'
 import { fileSystemPersister, browserPersister } from './deployer/login';
+import { reload as reloadAioConfig } from '@adobe/aio-lib-core-config'
 
 const debug = createDebug('nimbella-cli')
 
@@ -107,9 +108,11 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   // kui in a browser, it takes steps to avoid a second real parse and also captures all output.  The
   // logger argument is a CaptureLogger in fact.
   async runAio(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger, aioClass: typeof RuntimeBaseCommand) {
+    debug('runAio')
     fixAioCredentials()
     const cmd = new aioClass(rawArgv, {})
     if (inBrowser) {
+      reloadAioConfig() // The credentials fix doesn't take in the browser unless redone
       cmd.logger = logger
       cmd.parsed = { argv, args, flags }
       const capture = logger as CaptureLogger

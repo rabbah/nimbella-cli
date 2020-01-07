@@ -15,6 +15,7 @@
   "license": "SEE LICENSE IN 'LICENSE' or 'license.html'",
   "dependencies": {
     "@adobe/aio-cli-plugin-runtime": "https://nimaio-apigcp.nimbella.io/adobe-aio-cli-plugin-runtime-8d98fccfb43e5ae8100f10e7abc627eeb8ee66ab.tgz",
+    "@adobe/aio-lib-core-config": "^1.0.15",
     "@google-cloud/storage": "^3.2.1",
     "@oclif/command": "^1",
     "@oclif/config": "^1",
