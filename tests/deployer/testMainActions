@@ -32,7 +32,7 @@ declare -a NIMACTIONS
 NIMACTIONS=(
 		hello
     hellos/tess10
-    hellos/cloud8
+    hellos/cloud10
   	hellos/golang
 		hellos/java8
 		hellos/node10
@@ -204,6 +204,8 @@ if [ -n "$2" ]; then
 		exit 1
 elif [ "$1" == "--postdeploy" ]; then
 		POSTDEPLOY=true
+elif [ "$1" == "--retrieveonly" ]; then
+		RETRIEVEONLY=true
 elif [ -n "$1" ]; then
 		echo "invalid argument $1"
 		exit 1
@@ -211,7 +213,7 @@ fi
 set -e
 
 
-# Except in --postdeploy mode, retrieve existing actions, then delete them, then redeploy them
+# Except in --postdeploy mode, retrieve existing actions, then, depending on --retrieveonly, do other things
 if [ -z "$POSTDEPLOY" ]; then
 	# Retrieve
 	rm -fr $BEFOREDIR
@@ -219,6 +221,11 @@ if [ -z "$POSTDEPLOY" ]; then
 	pushd $BEFOREDIR
 	getAllActions
 	popd
+
+	# Having retrieved the actions, if running in "retrieve only" mode, exit
+  if [ -n "$RETRIEVEONLY" ]; then
+			exit 0
+	fi
 
   # Delete the actions (and their packages as needed)
 	setuser nimbella

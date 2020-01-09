@@ -31,8 +31,8 @@ popd
 echo "Deploying using the '.env' default"
 nim project deploy environ
 RESULT=$(nim action get variable | tail -n +2 | jq -r .exec.kind)
-if [ "$RESULT" != "cloudjs:8" ]; then
-	 echo "Expected 'cloudjs:8' but got '$RESULT'"
+if [ "$RESULT" != "cloudjs:10" ]; then
+	 echo "Expected 'cloudjs:10' but got '$RESULT'"
 	 exit 1
 fi
 
