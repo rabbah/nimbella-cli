@@ -83,6 +83,25 @@ const NON_CONFORMING_BUT_LICENSED = {
         license: 'MIT',
         location: 'Readme.md',
         verifier: `## License \n\n  MIT`
+    },
+
+    'ignore-loader': {
+        license: 'MIT',
+        location: 'LICENSE',
+        verifier: `MIT License\n\nCopyright (c) 2016 Cherry Ng`
+    },
+
+    'speedometer': {
+        license: 'MIT',
+        location: 'LICENSE',
+        verifier: `Copyright 2013 Mathias Buus`
+        // Note: 'MIT' does not appear in this license but it is the same text
+    },
+
+    'css-value': {
+        license: 'MIT',
+        location: 'Readme.md',
+        verifier: `## License\n\n(The MIT License)\n\nCopyright (c) 2012 TJ Holowaychuk &lt;tj@vision-media.ca&gt;`
     }
 }
 
