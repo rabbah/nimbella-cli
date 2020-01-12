@@ -257,5 +257,6 @@ export function fixAioCredentials() {
     }
     process.env.AIO_RUNTIME_APIHOST = currentHost
     process.env.AIO_RUNTIME_AUTH = currentAuth
-    process.env.AIO_RUNTIME_NAMESPACE = currentNamespace
+    // Don't pass the namespace to AIO.  It causes some problems with CORS in the beta workbench.
+    //process.env.AIO_RUNTIME_NAMESPACE = currentNamespace
 }
