@@ -35,7 +35,7 @@ const inputJSON = JSON.parse(inputText)
 const outputJSON = {}
 const members = []
 for (member in inputJSON) {
-    if (member == 'version') continue
+    if (member == 'version' || member == 'updated') continue
     members.push(member)
 }
 //console.log("found members")
