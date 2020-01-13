@@ -222,7 +222,12 @@ function validatePackageSpec(arg: {}): string {
             } else if (isDefault) {
                 return `'${item}' may not be used in the default package`
             }
-        } else if (item != 'parameters' && item != 'annotations' && item != 'environment') { // Can't meaningfully validate parameters or annotations
+        } else if (item == 'environment') {
+            const envErr = validateEnvironment(arg[item])
+            if (envErr) {
+                return envErr
+            }
+        } else if (item != 'parameters' && item != 'annotations') { // Can't meaningfully validate parameters or annotations
             return `Invalid key '${item}' found in 'package' in project.yml`
         } else if (isDefault) {
             return `'${item}' may not be used in the default package`
@@ -262,9 +267,13 @@ function validateActionSpec(arg: {}): string {
                     return `'${item}' member of an 'action' must be a boolean or a string`
                 }
                 break
+            case 'environment':
+                const envError = validateEnvironment(arg[item])
+                if (envError) {
+                    return envError
+                }
             case 'annotations':
             case 'parameters':
-            case 'environment':
                 // No meaningful validation for these
                 break
             case 'limits':
@@ -275,6 +284,17 @@ function validateActionSpec(arg: {}): string {
                 break
             default:
                 return `Invalid key '${item}' found in 'action' clause in project.yml`
+        }
+    }
+    return undefined
+}
+
+// Validator for the 'environment' clause of package or action.  Checks that all values are strings
+function validateEnvironment(entries: {}): string {
+    for (const entry in entries) {
+        const value = entries[entry]
+        if (typeof value !== 'string') {
+            return `All environment values must be strings but '${entry}' has type '${typeof value}'`
         }
     }
     return undefined
