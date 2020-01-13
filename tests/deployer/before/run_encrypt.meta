@@ -20,8 +20,14 @@
   "name": "encrypt",
   "namespace": "nimbella/run",
   "parameters": {
-    "__cipherKey": "7235754878BF413F4428472DCB6150325367566B5970337E3676C97924422325",
-    "__cipherKeyVersion": "N0"
+    "0": {
+      "key": "__cipherKeyVersion",
+      "value": "N0"
+    },
+    "1": {
+      "key": "__cipherKey",
+      "value": "7235754878BF413F4428472DCB6150325367566B5970337E3676C97924422325"
+    }
   },
   "publish": false
 }
