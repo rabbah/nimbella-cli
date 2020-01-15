@@ -22,37 +22,46 @@
 
  import { cleanEnvironment, fixAioCredentials } from './NimBaseCommand'
 
-// List of plural commands to be replaced by singular equivalentsdelegated to aio runtime plugin
+// List of plural commands to be replaced by singular equivalents before being delegated to aio runtime plugin
 const pluralCommands = ['actions', 'activations', 'packages', 'routes', 'rules', 'triggers' ]
 
 // A screening function called at top level (before the real oclif dispatching begins).  Does various fixups.
 export async function run() {
+    // Perform preparsing tasks, including token splitting, pushing 'help' to the end, and identifying --ui
+    const ui = preParse()
     // Remove __OW stuff from environment
     cleanEnvironment()
-    // Make the argv array canonical by splitting on colons
-    makeCanonical()
     // Apply simple "plurals" fix
     const cmd = process.argv[2]
     if (pluralCommands.includes(cmd)) {
         process.argv[2] = cmd.slice(0, -1)
     }
-    fixAioCredentials()
+    fixAioCredentials() // TODO I don't think this is needed here any more since it is done in runAio but it is idempotent so leaving for now
     colonize()
-    await require('@oclif/command').run()
+    if (ui) {
+        await runWb()
+    } else {
+        await require('@oclif/command').run()
+    }
 }
 
-// Change the user's presented command into a canonical form:
-// 1.  Colon-seperated commands are split into tokens as if blank-separated
+// Do various tasks that involve scanning and reorganizing the command line
+// 1.  Colon-seperated commands are split into tokens as if blank-separated.  Only those tokens that contain just lowercase and colons are
+//    split, to avoid splitting URLs and such-like
 // 2.  If a flag requesting help is present, remove it, note it, and add `--help` at the end.
-function makeCanonical() {
+// 3.  Return true or false according to whether the special flag --ui appears and elide that flag
+function preParse(): boolean {
     let argvbase = process.argv.slice(0, 2)
     const oldargv = process.argv.slice(2)
     const cmdTokens: string[] = []
     let haveHelp = false
+    let haveUI = false
     const lowerAlpha = /^[a-z]+$/
     for (const arg of oldargv) {
         if (isHelpToken(arg)) {
             haveHelp = true
+        } else if (arg === '--ui') {
+            haveUI = true
         } else {
             const parts = arg.split(':')
             let split = true
@@ -72,6 +81,7 @@ function makeCanonical() {
         cmdTokens.push('--help')
     }
     process.argv = argvbase.concat(cmdTokens)
+    return haveUI
 }
 
 // Check whether a token is a flag
@@ -101,4 +111,9 @@ function colonize() {
 // Test whether a command line token is a help verb or flag
 function isHelpToken(arg: string): boolean {
     return arg === 'help' || arg === '--help' || arg === '-h'
+}
+
+// In response to the --ui flag, dispatch via headless workbench rather than oclif
+async function runWb() {
+    throw new Error("The --ui flag is not yet implemented")
 }
