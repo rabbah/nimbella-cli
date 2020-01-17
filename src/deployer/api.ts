@@ -27,6 +27,8 @@ import { buildAllActions, buildWeb } from './finder-builder'
 import * as openwhisk from 'openwhisk'
 import * as path from 'path'
 import { switchNamespace, getCredentials, Persister } from './login';
+import { getGithubDef, fetchProject } from './github'
+import { inBrowser } from './../NimBaseCommand'
 
 // Contains the main public (library) API of the deployer (some exports in 'util' may also be used externally but are incidental)
 
@@ -69,9 +71,16 @@ export function deploy(todeploy: DeployStructure): Promise<DeployResponse> {
 // Read the information contained in the project, initializing the DeployStructure
 export function readProject(projectPath: string, envPath: string): Promise<DeployStructure> {
     //console.log("Starting readProject")
-    return readTopLevel(projectPath, envPath).then(buildStructureParts).then(assembleInitialStructure).catch((err) => {
-        return Promise.reject(err)
-    })
+    let start = Promise.resolve(projectPath)
+    if (projectPath.startsWith('*')) {
+        const def = getGithubDef(projectPath.slice(1), inBrowser)
+        if (!def) {
+            return Promise.reject(new Error(`'${projectPath}' is not a valid github reference`))
+        }
+        start = fetchProject(def)
+    }
+    return start.then(projectPath => readTopLevel(projectPath, envPath)).then(buildStructureParts).then(assembleInitialStructure)
+        .catch((err) => { return Promise.reject(err) })
 }
 
 // 'Build' the project by running the "finder builder" steps in each action-as-directory and in the web directory
