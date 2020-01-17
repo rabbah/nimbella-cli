@@ -189,7 +189,7 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
 
   static args = []
   static flags = {
-    debug: flags.string({ description: 'Debug level output' }),
+    debug: flags.string({ description: 'Debug level output', hidden: true }),
     verbose: flags.boolean({ char: 'v', description: 'Verbose output' }),
     help: flags.boolean({ description: 'Show help' })
   }
