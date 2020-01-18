@@ -76,6 +76,7 @@ export default class ProjectGithub extends NimBaseCommand {
       if (!storeGithubDef(def, inBrowser, replace)) {
         logger.handleError(`'${name}' is in use and --replace was not specified`)
       }
+      displayProject(def, logger)
     }
   }
 }
@@ -107,5 +108,5 @@ function displayProject(project: GithubDef, logger: NimLogger) {
   if (name.length < 12) {
     name += ' '.repeat(12 - name.length)
   }
-  logger.log(`${name} ${location}, auth=${auth || 'none'}, ref=${ref || 'none'}`)
+  logger.log(`${name} ${location}, auth=${auth || 'none'}, ref=${ref || 'master'}`)
 }
