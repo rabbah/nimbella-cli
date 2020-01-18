@@ -24,7 +24,7 @@ import { forgetNamespace } from '../../deployer/login'
 import { disambiguateNamespace } from '../project/deploy'
 
 export default class AuthLogout extends NimBaseCommand {
-  static description = 'Drop access to a Nimbella Namespace'
+  static description = 'Drop access to a Nimbella namespace'
 
   static flags = {
     apihost: flags.string({ description: 'API host serving the namespace'}),

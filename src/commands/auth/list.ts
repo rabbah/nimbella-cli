@@ -30,7 +30,7 @@ const NO = '    no  '
 const MAYBE = '   -?-  '
 
 export default class AuthList extends NimBaseCommand {
-  static description = 'List all your Nimbella Namespaces'
+  static description = 'List all your Nimbella namespaces'
 
   static flags = {
     ...NimBaseCommand.flags
