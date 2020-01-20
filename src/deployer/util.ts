@@ -92,6 +92,7 @@ function removeEmptyStringMembers(config: DeployStructure) {
 
 // Remove empty optional string-valued members from a bucket spec
 function removeEmptyStringMembersFromBucket(bucket: BucketSpec) {
+    if (!bucket) return
     if (bucket.mainPageSuffix && bucket.mainPageSuffix == '') {
         delete bucket.mainPageSuffix
     }
@@ -105,6 +106,7 @@ function removeEmptyStringMembersFromBucket(bucket: BucketSpec) {
 
 // Remove empty optional string-valued members from an array of PackageSpecs
 function removeEmptyStringMembersFromPackages(packages: PackageSpec[]) {
+    if (!packages) return
     for (const pkg of packages) {
         if (pkg.actions) {
             for (const action of pkg.actions) {
