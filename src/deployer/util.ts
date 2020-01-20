@@ -19,7 +19,7 @@
  */
 
 import { DeployStructure, DeployResponse, DeploySuccess, DeployKind, ActionSpec, PackageSpec,
-    DeployerAnnotation, WebResource, VersionMap, VersionEntry } from './deploy-struct'
+    DeployerAnnotation, WebResource, VersionMap, VersionEntry, BucketSpec } from './deploy-struct'
 import * as openwhisk from 'openwhisk'
 import * as fs from 'fs'
 import * as os from 'os'
@@ -62,6 +62,7 @@ export function loadProjectConfig(configFile: string, envPath: string, filePath:
                     if (configError) {
                         reject(new Error(configError))
                     } else {
+                        removeEmptyStringMembers(config)
                         resolve(config)
                     }
                 } catch (error) {
@@ -76,6 +77,48 @@ export function loadProjectConfig(configFile: string, envPath: string, filePath:
     })
 }
 
+// In project config we permit many optional string-valued members to be set to '' to remind users that they are available
+// without actually setting a value.  Here we delete those members to simplify subsequent handling.
+function removeEmptyStringMembers(config: DeployStructure) {
+    if (config.targetNamespace && config.targetNamespace == '') {
+        delete config.targetNamespace
+    }
+    if (config.actionWrapPackage && config.actionWrapPackage == '') {
+        delete config.targetNamespace
+    }
+    removeEmptyStringMembersFromBucket(config.bucket)
+    removeEmptyStringMembersFromPackages(config.packages)
+}
+
+// Remove empty optional string-valued members from a bucket spec
+function removeEmptyStringMembersFromBucket(bucket: BucketSpec) {
+    if (bucket.mainPageSuffix && bucket.mainPageSuffix == '') {
+        delete bucket.mainPageSuffix
+    }
+    if (bucket.notFoundPage && bucket.notFoundPage == '') {
+        delete bucket.notFoundPage
+    }
+    if (bucket.prefixPath && bucket.prefixPath == '') {
+        delete bucket.prefixPath
+    }
+}
+
+// Remove empty optional string-valued members from an array of PackageSpecs
+function removeEmptyStringMembersFromPackages(packages: PackageSpec[]) {
+    for (const pkg of packages) {
+        if (pkg.actions) {
+            for (const action of pkg.actions) {
+                if (action.main && action.main == '') {
+                    delete action.main
+                }
+                if (action.runtime && action.runtime == '') {
+                    delete action.runtime
+                }
+            }
+        }
+    }
+}
+
 // Validation for DeployStructure read from disk.  Note: this may be any valid DeployStructure except that the strays member
 // is not expected in this context.  TODO return a list of errors not just the first error.
 export function validateDeployConfig(arg: any): string {
@@ -87,9 +130,7 @@ export function validateDeployConfig(arg: any): string {
                 return `${item} must be a boolean`
             }
             break
-        case 'targetNamespace':
-        case 'pkgDir':
-        case 'webDir': {
+        case 'targetNamespace': {
             if (!(typeof(arg[item]) == 'string')) {
                 return `${item} must be a string`
             }
@@ -119,18 +160,11 @@ export function validateDeployConfig(arg: any): string {
             }
             break
         }
-        case 'initOptions': {
-            const optionsError = validateInitOptions(arg[item])
-            if (optionsError) {
-                return optionsError
-            }
-            break
-        }
         case 'actionWrapPackage': {
-            haveActionWrap = true
             if (!(typeof arg[item] == 'string')) {
                 return `${item} member must be a string`
             }
+            haveActionWrap = arg[item].length > 0
             break
         }
         case 'bucket': {
@@ -219,8 +253,8 @@ function validatePackageSpec(arg: {}): string {
         } else if (item == 'shared' || item == 'clean') {
             if (!(typeof arg[item] == 'boolean')) {
                 return `'${item}' member of a 'package' must be a boolean`
-            } else if (isDefault) {
-                return `'${item}' may not be used in the default package`
+            } else if (isDefault && arg[item]) {
+                return `'${item}' must be absent or false for the default package`
             }
         } else if (item == 'environment') {
             const envErr = validateEnvironment(arg[item])
@@ -229,8 +263,8 @@ function validatePackageSpec(arg: {}): string {
             }
         } else if (item != 'parameters' && item != 'annotations') { // Can't meaningfully validate parameters or annotations
             return `Invalid key '${item}' found in 'package' in project.yml`
-        } else if (isDefault) {
-            return `'${item}' may not be used in the default package`
+        } else if (isDefault && Object.keys(arg[item]).length > 0) {
+            return `'${item}' must be absent or empty for the default package`
         }
     }
     return undefined
@@ -319,33 +353,6 @@ function validateLimits(arg: any): string {
     return undefined
 }
 
-// Validator for InitialOptions
-export function validateInitOptions(arg: any): string {
-    for (const item in arg) {
-        const value = arg[item]
-        switch(item) {
-            case 'api':
-            case 'api_key':
-            case 'apihost':
-            case 'apigw_token':
-            case 'apigw_space_guid':
-            case 'bucketCredentialPath':
-                if (!(typeof value == 'string')) {
-                    return `'${item}' must be a string`
-                }
-                break
-            case 'ignore_certs':
-                if (!(typeof value == 'boolean')) {
-                    return "'ignore_certs' must be a boolean"
-                }
-            break
-            default:
-                return `Invalid key '${item}' found in 'initOptions' in project.yml`
-        }
-    }
-    return undefined
-}
-
 // Convert convenient "Dict" to the less convenient "KeyVal[]" required in an action object
 export function keyVal(from: openwhisk.Dict): openwhisk.KeyVal[] {
     if (!from) {
@@ -365,7 +372,7 @@ export function makeDict(keyVal: openwhisk.KeyVal[]): openwhisk.Dict {
 
 // Provide an empty DeployStructure with all array and object members defined but empty
 export function emptyStructure(): DeployStructure {
-    return { web: [], packages: [], strays: [], actionWrapPackage: undefined, bucket: undefined }
+    return { web: [], packages: [], strays: [] }
 }
 
 // Provide an empty DeployResponse with all required members defined but empty
