@@ -32,21 +32,15 @@ import * as fs from 'fs'
 import * as Octokit from '@octokit/rest'
 import * as rimrafOrig from 'rimraf'
 import { promisify } from 'util'
+import { nimbellaDir } from './login'
 
 const rimraf = promisify(rimrafOrig)
 
-const HOME = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
 const TEMP = process.platform == 'win32' ? process.env['TEMP'] : '/tmp'
 const CACHE_DIR = "deployer-git-cache"
 const PROJECT_MAP_KEY = 'wb.project_map'
-const NIMBELLA_DIR = '.nimbella'
 const PROJECT_MAP_FILE = 'gitProjectMap.json'
 const userAgent = 'nimbella-cli v1.0.0'  // TODO get the version dynamically
-
-// Function indirection needed for webpack
-function nimbellaDir() {
-    return Path.join(HOME, NIMBELLA_DIR)
-}
 function cacheDir() {
     return Path.join(TEMP, CACHE_DIR)
 }

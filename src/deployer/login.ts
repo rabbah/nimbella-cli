@@ -65,7 +65,11 @@ const NIMBELLA_DIR = '.nimbella'
 const WSK_PROPS = 'wskprops'
 const CREDENTIAL_STORE = 'credentials.json'
 // Function indirection needed for webpack
-function nimbellaDir() {
+export function nimbellaDir() {
+    const fromEnv = process.env['NIMBELLA_DIR']
+    if (fromEnv && fromEnv.length > 0) {
+        return fromEnv
+    }
     return path.join(HOME, NIMBELLA_DIR)
 }
 function wskProps() {
