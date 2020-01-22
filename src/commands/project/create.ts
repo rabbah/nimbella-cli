@@ -26,7 +26,7 @@ import { extFromRuntime } from '../../deployer/util'
 import * as yaml from 'js-yaml'
 import { DeployStructure, PackageSpec, ActionSpec } from '../../deployer/deploy-struct'
 
-export class ProjectCreate extends NimBaseCommand {
+export default class ProjectCreate extends NimBaseCommand {
   static description = 'Create a Nimbella Project'
 
   static flags = {

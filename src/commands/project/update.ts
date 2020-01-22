@@ -19,9 +19,9 @@
  */
 
 import { NimBaseCommand, NimLogger } from '../../NimBaseCommand'
-import { ProjectCreate, createOrUpdateProject } from './create';
+import { default as ProjectCreate, createOrUpdateProject } from './create';
 
-export class ProjectUpdate extends NimBaseCommand {
+export default class ProjectUpdate extends NimBaseCommand {
   static description = 'Update a Nimbella Project'
 
   static flags = {
