@@ -29,11 +29,21 @@ import * as URL from 'url-parse'
 
 // Open a "bucket client" (object of type Bucket) to use in deploying web resources to the bucket associated with the
 // InitOptions.  The InitOptions should have been checked for sufficient information already.
-export function openBucketClient(credentials: Credentials, bucketSpec: BucketSpec): Promise<Bucket> {
+export async function openBucketClient(credentials: Credentials, bucketSpec: BucketSpec): Promise<Bucket> {
     //console.log("bucket client open")
-    const bucketName = computeBucketName(credentials.ow.apihost, credentials.namespace)
+    let bucketName = computeBucketName(credentials.ow.apihost, credentials.namespace)
     //console.log("computed bucket name")
-    return makeClient(bucketName, credentials.storageKey).then(bucket => addWebMeta(bucket, bucketSpec))
+    let bucket = await makeClient(bucketName, credentials.storageKey)
+    await addWebMeta(bucket, bucketSpec).catch(async err => {
+        if (err.code && err.code == 404) {
+            // console.log(`bucket '${bucketName}' not found`)
+            bucketName = bucketName.split('.').join('-')
+            // console.log(`retrying with '${bucketName}'`)
+            bucket = await makeClient(bucketName, credentials.storageKey)
+            return await addWebMeta(bucket, bucketSpec)
+        }
+    })
+    return bucket
 }
 
 // Add web metadata after Bucket created but before returning it
