@@ -174,9 +174,9 @@ export async function deployPackage(pkg: PackageSpec, wsk: openwhisk.Client,
         deployer.digest = digest.substring(0, 8)
         const annotDict = Object.assign({}, oldAnnots, pkg.annotations, { deployer })
         const annotations = keyVal(annotDict)
-        const params = encodeParameters(pkg.parameters, pkg.environment)
-        const mergedParams = Object.assign({}, projectParams, params)
-        const owPkg: openwhisk.Package = { parameters: keyVal(mergedParams), annotations, publish: pkg.shared }
+        const mergedParams = Object.assign({}, projectParams, pkg.parameters)
+        const params = encodeParameters(mergedParams, pkg.environment)
+        const owPkg: openwhisk.Package = { parameters: params, annotations, publish: pkg.shared }
         await wsk.packages.update({name: pkg.name, package: owPkg}).then(result => {
             const packageVersions = {}
             packageVersions[pkg.name] = { version: result.version, digest }
