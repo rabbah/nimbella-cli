@@ -34,15 +34,7 @@ export async function openBucketClient(credentials: Credentials, bucketSpec: Buc
     let bucketName = computeBucketName(credentials.ow.apihost, credentials.namespace)
     //console.log("computed bucket name")
     let bucket = await makeClient(bucketName, credentials.storageKey)
-    await addWebMeta(bucket, bucketSpec).catch(async err => {
-        if (err.code && err.code == 404) {
-            // console.log(`bucket '${bucketName}' not found`)
-            bucketName = bucketName.split('.').join('-')
-            // console.log(`retrying with '${bucketName}'`)
-            bucket = await makeClient(bucketName, credentials.storageKey)
-            return await addWebMeta(bucket, bucketSpec)
-        }
-    })
+    await addWebMeta(bucket, bucketSpec)
     return bucket
 }
 
@@ -64,13 +56,18 @@ function addWebMeta(bucket: Bucket, bucketSpec: BucketSpec): Promise<Bucket> {
 }
 
 // Make a Bucket (client to access a bucket)
-function makeClient(bucketName: string, options: {}): Promise<Bucket> {
-        //console.log("entered makeClient")
-        const storage = new Storage(options)
-        //console.log("made Storage handle")
-        const bucket = storage.bucket(bucketName)
-        //console.log("made Bucket handle")
-        return bucket.exists().then(() => bucket)
+async function makeClient(bucketName: string, options: {}): Promise<Bucket> {
+    // console.log("entered makeClient")
+    const storage = new Storage(options)
+    // console.log("made Storage handle")
+    const bucket = storage.bucket(bucketName)
+    const exists = await bucket.exists()
+    // console.dir(exists)
+    if (exists[0]) {
+        return bucket
+    }
+    const altName = bucketName.split('.').join('-')
+    return storage.bucket(altName)
 }
 
 // Deploy a single resource to the bucket
