@@ -1,26 +1,17 @@
 <h1>How To Use the Nimbella Command Line Tool</h1>
 
-
 This document provides information about the Nimbella Command Line Tool, called nim, and its Command Line Interface (CLI). There are also several [Nimbella demo projects at GitHub](https://github.com/nimbella/demo-projects) that you can try out.
 
 <h2>Table of Contents</h2>
 
-
-
 [TOC]
-
-
-
 
 ---
 
 
 <h2 id="your-nimbella-cloud-account">Your Nimbella cloud account</h2>
 
-
 Your Nimbella cloud account gives you the following benefits:
-
-
 
 *   A dedicated and secure domain name for your cloud applications. If you need more, let us know.
 *   Static front-end assets are automatically deployed to and served from a global CDN.
@@ -30,254 +21,241 @@ Your Nimbella cloud account gives you the following benefits:
 *   Workflows you can  build and the ability to orchestrate long-running tasks.
 *   CLI and workbench tools to manage Nimbella services, build projects, and deploy your apps.
 
-You have a login with your account that you need to [create your first Nimbella Cloud namespace](#create-a-nimbella-namespace) and [run CLI commands](#nim-command-overview).  
+Once you [create your first Nimbella Cloud namespace](#create-a-nimbella-namespace) you are ready to login and [run CLI commands](#nim-command-overview) and deploy projects to your Nimbella Cloud.
+
 
 <h2 id="install-the-nimbella-command-line-tool-nim">Install the Nimbella Command Line Tool (nim)</h2>
 
-
-In most cases, we recommend that you use `nim` as a command to be invoked globally from shells or scripts. Here are the advantages of shell invocation:
-
-
+In most cases, we recommend that you use nim as a command to be invoked globally from shells or scripts. Here are the advantages of shell invocation:
 
 *   The CLI is self-contained and has no dependencies on previously installed software.
 *   You get automated update services when new versions are available.
 
-If you don’t want a global installation but rather want to make nim a dependency of some other package, you can install nim as a dependency with npm or yarn. See the second procedure.
+If you don’t want a global installation but rather want to make nim a dependency of some other package, you can install it as a dependency with npm or yarn. See the second procedure.
 
-<h3 id="install-nim-for-shell-invocation-globally">Install nim for shell invocation globally</h3>
-
-
-
+<h3 id="install-nim-for-shell-invocation-globally">Install nim globally</h3>
 
 1. Install nim according to your operating system:
-*   On Windows, download and run [the Windows installer](https://apigcp.nimbella.io/downloads/nim/win/nim-x64.exe). 
-*   On Mac, download and run [the Mac installer](https://apigcp.nimbella.io/downloads/nim/macos/nim.pkg).
-*   On Linux, run the following script: \
-`curl https://apigcp.nimbella.io/downloads/nim/nim-install-linux.sh | sudo bash`
-2. When the installation completes, run the following command: \
-`nim update`
+   *   On Windows, download and run [the Windows installer]
+       (https://apigcp.nimbella.io/downloads/nim/win/nim-x64.exe). 
+   *   On Mac, download and run [the Mac installer]
+       (https://apigcp.nimbella.io/downloads/nim/macos/nim.pkg).
+   *   On Linux, run the following script:
+       `curl https://apigcp.nimbella.io/downloads/nim/nim-install-linux.sh | sudo bash`
+2. When the installation completes, run the following command: `nim update`
 
-The `nim update` command verifies that nim is installed and capable of self-updating. If the initial installation happens not to be the latest version,  the update step also corrects that.
+The `nim update` command verifies that nim is installed and capable of self-updating. If the initial installation happens not to be the latest version, the update step also corrects that.
 
 <h3 id="install-nim-as-a-dependency">Install nim as a dependency</h3>
 
-
 Use this method only to make nim a dependency of some other package. To invoke nim globally, use the previous procedure.
 
-**Note: **When installed as a dependency, the `nim update` command doesn’t work. You have to do a fresh install to get later versions.
+**Note:** When installed as a dependency, the `nim update` command will not work. You have to do a fresh install to get later versions.
 
+1. Run either of the following commands, depending on whether you want to use npm or yarn:
+  - For npm: `npm install https://apigcp.nimbella.io/downloads/nim/nimbella-cli.tgz`
+  - For yarn: `yarn add https://apigcp.nimbella.io/downloads/nim/nimbella-cli.tgz`
+ 
+2. When installation finishes, execute nim locally to the package into which it has been incorporated with the following command. For example using `npx nim ...`
 
-
-1. Run either of the following commands, depending on whether you want to use npm or yarn: \
-`npm install https://apigcp.nimbella.io/downloads/nim/nimbella-cli.tgz` \
-or  \
-`yarn add https://apigcp.nimbella.io/downloads/nim/nimbella-cli.tgz`
-2. When installation finishes, execute nim locally to the package into which it has been incorporated with the following command. \
-`npx nim ...`
 
 <h2 id="nim-command-overview">nim command overview</h2>
 
-
 The Nimbella Command Line Tool (nim) is your primary portal to Nimbella services. Typing `nim` at a command prompt produces the latest version of help output, similar to the following.
-
 
 ```
 > nim
-  A comprehensive CLI for the Nimbella stack
+A comprehensive CLI for the Nimbella stack
+
 VERSION
-  nimbella-cli/0.1.3 darwin-x64 node-v10.16.3
+  nimbella-cli/0.1.9 darwin-x64 node-v10.16.3
+
 USAGE
   $ nim [COMMAND]
-COMMANDS
-  action        work with actions
-  activation    work with activations
-  auth          manage Nimbella namespace credentials
-  doc           display the full documentation of this CLI
-  help          display help for nim
-  info          show information about this version of nim
-  namespace     work with namespaces
-  package       work with packages
-  project       manage and deploy Nimbella projects
-  route         work with routes
-  rule          work with rules
-  trigger       work with triggers
-  update        update the nim CLI
-```
 
+COMMANDS
+  action      work with actions
+  activation  work with activations
+  auth        manage Nimbella namespace credentials
+  doc         display the full documentation of this CLI
+  help        display help for nim
+  info        show information about this version of 'nim'
+  namespace   work with namespaces
+  package     work with packages
+  project     manage and deploy Nimbella projects
+  route       work with routes
+  rule        work with rules
+  trigger     work with triggers
+  update      update the nim CLI
+```
 
 These commands fall into four categories, shown in the following diagram and described in the following sections.
 
+![](./fig1-nim-commands.svg)
 <h6 id="figure-1-nim-commands">Figure 1: nim commands</h6>
 
-
-**Note: **The `auth:` subtree commands in the first group and `project:` subtree commands in the second group show colon separators because nim is based on oclif, the Open CLI Framework from Heroku, which requires them. However, nim has logic to allow blank separators, so you can also use these commands with blank separators, as in these examples:
-
+**Note:** In the figure, the `auth:` subtree commands in the first group and `project:` subtree commands in the second group show colon separators because nim is based on [oclif](https://github.com/oclif), the Open CLI Framework from Heroku, which requires them. However, nim has logic to allow blank separators, so you can also use these commands with blank separators, as in these examples:
 
 ```
 > nim auth list
 > nim project deploy
 ```
 
+If you find a case in which a blank separator doesn't work in nim, please [report it as an issue](https://github.com/nimbella/nimbella-cli/issues) or use a colon separator. 
 
-If you find a case in which a blank separator doesn’t work in nim, please report it as an issue or use a colon separator. 
 
 <h3 id="1-credential-management-to-access-nimbella-namespaces">1 Credential management to access Nimbella namespaces</h3>
 
-
 The `auth` subtree lets you manage Nimbella credentials for Nimbella _namespaces_, as described in the section [Nimbella Namespaces](#your-nimbella-cloud-account).
 
-The `auth` subtree has its own set of commands, as follows.
-
+The `nim auth` subtree has its own set of commands, as follows.
 
 ```
 > nim auth
-	Manage Nimbella namespace credentials
+Manage Nimbella namespace credentials
+
 USAGE
-	  $ nim auth:COMMAND
+  $ nim auth:COMMAND
+
 COMMANDS
-	  auth:list    List all your Nimbella namespaces
-	  auth:login   Gain access to a Nimbella namespace
-	  auth:logout  Drop access to a Nimbella namespace
-	  auth:switch  Switch to a different Nimbella namespace
+  auth:current  Get current namespace with optional details
+  auth:list     List all your Nimbella Namespaces
+  auth:login    Gain access to a Nimbella namespace
+  auth:logout   Drop access to a Nimbella Namespace
+  auth:switch   Switch to a different Nimbella namespace
 ```
 
 
 <h3 id="2-project-level-deployment-commands">2 Project-level deployment commands</h3>
 
-
-The `project` subtree has two commands: 
-
-
+The `nim project` subtree has two commands: 
 
 *   `deploy` 
 *   `watch` 
 
-These subcommands operate on logical groupings of resources (web content, storage, and so on) that make up typical applications. Such a grouping is called a _project_ and is described more in [About Nimbella Projects](#overview-of-nimbella-projects-actions-and-deployment). 
+These subcommands operate on logical groupings of resources (web content, storage, and APIs) that make up typical applications. Such a grouping is called a _project_ and is described more in [About Nimbella Projects](#overview-of-nimbella-projects-actions-and-deployment). 
 
-The `project:deploy` command controls the Nimbella _deployer_, which operates on projects. Much of the rest of this document concerns itself with projects and the deployer.
+The `project:deploy` command controls the Nimbella _deployer_, which operates on projects. Much of the rest of this document concerns itself with projects and the deployer. 
 
-<h4 id="help-output-for-the-nim-project-command">Help output for the nim project command</h4>
-
-
+Help output for the `nim project` command:
 
 ```
 > nim project
-  	manage and deploy Nimbella projects
-  	USAGE
-  	$ nim project:COMMAND
-COMMANDS
-	  project:deploy  Deploy Nimbella projects
-	  project:watch   Watch Nimbella projects, deploying incrementally on change
-```
+Manage and deploy Nimbella projects
 
-
-Help output for the nim project deploy command
-
-
-```
->   nim project deploy
-	Deploy Nimbella projects
 USAGE
-	  $ nim project:deploy [PROJECTS]
-ARGUMENTS
-PROJECTS  one or more paths to projects
-OPTIONS
-	  -v, --verbose      Verbose output
-	  --apihost=apihost  API host to use
-	  --auth=auth        OpenWhisk auth token to use
-	  --env=env          path to environment file
-	  --help             Show help
-	  --incremental      Deploy only changes since last deploy
-	  --insecure         Ignore SSL Certificates
-	  --target=target    the target namespace
-	  --verbose-build    Display build details
-	  --yarn             Use yarn instead of npm for node builds
+  $ nim project:COMMAND
+
+COMMANDS
+  project:deploy  Deploy Nimbella projects
+  project:watch   Watch Nimbella projects, deploying incrementally on change
 ```
 
+Help output for the `nim project deploy` command:
 
-See the [Example: Create and deploy a project with a single action](#example-create-and-deploy-a-project-with-a-single-action) for an example of using the `project deploy` command.
+```
+> nim project deploy
+Deploy Nimbella projects
 
-Help output for the nim project watch command
+USAGE
+  $ nim project:deploy [PROJECTS]
+
+ARGUMENTS
+  PROJECTS  one or more paths to projects
+
+OPTIONS
+  -v, --verbose      Verbose output
+  --apihost=apihost  API host to use
+  --auth=auth        OpenWhisk auth token to use
+  --debug=debug      Debug level output
+  --env=env          path to environment file
+  --help             Show help
+  --incremental      Deploy only changes since last deploy
+  --insecure         Ignore SSL Certificates
+  --target=target    the target namespace
+  --verbose-build    Display build details
+  --verbose-zip      Display start/end of zipping phase for each action
+  --yarn             Use yarn instead of npm for node builds
+```
+
+See the [Example: Create and deploy a project with a single action](#example-create-and-deploy-a-project-with-a-single-action) for an example of using the project deploy command.
+
+Help output for the `nim project watch` command:
 
 
 ```
 > nim project watch --help
-	Watch Nimbella projects, deploying incrementally on change
+Watch Nimbella projects, deploying incrementally on change
+
 USAGE
-	  $ nim project:watch [PROJECTS]
+  $ nim project:watch [PROJECTS]
+
 ARGUMENTS
-PROJECTS  one or more paths to projects
+  PROJECTS  one or more paths to projects
+
 OPTIONS
-	  -v, --verbose      Verbose output
-	  --apihost=apihost  path to environment file
-	  --auth=auth        OpenWhisk auth token to use
-	  --env=env          path to environment file
-	  --help             Show help
-	  --insecure         Ignore SSL Certificates
-	  --target=target    the target namespace
-	  --verbose-build    Display build details
-	  --yarn             Use yarn instead of npm for node builds
+  -v, --verbose      Verbose output
+  --apihost=apihost  path to environment file
+  --auth=auth        OpenWhisk auth token to use
+  --debug=debug      Debug level output
+  --env=env          path to environment file
+  --help             Show help
+  --insecure         Ignore SSL Certificates
+  --target=target    the target namespace
+  --verbose-build    Display build details
+  --verbose-zip      Display start/end of zipping phase for each action
+  --yarn             Use yarn instead of npm for node builds
 ```
 
+See [Project watching](#project-watching-for-incremental-deployment) for an example of how to use this command for incremental deployment which facilitates faster project development.
 
-See [Project watching](#project-watching-for-incremental-deployment) for an example of how to use this command for incremental deployment to facilitate project development.
-
-**Tip: **If you’re used to using `wsk`, see [Project Commands in nim vs. wsk](#project-commands-in-nim-vs-wsk).
 
 <h3 id="3-entity-management-commands">3 Entity management commands</h3>
 
-
 The `action`, `activation`, `namespace`, `package`, `route`, `rule` and `trigger` commands each manage the corresponding type of entity. 
 
-If you’re an Apache OpenWhisk developer, see [Entity Management commands in nim vs. wsk](#entity-management-commands-in-nim-vs-wsk) for a comparison of entity management commands.
+If you’re an [Apache OpenWhisk](https://openwhisk.apache.org) developer, see [Entity Management commands in nim vs. wsk](#entity-management-commands-in-nim-vs-wsk) for a comparison of entity management commands.
+
 
 <h3 id="4-supporting-commands">4 Supporting commands</h3>
 
-
 The `doc`, `help`, `info` and `update` commands provide the following supporting services:
 
+*   `doc`: Displays the documentation set for the nim CLI.
+*   `help`: Displays help for nim.
+*   `info`: Displays information about the version of nim that is installed.
+*   `update`: Updates to the latest version of nim.
 
+**Note:** `nim update` works only when nim is installed [using the recommended installation method for use from a shell](#install-nim-for-shell-invocation-globally). It does not work when nim is installed [as a dependency using npm or yarn](#install-nim-as-a-dependency).
 
-*   `doc` \
-Displays the documentation set for the nim CLI.
-*   `help` \
-Displays help for nim.
-*   `info` \
-Displays information about the version of nim that is installed.
-*   `update` \
-Updates to the latest version of nim.
-
-**Note:** `nim` `update` works only when nim is installed [using the recommended installation method for use from a shell](#install-nim-for-shell-invocation-globally). It does not work when nim is installed [as a dependency using npm or yarn](#install-nim-as-a-dependency).
 
 <h2 id="nimbella-namespaces">Nimbella namespaces</h2>
-
 
 You must have permission to use a specific namespace on the Nimbella platform In order to deploy a nim project and use many other nim capabilities.  A Nimbella namespace comes with resources such as object store buckets for web content and database instances, which are managed as part of the namespace. 
 
 This section contains information about how to create a Nimbella namespace, view the credential store, and perform other tasks involving namespaces.
 
-<h3 id="create-a-nimbella-namespace">Create a Nimbella namespace</h3>
 
+<h3 id="create-a-nimbella-namespace">Create a Nimbella namespace</h3>
 
 Here’s how to create a Nimbella workspace in nim.
 
 **To obtain a namespace using the Nimbella Command Line Tool:** 
 
-
-
 1. Visit [the Nimbella Early Access Request site](https://nimbella.com/request/). 
 2. Provide the information requested.
 3. Wait for an email response from Nimbella containing a _login token_, which is a very long mostly hexadecimal string. 
-4. Use `nim auth login` to activate your namespace. Substitute our own login token in the following command: \
-`> nim auth login <login token>` \
-    `stored a credential set for namespace '...' and API host '...'`
+4. Use `nim auth login` to activate your namespace, substituting our own login token in the following command:
+
+```
+> nim auth login <login token>
+stored a credential set for namespace '...' and API host '...'
+```
+
 
 <h3 id="view-the-credential-store">View the credential store</h3>
 
-
 A typical namespace is provisioned with the following:
-
-
 
 *   Two storage buckets: one for web content and one accessible to actions for use as a virtual file system
 *   A [Redis](https://redis.io) instance for storing key-value pairs
@@ -288,82 +266,65 @@ After you’ve created a namespace, you can view it and information about it in 
 
 **To view the credential store in nim:**
 
+*   Use the `auth list` command, as follows:
 
-
-*   Use the `auth list` command, as follows: \
-`> nim auth list \
-    Namespace            Current Storage  Redis API Host \
-    <your namespace>       yes     yes     yes  https://...`
+```
+> nim auth list
+Namespace            Current Storage  Redis API Host
+<your namespace>       yes     yes     yes  https://...
+```
 
 Here’s more information about the table displayed in the response:
 
-
-
 *   The **Current** column displays `yes` when there is just one namespace. The Nimbella deployer will deploy this namespace in the absence of other directives.
-*   The **Storage** column indicates whether the namespace has provision for web content storage as discussed in [Adding static web content](https://nimbella.io/downloads/nim/nim.html#AddinsgWeb).  \
-There is also a second object storage bucket available for general use, not connected to the web.
+*   The **Storage** column indicates whether the namespace has provision for web content storage as discussed in [Adding static web content](https://nimbella.io/downloads/nim/nim.html#AddinsgWeb). There is also a second object storage bucket available for general use, not connected to the web.
 *   The **Redis** column indicates whether the namespace has a Redis key-value storage instance available for use by actions.
 *   Usually, a Nimbella developer has just one **API Host** and all namespaces use the same one. To add more API hosts, see the section on [Multiple API Hosts](#working-with-other-openwhisk-hosts).
 
-<h3 id="create-and-manage-multiple-namespaces">Create and manage multiple namespaces</h3>
 
+<h3 id="create-and-manage-multiple-namespaces">Create and manage multiple namespaces</h3>
 
 There are a number of reasons why it can be useful to have multiple namespaces. For example, while multiple applications can share a namespace, there are also good reasons to isolate them.
 
 **To create additional namespaces:**
 
-
-
 1. [Contact Nimbella Support](https://nimbella.com/contact). 
 2. Identify yourself as an existing developer and provide the email you used for signing up initially.
 3. Wait for your login token via email.
-4. Use the auth login command as described in [Create a Nimbella Namespace](#create-a-nimbella-namespace). \
-The additional namespace is added to your credential store.
+4. Use the auth login command as described in [Create a Nimbella Namespace](#create-a-nimbella-namespace). The additional namespace is added to your credential store.
 
 **To view all of your namespaces:**
 
-
-
-1. Follow the procedure to [view your credential store](#view-the-credential-store). \
-Initially, the newly added namespace is listed as **yes** in the **Current** column.
+Follow the procedure to [view your credential store](#view-the-credential-store).
+A newly added namespace is automatically set as current, indicated by a **yes** in the **Current** column.
 
 <h4 id="switch-between-namespaces">Switch between namespaces</h4>
 
-
 If you have more than one namespace, you can switch between them without needing to log into your account again by using the following command:
-
 
 ```
 nim auth switch <namespace>
 ```
 
-
-This changes the remembered target namespace without the need to deploy.
+This changes the target namespace for future project deployments.
 
 <h4 id="manage-multiple-namespaces">Manage multiple namespaces</h4>
 
-
 The easiest way to manage multiple namespaces is to maintain the rule that each project is tied to its own namespace. To do this, add the following top-level directive to a _project.yml_ configuration file for each project:
-
 
 ```
 targetNamespace: <namespace>
 ```
 
-
 For more information about using _project.yml_ files to configure more complex projects, see [Adding Project Configuration](#adding-project-configuration).
 
 There are more complex development scenarios, such as the case in which a single project may deploy to different namespaces, for example, a test namespace and a production namespace. This case can be managed by using the `--target` directive of the `project deploy` command:
-
 
 ```
 nim project deploy <projectPath>... --target <namespace>
 ```
 
-
 **Notes:**
-
-
 
 *   If your project has a _project.yml_ configuration file with a `targetNamespace` directive and also uses the `--target` option in a `project deploy` command, the latter takes precedence. 
 *   A value specified with the `--target` is remembered and will apply to subsequent deployments that do not use either `targetNamespace` or `--target` to specify a new target.
@@ -372,134 +333,115 @@ For more information about using _project.yml_ files to configure more complex p
 
 If you need the deployment of a project to have different characteristics depending on the target namespace, such as parameters that might differ between test and production, you can use [symbolic substitution](https://nimbella.io/downloads/nim/nim.html#SymbolicVars), for example:
 
-
 ```
 targetNamespace: ${NAMESPACE}
 ```
 
-
 Provide the value of `NAMESPACE` in an environment file along with other substitutions.
+
 
 <h2 id="overview-of-nimbella-projects-actions-and-deployment">Overview of Nimbella projects, actions, and deployment</h2>
 
+A Nimbella _project_ is a logical grouping of static web content and _actions_. An action is a function or program encoded in a programming language supported by the Nimbella Cloud (e.g., JavaScript or Node.js, PHP, Python or Go). An action usually produces some output in response to an event. For example, an action can be used to convert an image to text, update a stock portfolio, or generate a QR code. Actions are usually grouped into _packages_, but you can create them without a package qualifier if you wish.
 
-A Nimbella _project_ is a logical grouping of static web content and _actions_. An action is a function encoded in JavaScript or Node.js. An action usually produces some output in response to an event. For example, an action can be used to `upload a file, convert an image to text, update a stock portfolio, or generate a QR code`. Actions are usually grouped into _packages_, but you can create them without a package qualifier if you wish.
-
-Projects are _deployed_ as a unit into your namespace on a Nimbella host to make them visible to your end users to the extent that you wish. Your namespace can have any number of projects that you want. An application can have any number of projects to achieve its full functionality. This modular approach also lets you share projects across apps and namespaces.
+Projects are _deployed_ as a unit into your Nimbella Cloud namespace to make them visible to your end-users to the extent that you wish. Your namespace can have any number of projects that you want. An application can have any number of projects to achieve its full functionality. This modular approach also lets you share projects across apps and namespaces.
 
 Projects can contain actions, or actions plus static web content, or actions plus web content plus build steps. The following sections show you how to go from simple to complex:
-
-
 
 *   [Example: Create and deploy a project with a single action](#example-create-and-deploy-a-project-with-a-single-action)
 *   [Add static web content](#adding-static-web-content) to a project
 *   [Add build steps](#incorporating-build-steps-for-actions-and-web-content) to a project
 
 Projects can be deployed without any configuration, but in more complex cases you can 
+[add a project configuration](#adding-project-configuration).
 
-<p id="gdcalert1" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: undefined internal link (link text: "add a project configuration"). Did you generate a TOC? </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert2">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
+Finally, there are variations in how to [deploy projects](#FIXME), including [incremental deployment](#deploying-projects-incrementally) to reduce deployment time, especially during project development.
 
-[add a project configuration](#heading=h.9jjjt766eivk).
-
-Finally, there are variations in how to 
-
-<p id="gdcalert2" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: undefined internal link (link text: "deploy projects"). Did you generate a TOC? </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert3">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-[deploy projects](#heading=h.w87ohuo7u9nn), including [incremental deployment](#deploying-projects-incrementally) to reduce deployment time, especially during project development.
 
 <h2 id="example-create-and-deploy-a-project-with-a-single-action">Example: Create and deploy a project with a single action</h2>
-
 
 Let’s start with a really simple example that shows the basics of creating the source code for an action, placing it in a directory structure for a project, and deploying the project. This project needs no configuration and creates actions automatically based on the project directory structure.
 
 In the simplest implementation of a project, each action corresponds to a single JavaScript or Node.js file. In this example:
 
-
-
-*   A `Hello World` print function is placed in a file named _hello.js`.`_
+*   A `Hello World` print function is placed in a file named _hello.js_.
 *   A project named `example1` is created and deployed to your namespace. 
 
 **To create and deploy a project to print Hello World:**
 
+1. Create _hello.js_ with the following code:
 
+```nodejs
+function main(args) { return { msg: 'Hello World' } }
+```
 
-1. Create _hello.js_ with the following code: \
-`function main(args) { return { msg: 'Hello World' } }`
-2. Create a project directory with the following command: \
-`> mkdir -p example1/packages/demo \
-`The [project directory structure](#about-projects) sets the name of the project (`example1`), a _packages_ directory, and the package qualifier (`demo`).
-3. Copy the JavaScript file into the `demo` directory with the following command: \
-`> cp hello.js example1/packages/demo`
-4. Deploy the project with the following command: \
-<code>> nim project deploy example1 \
-	Result of deploying project '.../example1' \
-	to namespace '...' \
-	on host '[https://...nimbella.io](https://...nimbella.io)' \
-	Deployed actions: \
-	- demo/hello</code>
+2. Create a project directory with the following command:
+
+```
+> mkdir -p example1/packages/demo
+```
+
+The [project directory structure](#about-projects) sets the name of the project (`example1`), a _packages_ directory, and the package qualifier (`demo`).
+
+3. Copy the JavaScript file into the `demo` directory with the following command:
+
+```
+> cp hello.js example1/packages/demo
+```
+
+4. Deploy the project with the following command:
+
+```
+> nim project deploy example1
+Deploying project '/path/to/example1'
+  to namespace '...'
+  on host 'https://...nimbella.io'
+
+Deployed actions:
+  - demo/hello
+```
 
 Here’s a diagram of the project structure that was created in this procedure.
 
-<h6>
+<img src="./fig2-nim-example1-project-directory-structure.svg" height="300">
+<h6 id="figure-1-nim-commands">Figure 2: Directory structure of the example1 project</h6>
 
-<p id="gdcalert3" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/How-To0.png). Store image on your image server and adjust path/filename if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert4">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-
-![alt_text](images/How-To0.png "image_tooltip")
- \
-Figure 2: Directory structure of the example1 project</h6>
-
-
-**Notes: **
-
-
+**Notes:**
 
 *   The `project deploy` command in the last step activates the deployer, which names the action automatically based on the source code file (`hello`), prepended by the package qualifier (`demo`).
 *   If you want an action to have a simple name (no package qualification), put it in a package directory called _default_. In that case, no package qualifier is prepended. See [Project Directory Structure](#project-directory-structure).
-*   The correct runtime for the source code file is activated according to the file suffix. See [Nimbella Deployer Supported Runtimes for Actions](#nimbella-deployer-supported-runtimes-for-actions) for a list of supported runtimes.
+*   The correct runtime for the source code file is determined according to the file suffix. See [Nimbella Deployer Supported Runtimes for Actions](#nimbella-deployer-supported-runtimes-for-actions) for a list of supported runtimes.
 *   Project configuration occurs automatically when it can, but see [Adding Project Configuration](#adding-project-configuration) for complex projects.
 
 **Next steps:**
-
-
 
 *   To add web content to your project, see [Adding static web content](#adding-static-web-content).
 *   If you need to add build steps, see [Incorporating build steps for actions and web content](#incorporating-build-steps-for-actions-and-web-content).
 *   Read more about [deploying projects](#about-the-nimbella-deployer).
 *   Look at a somewhat more complex [example QR code project with both an action and static web content](https://github.com/nimbella/demo-projects/tree/master/qrcode).
 
-<h2 id="about-projects">About projects</h2>
 
+<h2 id="about-projects">About projects</h2>
 
 A project represents a logical unit of functionality whose boundaries are up to you. Your app can contain one or more projects. The directory structure of a project triggers how the deployer finds and labels packages and actions, how it deploys static web content, and what it ignores. In more complex cases you can set more control over project deployment by adding a [project configuration](#adding-project-configuration).
 
-<h3 id="project-directory-structure">Project directory structure</h3>
 
+<h3 id="project-directory-structure">Project directory structure</h3>
 
 A project has a fixed directory structure, which determines how projects are deployed. Here’s a diagram that summarizes the directory structure of an individual project with no project configuration, with explanation below.
 
-<h6>
-
-<p id="gdcalert4" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/How-To1.png). Store image on your image server and adjust path/filename if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert5">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-
-![alt_text](images/How-To1.png "image_tooltip")
- \
-Figure 3: Basic directory structure of a project</h6>
-
+<img src="./fig3-nim-project-directory-structure.svg" height="300">
+<h6 id="figure-1-nim-commands">Figure 3: Basic directory structure of a project</h6>
 
 The project has a root directory, within which a certain small number of directory names are significant to the deployer, specifically:
 
-
-
-*   A _packages_ directory.  \
-Each subdirectory of _packages_ is treated as a package and is assumed to contain actions, in the form of either files or directories. Files in the _packages_ directory are ignored by the deployer.
+*   A _packages_ directory. Each subdirectory of _packages_ is treated as a package and is assumed to contain actions, in the form of either files or directories. Files in the _packages_ directory are ignored by the deployer.
 *   A _web_ directory, which contains directories and files with static web content. 
 
-Anything_ _else in the root directory is ignored by the deployer, shown in blue in the diagram. This lets you store things in the root directory that need to be “off to the side,” such as build directories used by the deployer and project documentation. 
+Anything else in the root directory is ignored by the deployer, shown in blue in the diagram. This lets you store things in the root directory that need to be “off to the side,” such as build directories used by the deployer and project documentation. 
+
 
 <h3 id="projects-with-multiple-actions">Projects with multiple actions</h3>
-
 
 Adding more actions to a project is easy when each action is related to a single source code file. You can create as many subdirectories of the packages directory as you want and add as many source code files as you want to each subdirectory. (See [Project Directory Structure](#about-projects).) 
 
