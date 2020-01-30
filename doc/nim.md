@@ -53,8 +53,8 @@ Use this method only to make nim a dependency of some other package. To invoke n
 **Note:** When installed as a dependency, the `nim update` command will not work. You have to do a fresh install to get later versions.
 
 1. Run either of the following commands, depending on whether you want to use npm or yarn:
-  - For npm: `npm install https://apigcp.nimbella.io/downloads/nim/nimbella-cli.tgz`
-  - For yarn: `yarn add https://apigcp.nimbella.io/downloads/nim/nimbella-cli.tgz`
+  *   For npm: `npm install https://apigcp.nimbella.io/downloads/nim/nimbella-cli.tgz`
+  *   For yarn: `yarn add https://apigcp.nimbella.io/downloads/nim/nimbella-cli.tgz`
  
 2. When installation finishes, execute nim locally to the package into which it has been incorporated with the following command. For example using `npx nim ...`
 
@@ -92,7 +92,7 @@ COMMANDS
 These commands fall into four categories, shown in the following diagram and described in the following sections.
 
 ![](./fig1-nim-commands.svg)
-<h6 id="figure-1-nim-commands">Figure 1: nim commands</h6>
+<h6>Figure 1: nim commands</h6>
 
 **Note:** In the figure, the `auth:` subtree commands in the first group and `project:` subtree commands in the second group show colon separators because nim is based on [oclif](https://github.com/oclif), the Open CLI Framework from Heroku, which requires them. However, nim has logic to allow blank separators, so you can also use these commands with blank separators, as in these examples:
 
@@ -242,10 +242,10 @@ Here’s how to create a Nimbella workspace in nim.
 
 **To obtain a namespace using the Nimbella Command Line Tool:** 
 
-1. Visit [the Nimbella Early Access Request site](https://nimbella.com/request/). 
-2. Provide the information requested.
-3. Wait for an email response from Nimbella containing a _login token_, which is a very long mostly hexadecimal string. 
-4. Use `nim auth login` to activate your namespace, substituting our own login token in the following command:
+1.  Visit [the Nimbella Early Access Request site](https://nimbella.com/request/). 
+2.  Provide the information requested.
+3.  Wait for an email response from Nimbella containing a _login token_, which is a very long mostly hexadecimal string. 
+4.  Use `nim auth login` to activate your namespace, substituting our own login token in the following command:
 
 ```
 > nim auth login <login token>
@@ -288,10 +288,10 @@ There are a number of reasons why it can be useful to have multiple namespaces. 
 
 **To create additional namespaces:**
 
-1. [Contact Nimbella Support](https://nimbella.com/contact). 
-2. Identify yourself as an existing developer and provide the email you used for signing up initially.
-3. Wait for your login token via email.
-4. Use the auth login command as described in [Create a Nimbella Namespace](#create-a-nimbella-namespace). The additional namespace is added to your credential store.
+1.  [Contact Nimbella Support](https://nimbella.com/contact). 
+2.  Identify yourself as an existing developer and provide the email you used for signing up initially.
+3.  Wait for your login token via email.
+4.  Use the auth login command as described in [Create a Nimbella Namespace](#create-a-nimbella-namespace). The additional namespace is added to your credential store.
 
 **To view all of your namespaces:**
 
@@ -342,7 +342,7 @@ Provide the value of `NAMESPACE` in an environment file along with other substit
 
 <h2 id="overview-of-nimbella-projects-actions-and-deployment">Overview of Nimbella projects, actions, and deployment</h2>
 
-A Nimbella _project_ is a logical grouping of static web content and _actions_. An action is a function or program encoded in a programming language supported by the Nimbella Cloud (e.g., JavaScript or Node.js, PHP, Python or Go). An action usually produces some output in response to an event. For example, an action can be used to convert an image to text, update a stock portfolio, or generate a QR code. Actions are usually grouped into _packages_, but you can create them without a package qualifier if you wish.
+A Nimbella _project_ is a logical grouping of static web content and _actions_. An action is a function or program encoded in a programming language supported by the Nimbella Cloud (e.g., JavaScript or Node.js, PHP, Python Java, or Go). An action usually produces some output in response to an event. For example, an action can be used to convert an image to text, update a stock portfolio, or generate a QR code. Actions are usually grouped into _packages_, but you can create them without a package qualifier if you wish.
 
 Projects are _deployed_ as a unit into your Nimbella Cloud namespace to make them visible to your end-users to the extent that you wish. Your namespace can have any number of projects that you want. An application can have any number of projects to achieve its full functionality. This modular approach also lets you share projects across apps and namespaces.
 
@@ -355,7 +355,7 @@ Projects can contain actions, or actions plus static web content, or actions plu
 Projects can be deployed without any configuration, but in more complex cases you can 
 [add a project configuration](#adding-project-configuration).
 
-Finally, there are variations in how to [deploy projects](#FIXME), including [incremental deployment](#deploying-projects-incrementally) to reduce deployment time, especially during project development.
+Finally, there are variations in how to [deploy projects](#about-projects), including [incremental deployment](#deploying-projects-incrementally) to reduce deployment time, especially during project development.
 
 
 <h2 id="example-create-and-deploy-a-project-with-a-single-action">Example: Create and deploy a project with a single action</h2>
@@ -404,7 +404,7 @@ Deployed actions:
 Here’s a diagram of the project structure that was created in this procedure.
 
 <img src="./fig2-nim-example1-project-directory-structure.svg" height="300">
-<h6 id="figure-1-nim-commands">Figure 2: Directory structure of the example1 project</h6>
+<h6>Figure 2: Directory structure of the example1 project</h6>
 
 **Notes:**
 
@@ -431,7 +431,7 @@ A project represents a logical unit of functionality whose boundaries are up to 
 A project has a fixed directory structure, which determines how projects are deployed. Here’s a diagram that summarizes the directory structure of an individual project with no project configuration, with explanation below.
 
 <img src="./fig3-nim-project-directory-structure.svg" height="300">
-<h6 id="figure-1-nim-commands">Figure 3: Basic directory structure of a project</h6>
+<h6>Figure 3: Basic directory structure of a project</h6>
 
 The project has a root directory, within which a certain small number of directory names are significant to the deployer, specifically:
 
@@ -445,10 +445,11 @@ Anything else in the root directory is ignored by the deployer, shown in blue in
 
 Adding more actions to a project is easy when each action is related to a single source code file. You can create as many subdirectories of the packages directory as you want and add as many source code files as you want to each subdirectory. (See [Project Directory Structure](#about-projects).) 
 
-In the [example1 project procedure](#example-create-and-deploy-a-project-with-a-single-action) above, you’d just add `mkdir` commands to optionally create more subdirectories under `packages` and `cp` commands to create the directories to add the source code files. For example, the following `mkdir` commands create _demo_, _admin_, _default_, and _test_ directories under the _packages_ directory. The `cp` commands copy the source code files for the actions under those subdirectories. The actions are automatically created from these source code files and named in relation to their directory structure. 
+<!--FIXME these cp commands wont work for anyone as is remove the two paras below and code block
+
+In the [example1 project procedure](#example-create-and-deploy-a-project-with-a-single-action) above, you would use `mkdir` commands to optionally create more subdirectories under `packages` add the source code files in those directories. For example, the following `mkdir` commands create _demo_, _admin_, _default_, and _test_ directories under the _packages_ directory. The `cp` commands copy the source code files for the actions under those subdirectories. The actions are automatically created from these source code files and named in relation to their directory structure. 
 
 In this example, the resulting actions are listed under `Deployed actions` in the command output below. As described in the previous procedure, the actions from the _default_ subdirectory (`sampleJavaScript`, `samplePython`, and `welcome`), are created without a package qualifier prepended to the name.
-
 
 ```
 > mkdir -p example1/packages/demo
@@ -472,27 +473,23 @@ Deployed actions:
 	  - test/work0
 	  - test/work30
 ```
+-->
 
 
 <h3 id="factors-in-choosing-project-size">Factors in choosing project size</h3>
-
 
 There is no limit on how many packages and actions can be in a project.  However, using fewer very large projects or many small projects both have some negative ramifications, which are solved by using [incremental deployment](#deploying-projects-incrementally).
 
 For example, you could create one large project. However, the default behavior of the deployer is to deploy everything in the project that it can, so deployment could become time-consuming. 
 
-The other extreme is to create many small projects. You’d have to use the `project deploy` command with a list of projects in a single invocation: \
-`> nim project deploy example1 example2 … \
-`Having lots of small projects complicates the build process, especially during iterative development. 
+The other extreme is to create many small projects. You can use the `project deploy` command with a list of projects in a single invocation to deploy them all at once (e.g., `nim project deploy example1 example2 …`). Having lots of small projects may lengthen the build process, especially during iterative development. 
 
 Incremental deployment facilitates deployment of both large and small projects, so you can create projects that make sense logically.
 
+
 <h3 id="factors-in-choosing-project-boundaries">Factors in choosing project boundaries</h3>
 
-
 Projects and actions are very flexible.
-
-
 
 *   When deploying a project, all of its actions and web resources are installed into a single target namespace.
 *   Multiple projects can deploy into the same namespace.
@@ -500,66 +497,47 @@ Projects and actions are very flexible.
 
 In other words, _you_ decide on project boundaries based on deployment convenience.
 
-**Note: **As a consequence of this flexibility, it’s important to watch for possible collisions between different projects trying to install the same resource. There are some audit trails that can help, described in [Deployer recordkeeping](#deployer-recordkeeping).
+**Note:** As a consequence of this flexibility, it’s important to watch for possible collisions between different projects trying to install the same resource. There are some audit trails that can help, described in [Deployer recordkeeping](#deployer-recordkeeping).
+
 
 <h2 id="about-actions">About actions</h2>
 
-
 <h3 id="actions-have-public-urls-by-default-unless-the-project-is-configured">Actions Have Public URLs by Default Unless the Project is Configured</h3>
 
-
-Every action produced by a no-configuration project such as [the example project above](#example-create-and-deploy-a-project-with-a-single-action) is publicly accessible via a URL and is called a _web action_. You can retrieve the URL for any particular web action by using the `action get` command, as in the following example, which returns the URL for the demo/hello action created in the previous example.
-
+Every action produced by a no-configuration project such as [the example project above](#example-create-and-deploy-a-project-with-a-single-action) is publicly accessible via a URL and is called a _web action_. You can retrieve the URL for any particular web action by using the `action get` command, as in the following example, which returns the URL for the `demo/hello` action created in the previous example.
 
 ```
 > nim action get demo/hello --url 
-	https://....nimbella.io/api/v1/web/.../demo/hello
+https://....nimbella.io/api/v1/web/.../demo/hello
 ```
 
+If you don’t want your actions to be publicly accessible through an unprotected URL, you’ll need to [add a project configuration](#adding-project-configuration).
 
-If you don’t want your actions to be publicly accessible through a URL, you’ll need to 
-
-<p id="gdcalert5" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: undefined internal link (link text: "add a project configuration"). Did you generate a TOC? </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert6">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-[add a project configuration](#heading=h.9jjjt766eivk).
 
 <h3 id="using-zipped-source-files-to-form-a-single-action">Using zipped source files to form a single action</h3>
 
-
-If you have more than one source file that you want to correspond to a single action, you can zip the source files together as long as the file name and suffix take the following form: \
-_<xxx>.<runtime>.zip_
+If you have more than one source file that must be bundled together to create a single action, you can zip the source files together as long as the file name and suffix take the following form _\<xxx\>.\<runtime\>.zip_.
 
 The deployer normally [determines the runtime for the source file from the file’s suffix](#nimbella-deployer-supported-runtimes-for-actions), and the _.zip_ suffix doesn’t provide this information, so the runtime must be specified between the file name and the file suffix, demarcated by periods. For example, the name _hello.nodejs.zip_ can be used for a zipped action whose action name is `hello` and whose runtime kind is the default version of Node.js. 
 
-If you want to force a specific runtime version,  use a file form that follows this example:
+If you want to force a specific runtime version, use a file of this form instead: _hello.nodejs-8.zip_. The Nimbella Cloud must support the version you specify.
 
- _Hello.nodejs-8.zip_
-
-**Note: **Nimbella must support the version you specify.
-
-Some language runtimes, such as Java, also accept specialized archives such as _.jar_ files, or they directly accept binary executables. In this case, the runtime is determined by the file extension in the normal manner, such as hello.jar. Other cases are not specially handled by nim and might require [adding a project configuration](#adding-project-configuration).
+Some language runtimes, such as Java, also accept specialized archives such as _.jar_ files, or they directly accept binary executables. In this case, the runtime is determined by the file extension in the normal manner, such as _hello.jar_. Other cases are not specially handled by nim and might require [adding a project configuration](#adding-project-configuration).
 
 Zipped actions are usually created in a separate build step. As an alternative, Nimbella has [an autozip feature triggered by directory structure](#multifile-actions-created-with-autozip).
 
+
 <h3 id="multifile-actions-created-with-autozip">Multifile actions created with autozip</h3>
 
+By adding an extra directory under the action directory, you can trigger an autozip of your action source files by creating a directory between the action directory and the source files and meeting certain conditions. Suppose the [example1 project](#example-create-and-deploy-a-project-with-a-single-action) has a `hello` action with two source files: _helloMain.js_ and _helloAux.js_. To create the `demo/hello` action, add a `hello` directory as a child of the `demo` directory, as shown in this diagram.
 
-By adding an extra directory under the action directory, you can trigger an autozip of your action source files by creating a directory between the action directory and the source files and meeting certain conditions. Suppose the [example1 project](#example-create-and-deploy-a-project-with-a-single-action) has a `hello` action with two source files: _helloMain.js_ and _helloAux.js_. To create the demo/hello action, add a hello directory as a child of the demo directory, as shown in this diagram.
-
-<h6>
-
-<p id="gdcalert6" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/How-To2.png). Store image on your image server and adjust path/filename if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert7">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-
-![alt_text](images/How-To2.png "image_tooltip")
- \
-`Figure 4: Two source files in an action directory for automatic zipping`</h6>
-
+<img src="./fig4-nim-example2-project-directory-structure.svg" height="450">
+<h6>Figure 4: Two source files in an action directory for automatic zipping</h6>
 
 The difference from the [example1 directory structure](#figure-2-directory-structure-of-the-example1-project) is that the `hello` action is a _directory_ rather than a single source file. The source files in the directory are zipped automatically to form the action. 
 
+<!-- FIXME REMOVE THESE 
 Here are the commands to create the directory structure for this autozipping to occur.
-
 
 ```
 > mkdir -p example2/packages/demo/hello
@@ -571,11 +549,9 @@ Result of deploying project '.../example2'
 	Deployed actions:
 	- demo/hello
 ```
-
+-->
 
 For autozipping to work in a project with no configuration, the following conditions must be met:
-
-
 
 *   At least one source file must have [a suffix from which the runtime type can be inferred](#nimbella-deployer-supported-runtimes-for-actions).
 *   All source files must be of the same type so they can use the same runtime.
@@ -583,72 +559,50 @@ For autozipping to work in a project with no configuration, the following condit
 
 These conditions can be relaxed by using [project configuration](#adding-project-configuration).
 
-Subdirectories can be present under an action directory (in this example, a _node_modules_ directory under the _hello_ action directory). These directories are zipped up with everything else under the action directory. Here’s a diagram:
+Subdirectories can be present under an action directory (for example, a `node_modules` directory as in the following diagram). These directories are zipped up with everything else under the action directory.
 
-<h6>
-
-<p id="gdcalert7" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/How-To3.png). Store image on your image server and adjust path/filename if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert8">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-
-![alt_text](images/How-To3.png "image_tooltip")
- \
-Figure 5: Autozipping a subdirectory of an action directory</h6>
-
+<img src="./fig5-nim-example2-complex-directory-structure.svg" height="450">
+<h6>Figure 5: Autozipping a subdirectory of an action directory</h6>
 
 You can optionally limit the files to be zipped in either of two ways:
 
+*   Add a file called `.include`, which lists exactly the items to be included. Anything else in the action directory is excluded. Wildcards are not permitted in this file but entries can denote directories as well as files. The `.include` file can also be used for linking to somewhere else in the filesystem, as described in [Using an action source from elsewhere in the filesystem](#using-an-action-source-file-from-elsewhere-in-the-filesystem).
+*   Add a file called `.ignore`, stating which files and directories _not_ to include. The `.ignore` file follows the same rules as `.gitignore` and has the same effect. It is not necessary to list `.ignore` inside itself. It is automatically ignored, as are certain build-related files.
 
+You cannot have both a `.include` and `.ignore` in the same action directory.
 
-*   Add a file called _.include_, which lists exactly the items to be included. \
-Anything else in the action directory is excluded.  \
-Wildcards are not permitted in this file but entries can denote directories as well as files.  \
-The _.include_ file can also be used for linking to somewhere else in the filesystem, as described in [Using an action source from elsewhere in the filesystem](#using-an-action-source-file-from-elsewhere-in-the-filesystem).
-*   Add a file called_ .ignore_, stating which files and directories _not_ to include. The _.ignore_ file follows the same rules as _.gitignore_ and has the same effect.  \
-It is not necessary to list _.ignore_ inside itself. It is automatically ignored, as are certain build-related files.  \
-You cannot have both .include and .ignore.
-
-**Note: **No zipping occurs in any of the following cases:
-
-
+**Note:** No zipping occurs in any of the following cases:
 
 *   The directory representing the action contains only a single file.
-*   Only one file is listed in _.include_.
-*   Only one file is left after applying the rules in _.ignore_.
+*   Only one file is listed in `.include`.
+*   Only one file is left after applying the rules in `.ignore`.
+
 
 <h4 id="using-an-action-source-file-from-elsewhere-in-the-filesystem">Using an action source file from elsewhere in the filesystem</h4>
 
+If you use an `.include` file, it can contain entries that denote files or directories outside the action directory. Entries can be either absolute paths or paths that are relative to the action directory using standard `../` notation. 
 
-If you use an _.include_ file, it can contain entries that denote files or directories outside the action directory. Entries can be either absolute paths or paths that are relative to the action directory using standard `../` notation. 
+**Note:** Although paths in `.include` can terminate outside the project, it becomes harder to relocate the project. It’s better practice to include files within the project. If they are directories that you want the deployer to ignore, you can put them in the root directory, as described in [About projects](#about-projects).
 
-**Note: **Although paths in _.include_ can terminate outside the project, it becomes harder to relocate the project. It’s better practice to include files within the project. If they are directories that you want the deployer to ignore, you can put them in the root directory, as described in [About projects](#about-projects).
+Entries in `.include` are interpreted differently if they are absolute or relative. If the path is relative, the resulting entries in the zip file start with the last segment of the listed path. Here are two examples:
 
-Entries in _.include_ are interpreted differently if they are absolute or relative. If the path is relative, the resulting entries in the zip file start with the last segment of the listed path. Here are two examples:
-
-
-
-*   If you have `../../../actionSrc/node_modules`, the contents of the node_modules directory are zipped but files inside the directory have the form `node_modules/<path>`. 
-*   If you have `../../../actionSrc/helpers.js` the file becomes just `helpers.js`.
-
-
-
----
+*   If you have `../../../lib/node_modules`, the contents of the node_modules directory are zipped but files inside the directory have the form `node_modules/<path>`. 
+*   If you have `../../../lib/helpers.js` the file becomes just `helpers.js`.
 
 
 <h2 id="adding-static-web-content">Adding static web content</h2>
 
+To add static web content to a project, add a directory called _web_ as a peer of the directory called _packages_. This directory should contain files whose suffixes imply well-known mime types for web content, such as _.html_, _.css_, or _.js_. 
 
-To add static web content to a project, add a directory called _web_ as a peer of the directory called _packages_. This directory should contain files whose suffixes imply well-known mime types for web content, such as_ .html_, _.css_, or_ .js_. 
-
-**Note: **JavaScript files in static web content are _not_ actions but are scripts intended to run in the browser.
+**Note:** JavaScript files in static web content are _not_ actions but are scripts intended to run in the browser.
 
 The _web_ directory can have subdirectories and can be built by website builders or other tools.
 
-Like an action directory, the _web_ directory may contain `.include` or `.ignore` to control what is actually considered web content, as opposed to build support or intermediate results. For more information about `.include` and .`ignore`, see [Multifile actions created with autozip](#multifile-actions-created-with-autozip).
+Like an action directory, the _web_ directory may contain `.include` or `.ignore` to control what is actually considered web content, as opposed to build support or intermediate results. For more information about `.include` and `.ignore`, see [Multifile actions created with autozip](#multifile-actions-created-with-autozip).
 
-The _web_ directory also supports integrated [building](https://nimbella.io/downloads/nim/nim.html#Building), just like an action directory.
+The _web_ directory also supports integrated [building](#FIXME), just like an action directory.
 
 Here’s an example of a project with modest web content, populated by hand. For simplicity, the actions of the project are not shown.
-
 
 ```
 example3/web/chatroom.html
@@ -657,46 +611,36 @@ example3/web/runner.js
 example3/web/favicon.ico
 ```
 
-
 Here’s a diagram of the `example3` project structure.
 
-<h6>
-
-<p id="gdcalert8" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/How-To4.png). Store image on your image server and adjust path/filename if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert9">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-
-![alt_text](images/How-To4.png "image_tooltip")
- \
-Figure 6: Example3 project with static web content</h6>
-
+<img src="./fig6-nim-example3-project-directory-structure.svg" height="450">
+<h6>Figure 6: A project with static web content</h6>
 
 Here’s the output when the project is deployed.
 
-
 ```
 > nim project deploy example3
-Result of deploying project '.../example3' to namespace '...'
-    on host 'https://apigcp.nimbella.io'
-Deployed 4 web content items to https://<ns>-apigcp.nimbella.io
+Deploying project '/path/to/example3'
+  to namespace '...'
+  on host 'https://...nimbella.io'
+
+Deployed 4 web content items to 
+  https://<namespace>-host.nimbella.io
 Deployed actions:
   ...
 ```
 
+As the output shows, the contents of the web directory were deployed to the web, with URLs within your namespace’s unique DNS domain `<namespace>-host.nimbella.io`, where `<namespace>` is your namespace. The remaining portion of the domain name may differ depending your account configuration and your API host within the Nimbella Cloud. To access the content, either `http` or `https` may be used. For `https`, the SSL certificate will be that of Nimbella Corp.
 
-As the output shows, the contents of the web directory were deployed to the web, with URLs within your namespace’s unique DNS domain `<ns>-apigcp.nimbella.io` , where <ns> is your namespace. The remaining portion of the domain name may differ from the typical `apigcp.nimbella.io`, depending on your API host within the Nimbella Cloud. To access the content, either `http` or `https` may be used. For https, the SSL certificate will be that of Nimbella Corp.
+**Notes:**
 
-**Notes: **
-
-
-
-*   For a web deployment to work correctly, the `namespace` entry in the credential store must include storage. See [View the Credential Store](#view-the-credential-store) to generate the credential store, then check to make sure the `Storage` column of the response says `yes`. The first namespace created for each user includes storage, but it’s possible to create namespaces without it.
-*   You can add [project configuration to change how your static web content is deployed](#project-configuration-for-web-content).  \
+*   For a web deployment to work correctly, the namespace entry in the credential store must include storage. See [View the Credential Store](#view-the-credential-store) to generate the credential store, then check to make sure the `Storage` column of the response says `yes`. The first namespace created for each user includes storage, but it’s possible to create namespaces without it.
+*   You can add [project configuration to change how your static web content is deployed](#project-configuration-for-web-content).
 See [an example of how to configure a project when you generate web content with a tool such as React.](#configuration-example-for-web-content-generated-by-a-tool)
+
+<!--FIXME
 *   If your Nimbella namespace doesn’t have storage, an alternative is to use a form of deployment called _action wrapping_. See [The action wrapping alternative for deploying web content](#the-action-wrapping-alternative-for-deploying-web-content).
-
-
-
----
+-->
 
 
 <h2 id="about-the-nimbella-deployer">About the Nimbella deployer</h2>
@@ -705,25 +649,19 @@ See [an example of how to configure a project when you generate web content with
 <h3 id="nimbella-deployer-supported-runtimes-for-actions">Nimbella deployer supported runtimes for actions</h3>
 
 
-The Nimbella deployer determines the kind of runtime required for the action from the file suffix. In this example, the deployer uses the nodejs:default runtime, inferred from the file suffix _.js_. 
+The Nimbella deployer determines the kind of runtime required for the action from the file suffix. The follwing runtimes are supported:
 
-Nimbella supports the following runtimes:
-
-
-
-*   Nodejs for suffix _.js_
+*   Node.js for suffix _.js_
 *   Python for suffix _.py_
-*   Java for suffixes _.java_ and .jar.
+*   Java for suffixes _.java_ and _.jar_
 *   Swift suffix _.swift_
 *   PHP for suffix _.php_
 *   Go for suffix _.go_
 
+
 <h3 id="deploying-projects-incrementally">Deploying projects incrementally</h3>
 
-
-Instead of deploying your entire project each time you deploy, you can use incremental deployment to detect and deploy changes in the following:
-
-
+Instead of deploying your entire project each time you make a change to the file contents, you can use incremental deployment to detect and deploy changes in the following:
 
 *   Project structure
 *   Project content
@@ -735,19 +673,15 @@ Consider the following example of an `example4` project. The output from standar
 
 
 ```
->nim project deploy example4
-	Result of deploying project '.../example4' to namespace '...'
-	  on host 'https://...nimbella.io'
-	Deployed actions:
-	  - admin/adduser
-	  - sampleJavaScript
-	  - samplePython
-	  - welcome
-	  - demo/hello
-	  - test/work0
-	  - test/work30
+> nim project deploy example4
+Deploying project '/path/to/example4'
+  to namespace '...'
+  on host 'https://...nimbella.io'
+Deployed actions:
+  - admin/adduser
+  - welcome
+  - demo/hello
 ```
-
 
 Now suppose that you’ve made changes to `demo/hello` and `welcome` but not the others. You aren’t ready to do a production deployment or submit for testing, you just want to deploy what’s changed so you can continue developing. 
 
@@ -756,112 +690,104 @@ To deploy incrementally, use the `--incremental` flag, as in the following examp
 
 ```
 > nim project deploy example4 --incremental
-	Result of deploying project '.../example4' to namespace '...'
-	  on host 'https://...nimbella.io'
+Deploying project '/path/to/example4'
+  to namespace '...'
+  on host 'https://...nimbella.io'
 Deployed actions:
-	  - welcome
-	  - demo/hello
-Skipped 5 unchanged actions
+  - welcome
+  - demo/hello
+Skipped 1 unchanged action
 ```
-
 
 Changes to actions and web content are tracked by means of digests created by the deployer and described in more detail in [Deployer recordkeeping](#deployer-recordkeeping). The deployer skips the uploads of actions and web content whose digests have not changed. Digests are computed over an action’s contents and also its metadata, so if you use a [project configuration](#adding-project-configuration) file to change the properties of an action, those changes are detected as well. 
 
-The `--incremental` option also skips rezipping large multifile actions whose included contents are older than the last zip.
+The `--incremental` option also skips rezipping large multi-file actions whose included contents are older than the last zip file.
 
 The `--incremental` option is accurate in determining what has changed unless you add build steps. After you add build steps, some heuristics come into play, as discussed in [Build States and the Effect of --incremental on Builds](#build-states-and-the-effect-of-incremental-on-builds).
 
-<h4 id="project-watching-for-incremental-deployment">Project watching for incremental deployment</h4>
 
+<h4 id="project-watching-for-incremental-deployment">Project watching for incremental deployment</h4>
 
 A good way to implement incremental deployment during project development is to use `nim project watch`. The `project watch` command typically runs until interrupted in a devoted terminal window so you can work elsewhere, such as in your favorite IDE.
 
 Here’s an example of using this command for incremental deployment.
 
-
 ```
 > nim project watch example4
-	/Users/joshuaauerbach/nimbella> nim project watch example4
-	Watching example4
-	...
-	Deploying 'example4' due to change in 'project.yml'
-	Result of deploying project '/Users/joshuaauerbach/nimbella/example4'
-	  on host 'https://apijosh.nimbella.io'
-	Skipped 7 unchanged actions
-	Deployment complete.  Resuming watch.
+Watching 'example4' [use Control-C to terminate]
+...
+Deploying 'example4' due to change in 'path/to/packages/demo/hello'
+
+Skipped 4 unchanged web resources on
+  https://<namespace>-host.nimbella.io
+Deployed actions:
+  - demo/hello
+Deployment complete.  Resuming watch.
 ```
 
-
+<!--FIXME remove this
 The ellipsis in the example appears in the actual output and represents a passage of time during which the _[project.yml configuration](#adding-project-configuration)_ was changed in a way that did not affect the semantics of the action `demo/hello`. If it had, `demo/hello` would have been redeployed. 
+-->
 
 The `project watch` command accepts a list of projects and most of the flags that project `deploy` accepts, as described in [Project-Level Deployment Commands](#2-project-level-deployment-commands). An exception is `--incremental`, which is assumed. 
 
-<h3 id="deployer-recordkeeping">Deployer recordkeeping</h3>
 
+<h3 id="deployer-recordkeeping">Deployer recordkeeping</h3>
 
 The deployer creates two types of audit trails:
 
-
-
-*   One for actions and packages deployed to your namespace
-*   One for actions, packages and web content in your local project.  
+1.   One for actions and packages deployed to your namespace
+2.   One for actions, packages and web content in your local project.  
 
 We’ll describe each type and show how they differ and how they can be used for comparison.
 
-<h4 id="annotations-for-actions-and-packages-deployed-to-your-namespace">Annotations for actions and packages deployed to your namespace</h4>
 
+<h4 id="annotations-for-actions-and-packages-deployed-to-your-namespace">Annotations for actions and packages deployed to your namespace</h4>
 
 Version numbers for actions and packages are incremented on each update, and the `action get` command generates information about a deployed package or action in your namespace. 
 
-**Note: **Web content does not have version numbers. Its changes are tracked by maintaining content digests of the current files on your local system versus the latest-deployed files from the project. See [Recordkeeping in your local project](#recordkeeping-in-your-local-project) for an example.
+**Note:** Web content does not have version numbers. Its changes are tracked by maintaining content digests of the current files on your local system versus the latest-deployed files from the project. See [Recordkeeping in your local project](#recordkeeping-in-your-local-project) for an example.
 
 As shown in the following example, the `action get` command output shows the namespace, the name of the action or package, and and its version in the namespace. In addition, the command output displays the annotation data that the the deployer generates in each action and package it deploys. If your project is managed by git, the annotations contain a variety of information about the storage in your git repository, as described below. If your project isn’t managed by git, it contains the project path and the user who created the project.
 
 <h5 id="typical-action-get-command-output">Typical action get command output</h5>
 
-
 In this example, the `action get` command retrieves the annotation for the `demo/hello` action from [example1](#example-create-and-deploy-a-project-with-a-single-action):
-
 
 ```
 > nim action get demo/hello
-	{
-	  "namespace": ".../demo",
-	  "name": "hello",
-	  "version": "0.0.1",	
-	  ...
-	  "annotations": [
-	    {
-	      "key": "deployer",
-	      "value": {
-	        "repository": "...",
-	        "commit": "...",
-	        "digest": "...",
-	        "projectPath": "...",
-	        "user": "..."
-	        }
-	      },
-	      ...
-	  ],
-	  ...
-	}
+{
+  "namespace": ".../demo",
+  "name": "hello",
+  "version": "0.0.1",	
+  ...
+  "annotations": [
+    {
+      "key": "deployer",
+      "value": {
+        "repository": "...",
+        "commit": "...",
+        "digest": "...",
+        "projectPath": "...",
+        "user": "..."
+        }
+      },
+      ...
+  ],
+  ...
+}
 ```
-
 
 In the first section of output:
 
-
-
 *   `namespace` shows the namespace name plus the project’s package name.
 *   `name` shows the name of the action.
-*   `version` shows the version of the action that’s in your namespace. \
-This is the version that you’d compare with the version in .nimbella/versions to see if they match. If they do not, you’d then start looking for another project that may have placed that file there.
+*   `version` shows the version of the action that’s in your namespace.
+This is the version that you’d compare with the version in `/path/to/example1/.nimbella/versions` to see if they match. If they do not, you’d then start looking for another project that may have placed that file there.
 
-The `annotations` details for `value` vary according to whether the deployed project is under git control. 
+The `annotations` details for the key `deployer` vary according to whether the deployed project is under git control.
 
 **If the deployed project is managed by git:**
-
-
 
 *   `repository` is the value given by `git config --get remote.origin.url`.
 *   `commit` is the `githash` of the most recent commit, with` ++` added if the working copy contains uncommitted changes.
@@ -871,27 +797,23 @@ The `annotations` details for `value` vary according to whether the deployed pro
 
 **If the deployed project does not appear to be under git control:**
 
-
-
 *   The `repository` and `commit` fields are omitted.
 *   `digest` is the digest of the code and the metadata of either the action or the package (the same value that is stored locally for controlling incremental deployment).
 *   The `projectPath` is absolute.
 *   `user` is the local user name according to the operating system.
 
+
 <h4 id="recordkeeping-in-your-local-project">Recordkeeping in your local project</h4>
 
+The deployer records information about your local project in a single file called `versions.json` in a project subdirectory named `.nimbella`. For actions and packages, the deployer records the last-deployed version in your local project. For actions, packages, and web content, the deployer also creates digests, which are used for [incremental deployment](#deploying-projects-incrementally). 
+Looking at the information in `versions.json` answers the question _“What did you last put in the namespace using this project?"_
 
-The deployer records information about your local project in a single file called _versions.json in a _project subdirectory named _.nimbella_. For actions and packages, the deployer records the last-deployed version in your local project. For actions, packages, and web content, the deployer also creates digests, which are used for [incremental deployment](#deploying-projects-incrementally). 
+**Note:** Do not edit any files in the `.nimbella` directory.
 
-Looking at the information in _versions.json_ answers the question “`What did you last put in the namespace using this project?"`
-
-**Note: **Don’t edit any files in the _.nimbella_ directory.
 
 <h5 id="typical-versions-json-file-content">Typical versions.json file content</h5>
 
-
-The _versions.json_ entries for packages and actions look something like this:
-
+The `versions.json_`entries for packages and actions look something like this:
 
 ```
 [
@@ -914,64 +836,50 @@ The _versions.json_ entries for packages and actions look something like this:
 }
 ```
 
-
 In this example, you can see that there are separate status entries for the package `demo` and the action `demo/hello`. The entry for the package and for each action includes both a `version` field, showing the last-deployed version number, and a `digest` field, which is used to control [incremental deployment](#deploying-projects-incrementally). The fact that the package and action have different versions suggests that incremental deployment has been used.
 
-If you have also deployed static web content, the _versions.json_ file has a `webHashes` entry with digest information about each web file, something like this:
-
+If you have also deployed static web content, the `versions.json` file has a `webHashes` entry with digest information about each web file, something like this:
 
 ```
 "webHashes": {
-"qrcode/web/index.html": "56bc228c3f5b8a33e59224bdadd8a7d8674dbc1e774a97af4cb62a355f585276",
-"qrcode/web/logo.png": "302f6b60c3b73ac23df07e528d14ef740576ac5966cdd5ea4884f03d0a532a71"
+  "qrcode/web/index.html": "56bc228c3f5b8a33e59224bdadd8a7d8674dbc1e774a97af4cb62a355f585276",
+  "qrcode/web/logo.png": "302f6b60c3b73ac23df07e528d14ef740576ac5966cdd5ea4884f03d0a532a71"
 }
 ```
 
 
 <h4 id="comparing-versions-in-your-namespace-versus-local-project">Comparing versions in your namespace versus local project</h4>
 
-
-The namespace vs. local project recordkeeping is particularly useful for comparing version numbers between the local copy of the project and what’s actually in your namespace`. `For example, as described in [Factors in choosing project boundaries](#factors-in-choosing-project-boundaries), there can be collisions between different projects trying to install the same resource. If you use the `action get` command and find that the` demo/hello` action in your namespace is at Version 0.0.2 while the .nimbella/versions.json content tell you that the deployer last deployed Version 0.0.1 from your local project, it means that the action was updated in your namespace outside the deployer or by some other project or copy of this project. At that point, you might have to inspect the deployed action further to disambiguate the two versions.
+The namespace vs. local project recordkeeping is particularly useful for comparing version numbers between the local copy of the project and what’s actually in your namespace. For example, as described in [Factors in choosing project boundaries](#factors-in-choosing-project-boundaries), there can be collisions between different projects trying to install the same resource. If you use the `action get` command and find that the` demo/hello` action in your namespace is at version `0.0.2` while the `.nimbella/versions.json` content tell you that the deployer last deployed version `0.0.1` from your local project, it means that the action was updated in your namespace outside the deployer or by some other project or copy of this project. At that point, you might have to inspect the deployed action further to disambiguate the two versions.
 
 **Notes:**
 
-
-
-*   If you have a [project configuration](https://nimbella.io/downloads/nim/nim.html#Configuring) that uses one of the options to clean an action, package or namespace prior to deploying, then the version numbering of the cleaned action starts over again at 0.0.1.
-*   If you deploy to different namespaces or API hosts at different times, the array in _versions.json_ will have more than one entry, with versions for the last deployment to each distinct API host/namespace target.
-
-
-
----
+*   If you have a [project configuration](https://nimbella.io/downloads/nim/nim.html#Configuring) that uses one of the options to clean an action, package or namespace prior to deploying, then the version numbering of the cleaned action starts over again at `0.0.1`.
+*   If you deploy to different namespaces or API hosts at different times, the array in `versions.json` will have more than one entry, with versions for the last deployment to each distinct API host/namespace target.
 
 
 <h2 id="incorporating-build-steps-for-actions-and-web-content">Incorporating build steps for actions and web content</h2>
 
-
 The _web_ directory and any directory that represents an action can be built automatically as part of deployment. You can trigger this behavior in one of three ways.
 
+*   By placing a file called `build.sh` (for Mac or Linux), or `build.cmd` (for Windows), or both, in each directory in which you want builds to occur. This could be the web directory for web content or any of the action directories. Each build file should contain a shell script to execute with the directory in which it’s placed as the current directory.
+**Note:** If both _.sh_ and _.cmd_ files are provided, only the one appropriate for the current operating system will be used. If only one is provided, the deployer will run on systems for which that kind of script is appropriate and indicate an error on other systems.
 
+*   By placing a file called `.build` in each directory in which you want builds to occur. The rules for this option are explained under [out-of-line builds](https://nimbella.io/downloads/nim/nim.html#OutOfLineBuild) below.
 
-*   By placing a file called _build.sh_ (for Mac or Linux), or _build.cmd_ (for Windows), or both, in each directory in which you want builds to occur. This could be the web directory for web content or any of the action directories. Each build file should contain a shell script to execute with the directory in which it’s placed as the current directory. \
-**Note: **If both _.sh_ and _.cmd_ files are provided, only the one appropriate for the current operating system will be used. If only one is provided, the deployer will run on systems for which that kind of script is appropriate and indicate an error on other systems.
-*   By placing a file called _.build_ in each directory in which you want builds to occur. The rules for this option are explained under [out-of-line builds](https://nimbella.io/downloads/nim/nim.html#OutOfLineBuild) below.
-*   By placing a _package.json_ file in in each directory in which you want builds to occur. The presence of this file causes the following command to be executed: \
-`npm install --production`  \
-To override this command to use a `yarn` installation, use the flag `--yarn` on the `nim project deploy` command, which causes `yarn install --production` to be executed with the directory as the current directory.
+*   By placing a `package.json` file in in each directory in which you want builds to occur. The presence of this file causes the following command `npm install --production`  to be executed. To override this command to use a `yarn` installation, use the flag `--yarn` on the `nim project deploy` command, which causes `yarn install --production` to be executed instead, with the directory as the current directory.
 
-These three triggers are examined in this order, and when the deployer finds one, it does not consider the others. The exception is that a script in _build.sh_ or _build.cmd_ can always do its own `npm install` or `yarn install`.
+These three triggers are examined in this order, and when the deployer finds one, it does not consider the others. The exception is that a script in `build.sh` or `build.cmd` can always do its own `npm install` or `yarn install`.
 
-**Tip: _build.sh_**, _build.cmd_, and _.build_ are automatically ignored and do not have to be listed in `.ignore`. However, _package.json_ is not automatically ignored in this way.
+**Tip:** `build.sh`, `build.cmd`, and `.build` are automatically ignored and do not have to be listed in `.ignore`. However, `package.json` is not automatically ignored in this way.
 
 Building precedes the determination of what web files to upload or which action directories to zip into the action. This has two implications:
 
+*   You can optionally use the script to generate the `.include` or `.ignore` file that refines this process.
+*   If the build is designed to produce a _.zip_ file directly, you must ensure that there are no other files that will be interpreted as a part of the action, or else the deployer will do its own zipping. The easiest way to ensure that there is only one zip file is to use a one-line `.include` file.
 
 
-*   You can optionally use the script to generate the _.include_ or _.ignore_ file that refines this process.
-*   If the build is designed to produce a _.zip_ file directly, you must ensure that there are no other files that will be interpreted as a part of the action, or else the deployer will do its own zipping. The easiest way to ensure that there is only one zip file is to use a one-line _.include_ file.
-
-<h3 id="examples-of-building-common-use-cases">**Examples of building (common use cases)**</h3>
-
+<h3 id="examples-of-building-common-use-cases">Examples of building (common use cases)</h3>
 
 Let’s start with a simple node dependency.
 
