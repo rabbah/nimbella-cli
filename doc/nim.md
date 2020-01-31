@@ -1095,6 +1095,8 @@ However, Nimbella projects can’t always avoid having a configuration file, so 
 
 To configure a project, create a configuration file called _project.yml_ in the project’s root directory. The configuration file is coded in YAML. There are various online tutorials for YAML if you need to learn more about the YAML language.
 
+One important fact about YAML is that things to the right of the `:` separator are given data types according to their appearance.  So, `7895.37` is taken to be a _number_ and not a string, even though `abcd.ef` would be parsed as a string. You can always cause values to be taken as strings by quoting them.  E.g. `"7895.37"` and `"abcd.ef"` are both strings.  This distinction can be important in cases when dot-separated alphameric values can end up looking like numbers by the accident of having only digits and dots.
+
 The structure of the information in the _project.yml_ file should follow the structure of the project itself. In this example, the actions are nested under packages to follow the directory structure of a Nimbella project.
 
 ```
