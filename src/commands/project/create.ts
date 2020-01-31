@@ -41,7 +41,10 @@ export default class ProjectCreate extends NimBaseCommand {
   static args = [ { name: 'project', description: 'project path in the file system'} ]
 
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
-      await createOrUpdateProject(false, args, flags, logger)
+    if (!args.project) {
+        this._help()
+    }
+    await createOrUpdateProject(false, args, flags, logger)
   }
 }
 

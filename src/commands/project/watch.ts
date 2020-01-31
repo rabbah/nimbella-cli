@@ -43,8 +43,14 @@ export default class ProjectWatch extends NimBaseCommand {
   static strict = false
 
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
+     // If no projects specified, display help
+    if (argv.length == 0) {
+      this._help()
+    }
+    // Otherwise ...
     const { target, env, apihost, auth, insecure, yarn } = flags
-    const cmdFlags: Flags = { verboseBuild: flags['verbose-build'], verboseZip: flags['verboseZip'], production: false, incremental: true, env, yarn }
+    const cmdFlags: Flags = { verboseBuild: flags['verbose-build'], verboseZip: flags['verboseZip'], production: false,
+        incremental: true, env, yarn }
     this.debug('cmdFlags', cmdFlags)
     const { creds, owOptions } = await processCredentials(insecure, apihost, auth, target, logger)
     argv.forEach(project => watch(project, cmdFlags, creds, owOptions, logger))

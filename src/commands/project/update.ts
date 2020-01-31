@@ -35,6 +35,9 @@ export default class ProjectUpdate extends NimBaseCommand {
   static hidden = true
 
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
-      await createOrUpdateProject(true, args, flags, logger)
+    if (!args.project) {
+      this._help()
+    }
+    await createOrUpdateProject(true, args, flags, logger)
   }
 }

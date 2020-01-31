@@ -47,16 +47,16 @@ export class ProjectDeploy extends NimBaseCommand {
   static strict = false
 
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
+    // If no projects specified, display help
+    if (argv.length == 0) {
+      this._help()
+    }
+    // Otherwise ...
     const { target, env, apihost, auth, insecure, production, yarn, incremental } = flags
     const cmdFlags: Flags = { verboseBuild: flags['verbose-build'], verboseZip: flags['verbose-zip'], production, incremental, env, yarn }
     this.debug('cmdFlags', cmdFlags)
     const { creds, owOptions } = await processCredentials(insecure, apihost, auth, target, logger)
     this.debug('creds', creds)
-
-    // If no projects specified, display help
-    if (argv.length == 0) {
-      this._help()
-    }
 
     // Deploy each project
     let success = true
