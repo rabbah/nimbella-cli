@@ -1,10 +1,99 @@
-<h1>How To Use the Nimbella Command Line Tool</h1>
+% How To Use the Nimbella Command Line Tool
+%
+%
 
 This document provides information about the Nimbella Command Line Tool, called nim, and its Command Line Interface (CLI). There are also several [Nimbella demo projects at GitHub](https://github.com/nimbella/demo-projects) that you can try out.
 
 <h2>Table of Contents</h2>
 
-[TOC]
+ - [Your Nimbella cloud account](#your-nimbella-cloud-account)
+ - [Install the Nimbella Command Line Tool (nim)](#install-the-nimbella-command-line-tool-nim)
+      - [Install nim globally](#install-nim-for-shell-invocation-globally)
+      - [Install nim as a dependency](#install-nim-as-a-dependency)
+ - [nim command overview](#nim-command-overview)
+      - [1 Credential management to access Nimbella namespaces](#1-credential-management-to-access-nimbella-namespaces)
+      - [2 Project-level deployment commands](#2-project-level-deployment-commands)
+      - [3 Entity management commands](#3-entity-management-commands)
+      - [4 Supporting commands](#4-supporting-commands)
+ - [Nimbella namespaces](#nimbella-namespaces)
+      - [Create a Nimbella namespace](#create-a-nimbella-namespace)
+      - [View the credential store](#view-the-credential-store)
+      - [Create and manage multiple namespaces](#create-and-manage-multiple-namespaces)
+           - [Switch between namespaces](#switch-between-namespaces)
+           - [Manage multiple namespaces](#manage-multiple-namespaces)
+ - [Overview of Nimbella projects, actions, and deployment](#overview-of-nimbella-projects-actions-and-deployment)
+ - [Example: Create and deploy a project with a single action](#example-create-and-deploy-a-project-with-a-single-action)
+ - [About projects](#about-projects)
+      - [Project directory structure](#project-directory-structure)
+      - [Projects with multiple actions](#projects-with-multiple-actions)
+      - [Factors in choosing project size](#factors-in-choosing-project-size)
+      - [Factors in choosing project boundaries](#factors-in-choosing-project-boundaries)
+ - [About actions](#about-actions)
+      - [Actions Have Public URLs by Default Unless the Project is Configured](#actions-have-public-urls-by-default-unless-the-project-is-configured)
+      - [Using zipped source files to form a single action](#using-zipped-source-files-to-form-a-single-action)
+      - [Multifile actions created with autozip](#multifile-actions-created-with-autozip)
+           - [Using an action source file from elsewhere in the filesystem](#using-an-action-source-file-from-elsewhere-in-the-filesystem)
+ - [Adding static web content](#adding-static-web-content)
+ - [About the Nimbella deployer](#about-the-nimbella-deployer)
+      - [Nimbella deployer supported runtimes for actions](#nimbella-deployer-supported-runtimes-for-actions)
+      - [Deploying projects incrementally](#deploying-projects-incrementally)
+           - [Project watching for incremental deployment](#project-watching-for-incremental-deployment)
+      - [Deployer recordkeeping](#deployer-recordkeeping)
+           - [Annotations for actions and packages deployed to your namespace](#annotations-for-actions-and-packages-deployed-to-your-namespace)
+               - [Typical action get command output](#typical-action-get-command-output)
+           - [Recordkeeping in your local project](#recordkeeping-in-your-local-project)
+               - [Typical versions.json file content](#typical-versions-json-file-content)
+           - [Comparing versions in your namespace versus local project](#comparing-versions-in-your-namespace-versus-local-project)
+ - [Incorporating build steps for actions and web content](#incorporating-build-steps-for-actions-and-web-content)
+      - [Examples of building (common use cases)](#examples-of-building-common-use-cases)
+      - [Errors in builds](#errors-in-builds)
+      - [Out-of-line builds and shared builds](#out-of-line-builds-and-shared-builds)
+      - [Build states and the effect of incremental on builds](#build-states-and-the-effect-of-incremental-on-builds)
+           - [Two build states: Built and Unbuilt](#two-build-states-built-and-unbuilt)
+           - [What determines built or unbuilt states](#what-determines-built-or-unbuilt-states)
+ - [Adding project configuration](#adding-project-configuration)
+      - [Project configuration for packages and actions](#project-configuration-for-packages-and-actions)
+           - [Action modifiers allowed in project.yml](#action-modifiers-allowed-in-project-yml)
+               - [web](#web)
+               - [runtime](#runtime)
+               - [main](#main)
+               - [binary](#binary)
+               - [webSecure](#webSecure)
+               - [annotations](#annotations)
+               - [parameters](#parameters)
+               - [environment](#environment)
+               - [clean](#cleanactions)
+               - [limits](#limits)
+           - [Package modifiers allowed in project.yml](#package-modifiers-allowed-in-project-yml)
+               - [shared](#shared)
+               - [annotations](#annotations)
+               - [parameters](#parameters)
+               - [environment](#environment)
+               - [clean](#cleanpkgs)
+           - [Global modifiers allowed in project.yml](#global-modifiers-allowed-in-project-yml)
+               - [targetNamespace ](#cleannamespace)
+               - [cleanNamespace ](#cleannamespace)
+               - [parameters](#parameters)
+      - [Project configuration for web content](#project-configuration-for-web-content)
+           - [Use the YAML bucket member to configure how web content is deployed](#use-the-yaml-bucket-member-to-configure-how-web-content-is-deployed)
+               - [Share a Nimbella namespace with prefixpath](#share-a-nimbella-namespace-with-prefixpath)
+               - [Delete previously deployed content when new content is deployed](#delete-previously-deployed-content-when-new-content-is-deployed)
+               - [Configure behavior when the URL denotes a directory](#configure-behavior-when-the-url-denotes-a-directory)
+               - [Specify the page for a 404 error](#specify-the-page-for-a-404-error)
+               - [Strip path segments](#strip-path-segments)
+           - [Configuration example for web content generated by a tool](#configuration-example-for-web-content-generated-by-a-tool)
+      - [Symbolic variables](#symbolic-variables)
+      - [File substitution](#file-substitution)
+ - [Information for OpenWhisk developers](#information-for-openwhisk-developers)
+      - [Using the Nimbella stack with an OpenWhisk installation](#using-the-nimbella-stack-with-an-openwhisk-installation)
+      - [Credential management commands in nim vs. wsk](#credential-management-commands-in-nim-vs-wsk)
+      - [Project commands in nim vs. wsk](#project-commands-in-nim-vs-wsk)
+      - [Entity management commands in nim vs. wsk](#entity-management-commands-in-nim-vs-wsk)
+      - [Using Whisk commands in switching namespaces](#using-whisk-commands-in-switching-namespaces)
+      - [Working with other OpenWhisk hosts](#working-with-other-openwhisk-hosts)
+      - [Nimbella actions and OpenWhisk](#nimbella-actions-and-openwhisk)
+      - [Annotations by the Nimbella deployer](#annotations-by-the-nimbella-deployer)
+      - [Project configuration](#project-configuration)
 
 ---
 
@@ -457,37 +546,6 @@ Anything else in the root directory is ignored by the deployer, shown in blue in
 
 Adding more actions to a project is easy when each action is related to a single source code file. You can create as many subdirectories of the packages directory as you want and add as many source code files as you want to each subdirectory. (See [Project Directory Structure](#about-projects).)
 
-<!--FIXME these cp commands wont work for anyone as is remove the two paras below and code block
-
-In the [example1 project procedure](#example-create-and-deploy-a-project-with-a-single-action) above, you would use `mkdir` commands to optionally create more subdirectories under `packages` add the source code files in those directories. For example, the following `mkdir` commands create _demo_, _admin_, _default_, and _test_ directories under the _packages_ directory. The `cp` commands copy the source code files for the actions under those subdirectories. The actions are automatically created from these source code files and named in relation to their directory structure.
-
-In this example, the resulting actions are listed under `Deployed actions` in the command output below. As described in the previous procedure, the actions from the _default_ subdirectory (`sampleJavaScript`, `samplePython`, and `welcome`), are created without a package qualifier prepended to the name.
-
-```
-> mkdir -p example1/packages/demo
-> cp hello.js example1/packages/demo
-> mkdir example1/packages/admin
-> cp adduser.js example1/packages/admin
-> mkdir example1/packages/default
-> cp sampleJavaScript.js samplePython.py welcome.js example1/packages/default
-> mkdir example1/packages/test
-> cp work0.js work30.js example1/packages/test
-> nim project deploy example1
-Result of deploying project '.../example1'
-  to namespace '...'
-  on host 'https://...nimbella.io'
-Deployed actions:
-  - admin/adduser
-  - sampleJavaScript
-  - samplePython
-  - welcome
-  - demo/hello
-  - test/work0
-  - test/work30
-```
--->
-
-
 <h3 id="factors-in-choosing-project-size">Factors in choosing project size</h3>
 
 There is no limit on how many packages and actions can be in a project.  However, using fewer very large projects or many small projects both have some negative ramifications, which are solved by using [incremental deployment](#deploying-projects-incrementally).
@@ -549,21 +607,6 @@ By adding an extra directory under the action directory, you can trigger an auto
 <h6>Figure 4: Two source files in an action directory for automatic zipping</h6>
 
 The difference from the [example1 directory structure](#figure-2-directory-structure-of-the-example1-project) is that the `hello` action is a _directory_ rather than a single source file. The source files in the directory are zipped automatically to form the action.
-
-<!-- FIXME REMOVE THESE
-Here are the commands to create the directory structure for this autozipping to occur.
-
-```
-> mkdir -p example2/packages/demo/hello
-> cp helloMain.js helloAux.js example2/packages/demo/hello
-> nim project deploy example2
-Result of deploying project '.../example2'
-  to namespace '...'
-  on host 'https://...nimbella.io'
-Deployed actions:
-  - demo/hello
-```
--->
 
 For autozipping to work in a project with no configuration, the following conditions must be met:
 
@@ -654,10 +697,6 @@ As the output shows, the contents of the web directory were deployed to the web,
 *   You can add [project configuration to change how your static web content is deployed](#project-configuration-for-web-content).
 See [an example of how to configure a project when you generate web content with a tool such as React.](#configuration-example-for-web-content-generated-by-a-tool)
 
-<!--FIXME
-*   If your Nimbella namespace doesn’t have storage, an alternative is to use a form of deployment called _action wrapping_. See [The action wrapping alternative for deploying web content](#the-action-wrapping-alternative-for-deploying-web-content).
--->
-
 ---
 
 
@@ -742,10 +781,6 @@ Deployed actions:
   - demo/hello
 Deployment complete.  Resuming watch.
 ```
-
-<!--FIXME remove this
-The ellipsis in the example appears in the actual output and represents a passage of time during which the _[project.yml configuration](#adding-project-configuration)_ was changed in a way that did not affect the semantics of the action `demo/hello`. If it had, `demo/hello` would have been redeployed.
--->
 
 The `project watch` command accepts a list of projects and most of the flags that project `deploy` accepts, as described in [Project-Level Deployment Commands](#2-project-level-deployment-commands). An exception is `--incremental`, which is assumed.
 
@@ -1120,7 +1155,7 @@ The main entry point for the action.
 
 May be true or false. The value true indicates the need for base64 encoding when transmitting the action for deployment. Normally this is inferred from the file suffix.
 
-<h5>webSecure </h5>
+<h5 id="webSecure">webSecure </h5>
 
 Secures the website with a secret that the user must provide in order to create an action. The value may be `true` (nim generates the secret for you),  a string containing the secret, or `false` (the default, which means anyone can create an action).
 
@@ -1130,7 +1165,7 @@ A nested map providing annotations to place on the action. See [Deployer Recordk
 
 The keys and values of annotations are up to you to create. The important thing is that both clauses are nested maps in YAML terms and can have as many keys and values as needed. See the example in the [`parameters`](#parameters) description.
 
-<h5>parameters</h5>
+<h5 id="parameters">parameters</h5>
 
 A nested map providing parameters, which are bound to the action and passed on each invocation.
 
@@ -1171,11 +1206,11 @@ A nested map in which you can set limits for the timeout in milliseconds, memory
 
 The package modifiers that can go in the configuration are as follows.
 
-<h5>shared</h5>
+<h5 id="shared">shared</h5>
 
 May be `false` (default) or `true`. It indicates that the contents of the package are accessible to other authorized users.
 
-<h5>annotations</h5>
+<h5 id="annotations">annotations</h5>
 
 A nested map providing annotations to place on the package. See [Deployer Recordkeeping](#deployer-recordkeeping).
 
@@ -1205,7 +1240,7 @@ May be `true` or `false`, indicating whether you want any previous package with 
 
 There are also some useful global members of the configuration.
 
-<h5>targetNamespace </h5>
+<h5 id="targetNamespace">targetNamespace </h5>
 
 Selects the namespace to which the project will be deployed. This option is unnecessary unless you have multiple namespaces (discussed under [Managing Multiple Namespaces](#create-and-manage-multiple-namespaces)).
 
@@ -1319,31 +1354,6 @@ Deployed actions:
   ...
   - chatroom/postMessage
 ```
-
-<!--
-<h4 id="the-action-wrapping-alternative-for-deploying-web-content">The action wrapping alternative for deploying web content</h4>
-
-Action wrapping is an alternative for deploying web content that doesn’t require that your Nimbella namespace have storage. Action wrapping involves converting a web page to a string constant that is then returned by a web action. The result appears to the user as if static content was served. The deployer automates this idiom for you as long as your _web_ directory has no subdirectories.
-
-The performance characteristics of action wrapping are not ideal for static web content. However, action wrapping may be adequate if your static content meets all of these criteria:
-
-*   It is relatively simple.
-*   It meets the no-subdirectories restriction.
-*   It is incidental to a project consisting mostly of actions.
-
-To use action wrapping, simply add the `actionWrapPackage` member plus the package name to your _project.yaml_ configuration file, as described in the following instructions. The package you designate may also contain actions if you wish.
-
-**To employ action wrapping:**
-
-1. Open an existing [project configuration file](#adding-project-configuration), _project.yaml_, or create one. \
-For more information about _project.yaml_ configuration files, see [Adding Project Configuration](#adding-project-configuration).
-2. Add the following line to the file as a top-level member: \
-`actionWrapPackage: <package_name>`  \
-Example: To place all of your web content in the package called `demo`, add this line to your _project.yml_ file: \
-`actionWrapPackage: demo`
-
-**Note: **Don’t provide a `bucket` member in the configuration file.
--->
 
 <h3 id="symbolic-variables">Symbolic variables</h3>
 
