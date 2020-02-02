@@ -4,7 +4,7 @@
 
 This document provides information about the Nimbella Command Line Tool, called nim, and its Command Line Interface (CLI). There are also several [Nimbella demo projects at GitHub](https://github.com/nimbella/demo-projects) that you can try out.
 
-<h2>Table of Contents</h2>
+##Table of Contents
 
  - [Your Nimbella cloud account](#your-nimbella-cloud-account)
  - [Install the Nimbella Command Line Tool (nim)](#install-the-nimbella-command-line-tool-nim)
@@ -97,8 +97,7 @@ This document provides information about the Nimbella Command Line Tool, called 
 
 ---
 
-
-<h2 id="your-nimbella-cloud-account">Your Nimbella cloud account</h2>
+##<span id="your-nimbella-cloud-account"/>Your Nimbella cloud account
 
 Your Nimbella cloud account gives you the following benefits:
 
@@ -115,7 +114,7 @@ Once you [create your first Nimbella Cloud namespace](#create-a-nimbella-namespa
 ---
 
 
-<h2 id="install-the-nimbella-command-line-tool-nim">Install the Nimbella Command Line Tool (nim)</h2>
+##<span id="install-the-nimbella-command-line-tool-nim"/>Install the Nimbella Command Line Tool (nim)
 
 In most cases, we recommend that you use nim as a command to be invoked globally from shells or scripts. Here are the advantages of shell invocation:
 
@@ -152,7 +151,7 @@ Use this method only to make nim a dependency of some other package. To invoke n
 ---
 
 
-<h2 id="nim-command-overview">nim command overview</h2>
+##<span id="nim-command-overview"/>nim command overview
 
 The Nimbella Command Line Tool (nim) is your primary portal to Nimbella services. Typing `nim` at a command prompt produces the latest version of help output, similar to the following.
 
@@ -161,7 +160,7 @@ The Nimbella Command Line Tool (nim) is your primary portal to Nimbella services
 A comprehensive CLI for the Nimbella stack
 
 VERSION
-  nimbella-cli/0.1.9 darwin-x64 node-v10.16.3
+  nimbella-cli/0.1.11 ...
 
 USAGE
   $ nim [COMMAND]
@@ -185,7 +184,7 @@ COMMANDS
 These commands fall into four categories, shown in the following diagram and described in the following sections.
 
 ![](./fig1-nim-commands.svg)
-<h6>Figure 1: nim commands</h6>
+<center>**Figure 1: nim commands**</center>
 
 **Note:** In the figure, the `auth:` subtree commands in the first group and `project:` subtree commands in the second group show colon separators because nim is based on [oclif](https://github.com/oclif), the Open CLI Framework from Heroku, which requires them. However, nim has logic to allow blank separators, so you can also use these commands with blank separators, as in these examples:
 
@@ -221,8 +220,9 @@ COMMANDS
 
 <h3 id="2-project-level-deployment-commands">2 Project-level deployment commands</h3>
 
-The `nim project` subtree has two commands:
+The `nim project` subtree has three commands:
 
+*   `create`
 *   `deploy`
 *   `watch`
 
@@ -234,15 +234,40 @@ Help output for the `nim project` command:
 
 ```
 > nim project
-Manage and deploy Nimbella projects
+manage and deploy Nimbella projects
 
 USAGE
   $ nim project:COMMAND
 
 COMMANDS
+  project:create  Create a Nimbella Project
   project:deploy  Deploy Nimbella projects
   project:watch   Watch Nimbella projects, deploying incrementally on change
 ```
+
+Help output for the `nim project create` command:
+
+```
+> nim project create
+Create a Nimbella Project
+
+USAGE
+  $ nim project:create [PROJECT]
+
+ARGUMENTS
+  PROJECT  project path in the file system
+
+OPTIONS
+  -v, --verbose        Verbose output
+  --[no-]clean         clean the namespace before every deploy
+  --config             generate template config file
+  --help               Show help
+  --language=language  language for the sample (implies --sample)
+  --sample             start off with hello world (default language javascript)
+  --target=target      target namespace for the project
+```
+
+See the [Example: Create and deploy a project with a single action](#example-create-and-deploy-a-project-with-a-single-action) for an example of using the project create command.
 
 Help output for the `nim project deploy` command:
 
@@ -260,7 +285,6 @@ OPTIONS
   -v, --verbose      Verbose output
   --apihost=apihost  API host to use
   --auth=auth        OpenWhisk auth token to use
-  --debug=debug      Debug level output
   --env=env          path to environment file
   --help             Show help
   --incremental      Deploy only changes since last deploy
@@ -275,9 +299,8 @@ See the [Example: Create and deploy a project with a single action](#example-cre
 
 Help output for the `nim project watch` command:
 
-
 ```
-> nim project watch --help
+> nim project watch
 Watch Nimbella projects, deploying incrementally on change
 
 USAGE
@@ -290,7 +313,6 @@ OPTIONS
   -v, --verbose      Verbose output
   --apihost=apihost  path to environment file
   --auth=auth        OpenWhisk auth token to use
-  --debug=debug      Debug level output
   --env=env          path to environment file
   --help             Show help
   --insecure         Ignore SSL Certificates
@@ -301,7 +323,6 @@ OPTIONS
 ```
 
 See [Project watching](#project-watching-for-incremental-deployment) for an example of how to use this command for incremental deployment which facilitates faster project development.
-
 
 <h3 id="3-entity-management-commands">3 Entity management commands</h3>
 
@@ -439,7 +460,7 @@ Provide the value of `NAMESPACE` in an environment file along with other substit
 
 <h2 id="overview-of-nimbella-projects-actions-and-deployment">Overview of Nimbella projects, actions, and deployment</h2>
 
-A Nimbella _project_ is a logical grouping of static web content and _actions_. An action is a function or program encoded in a programming language supported by the Nimbella Cloud (e.g., JavaScript or Node.js, PHP, Python Java, or Go). An action usually produces some output in response to an event. For example, an action can be used to convert an image to text, update a stock portfolio, or generate a QR code. Actions are usually grouped into _packages_, but you can create them without a package qualifier if you wish.
+A Nimbella _project_ is a logical grouping of static web content and _actions_. An action is a function or program encoded in a programming language supported by the Nimbella Cloud (e.g., JavaScript, PHP, Python, Java,  Go, or Swift). An action usually produces some output in response to an event. For example, an action can be used to convert an image to text, update a stock portfolio, or generate a QR code. Actions are usually grouped into _packages_, but you can create them without a package qualifier if you wish.
 
 Projects are _deployed_ as a unit into your Nimbella Cloud namespace to make them visible to your end-users to the extent that you wish. Your namespace can have any number of projects that you want. An application can have any number of projects to achieve its full functionality. This modular approach also lets you share projects across apps and namespaces.
 
@@ -461,34 +482,72 @@ Finally, there are variations in how to [deploy projects](#about-projects), incl
 
 Let’s start with a really simple example that shows the basics of creating the source code for an action, placing it in a directory structure for a project, and deploying the project. This project needs no configuration and creates actions automatically based on the project directory structure.
 
-In the simplest implementation of a project, each action corresponds to a single JavaScript or Node.js file. In this example:
+In the simplest implementation of a project, each action corresponds to a single source file. In this example:
 
 *   A `Hello World` print function is placed in a file named _hello.js_.
 *   A project named `example1` is created and deployed to your namespace.
 
-**To create and deploy a project to print Hello World:**
+**To create and deploy a project to print Hello World (simplest form):**
 
-1. Create _hello.js_ with the following code:
+```
+> nim project create example1 --sample
+> nim project deploy example1
+Deploying project '/path/to/example1'
+  to namespace '...'
+  on host 'https://...nimbella.io'
+Deployment status recorded in 'example1/.nimbella'
+
+Deployed actions:
+  - hello
+> nim action invoke hello -r
+{
+  "greeting": "Hello stranger!"
+}
+```
+So, what just happened?  As a result, of `nim project create` with the `--sample` flag, `nim` generated a project and added a sample to it called `hello.js`.  Specifically, in your current directory, it created
+
+```
+example1/packages/default/hello.js
+example1/web
+```
+
+We address the purpose of the `web` directory in [Adding static web content](#adding-static-web-content) and the `packages` directory later in this section.
+
+As a result of `nim project deploy`, the project was deployed to your namespace and the result was an action called `hello`.  To record the status of that deployment, `nim` created
+
+```
+example1/.nimbella/...
+```
+
+The `nim action invoke` step invoked the just-deployed action.  The `-r` flag caused `nim` to wait for a result and display it.
+
+THe `nim project create` command has some other features that will come up in other examples.  But, `nim project create` is only a convenience.
+
+To make the process less magical and more hands-on, remove the entire `example1` from your local filesystem and let's start over, without using `nim project create`, emphasizing that a Nimbella project, no matter how it is created and modified, is just an area in your local file system.
+
+**Create and deploy a project to print Hello World (more manually):**
+
+(1) Create _hello.js_ with the following code:
 
 ```nodejs
 function main(args) { return { msg: 'Hello World' } }
 ```
 
-2. Create a project directory with the following command:
+(2) Create a project directory with the following command:
 
 ```
 > mkdir -p example1/packages/demo
 ```
 
-The [project directory structure](#about-projects) sets the name of the project (`example1`), a _packages_ directory, and the package qualifier (`demo`).
+The [project directory structure](#about-projects) sets the name of the project (`example1`), a _packages_ directory, and the package qualifier (`demo`).  There is no `web` directory this time; `web` is not required if you aren't adding web content.
 
-3. Copy the JavaScript file into the `demo` directory with the following command:
+(3) Copy the JavaScript file into the `demo` directory with the following command.
 
 ```
 > cp hello.js example1/packages/demo
 ```
 
-4. Deploy the project with the following command:
+(4) Deploy the project.
 
 ```
 > nim project deploy example1
@@ -500,15 +559,24 @@ Deployed actions:
   - demo/hello
 ```
 
+(5)  Invoke the deployed action.
+
+```
+> nim action invoke demo/hello -r
+{
+  "msg": "Hello World"
+}
+```
+
 Here’s a diagram of the project structure that was created in this procedure.
 
-<img src="./fig2-nim-example1-project-directory-structure.svg" height="300">
-<h6>Figure 2: Directory structure of the example1 project</h6>
+<center><img src="./fig2-nim-example1-project-directory-structure.svg" height="300"></center>
+<center>**Figure 2: Directory structure of the example1 project**</center>
 
 **Notes:**
 
-*   The `project deploy` command in the last step activates the deployer, which names the action automatically based on the source code file (`hello`), prepended by the package qualifier (`demo`).
-*   If you want an action to have a simple name (no package qualification), put it in a package directory called _default_. In that case, no package qualifier is prepended. See [Project Directory Structure](#project-directory-structure).
+*   The `project deploy` command activates the deployer, which names the action automatically based on the source code file (`hello`), prepended by the package qualifier (`demo`).
+*   If you want an action to have a simple name (no package qualification), put it in a package directory called _default_. In that case, no package qualifier is prepended. See [Project Directory Structure](#project-directory-structure).  When `nim` generates a sample in `nim project create` it uses this feature.
 *   The correct runtime for the source code file is determined according to the file suffix. See [Nimbella Deployer Supported Runtimes for Actions](#nimbella-deployer-supported-runtimes-for-actions) for a list of supported runtimes.
 *   Project configuration occurs automatically when it can, but see [Adding Project Configuration](#adding-project-configuration) for complex projects.
 
@@ -601,7 +669,7 @@ Zipped actions are usually created in a separate build step. As an alternative, 
 
 <h3 id="multifile-actions-created-with-autozip">Multifile actions created with autozip</h3>
 
-By adding an extra directory under the action directory, you can trigger an autozip of your action source files by creating a directory between the action directory and the source files and meeting certain conditions. Suppose the [example1 project](#example-create-and-deploy-a-project-with-a-single-action) has a `hello` action with two source files: _helloMain.js_ and _helloAux.js_. To create the `demo/hello` action, add a `hello` directory as a child of the `demo` directory, as shown in this diagram.
+By creating a directory under the package directory, named for the action, and containing its source file(s), you can expand to multiple source files and they will be zipped automatically. Certain conditions must be met for this to work. Suppose the [example1 project](#example-create-and-deploy-a-project-with-a-single-action) has a `hello` action with two source files: _helloMain.js_ and _helloAux.js_. To create the `demo/hello` action, add a `hello` directory as a child of the `demo` directory, as shown in this diagram.
 
 <img src="./fig4-nim-example2-project-directory-structure.svg" height="450">
 <h6>Figure 4: Two source files in an action directory for automatic zipping</h6>
@@ -611,7 +679,8 @@ The difference from the [example1 directory structure](#figure-2-directory-struc
 For autozipping to work in a project with no configuration, the following conditions must be met:
 
 *   At least one source file must have [a suffix from which the runtime type can be inferred](#nimbella-deployer-supported-runtimes-for-actions).
-*   All source files must be of the same type so they can use the same runtime.
+*   No other source file can have a suffix implying a different runtime.
+*   All source files must be compatible with the chosen runtime.
 *   Exactly one file must contain an identifiable `main` entry point, as required by the particular runtime selected.
 
 These conditions can be relaxed by using [project configuration](#adding-project-configuration).
@@ -797,7 +866,7 @@ We’ll describe each type and show how they differ and how they can be used for
 
 <h4 id="annotations-for-actions-and-packages-deployed-to-your-namespace">Annotations for actions and packages deployed to your namespace</h4>
 
-Version numbers for actions and packages are incremented on each update, and the `action get` command generates information about a deployed package or action in your namespace.
+Version numbers for actions and packages are incremented on each update, and the `action get` command retrieves information about a deployed package or action in your namespace.
 
 **Note:** Web content does not have version numbers. Its changes are tracked by maintaining content digests of the current files on your local system versus the latest-deployed files from the project. See [Recordkeeping in your local project](#recordkeeping-in-your-local-project) for an example.
 
@@ -889,7 +958,7 @@ The `versions.json_`entries for packages and actions look something like this:
 }
 ```
 
-In this example, you can see that there are separate status entries for the package `demo` and the action `demo/hello`. The entry for the package and for each action includes both a `version` field, showing the last-deployed version number, and a `digest` field, which is used to control [incremental deployment](#deploying-projects-incrementally). The fact that the package and action have different versions suggests that incremental deployment has been used.
+In this example, you can see that there are separate status entries for the package `demo` and the action `demo/hello`. The entry for the package and for each action includes both a `version` field, showing the last-deployed version number, and a `digest` field, which is used to control [incremental deployment](#deploying-projects-incrementally). The package and action versions often differ because the package version reflects (re)deployments of the package metadata and not whether or not contained actions were (re)deployed.
 
 If you have also deployed static web content, the `versions.json` file has a `webHashes` entry with digest information about each web file, something like this:
 
@@ -911,7 +980,6 @@ The namespace vs. local project recordkeeping is particularly useful for compari
 *   If you deploy to different namespaces or API hosts at different times, the array in `versions.json` will have more than one entry, with versions for the last deployment to each distinct API host/namespace target.
 
 ---
-
 
 <h2 id="incorporating-build-steps-for-actions-and-web-content">Incorporating build steps for actions and web content</h2>
 
@@ -969,9 +1037,9 @@ Deployed actions:
   - qr
 ```
 
-The presence of _package.json_ triggers the npm install, after which the normal behavior for [multifile actions (autozipping)](#multifile-actions-created-with-autozip) takes over and creates a zip file to upload that contains _qr.js_, _package.json_, and the entire _node_modules_ directory generated by npm. If you try this yourself with your own project, bear in mind that the runtime for Node.js requires either that _package.json_ provide an accurate designation of the main file or else that the file be called _index.js_.
+The presence of _package.json_ triggers the npm install, after which the normal behavior for [multifile actions (autozipping)](#multifile-actions-created-with-autozip) takes over and creates a zip file to upload that contains _qr.js_, _package.json_, and the entire _node\_modules_ directory generated by npm. If you try this yourself with your own project, bear in mind that the runtime for Node.js requires either that _package.json_ provide an accurate designation of the main file or else that the file be called _index.js_.
 
-Now let’s consider a case in which there are many actions, each with unique content, but only one _node_modules_ directory.
+Now let’s consider a case in which there are many actions, each with unique content, but only one _node\_modules_ directory.
 
 ```
 example5/build
@@ -1065,7 +1133,7 @@ Build state is determined as follows:
 
 If the build is triggered by _package.json_, the directory is considered _built_ if and only if:
 
-*   It contains a _package-lock.json_ (if run with `npm`) or _yarn.lock_ (if run with `yarn`) and a _node_modules_ directory, both of which are newer than the _package.json_.
+*   It contains a _package-lock.json_ (if run with `npm`) or _yarn.lock_ (if run with `yarn`) and a _node\_modules_ directory, both of which are newer than the _package.json_.
 If both _package-lock.json_ and _yarn.lock_ are present, the newer of the two is used in this determination.
 
 If the build employs a script, then the directory is considered _built_ if and only if:
@@ -1097,26 +1165,68 @@ To configure a project, create a configuration file called _project.yml_ in the 
 
 One important fact about YAML is that things to the right of the `:` separator are given data types according to their appearance.  So, `7895.37` is taken to be a _number_ and not a string, even though `abcd.ef` would be parsed as a string. You can always cause values to be taken as strings by quoting them.  E.g. `"7895.37"` and `"abcd.ef"` are both strings.  This distinction can be important in cases when dot-separated alphameric values can end up looking like numbers by the accident of having only digits and dots.
 
-The structure of the information in the _project.yml_ file should follow the structure of the project itself. In this example, the actions are nested under packages to follow the directory structure of a Nimbella project.
+The structure of the information in the _project.yml_ file should follow the structure of the project itself.  If you create the project using `nim project create` you can optionally request a _project.yml_ to be generated from the start, giving you something to edit.
 
 ```
-<globalStuff: ...>
-Packages:
-  - name: pkg1
-    pkg1modifier1: …
-    pkg1modifier2: …
-    Actions:
-      - name: action1
-        action1modifier1: …
-        action1modifier2: …
-  - name: pkg2
-    ...
+> nim project create example6 --config
 ```
 
-The project configuration is merged with what is inferred from file and directory names, so it’s only necessary to put information in the configuration that can’t be inferred from file or directory names or for which the defaults aren’t what you want.
+The resulting project will have a _project.yml_ with all default values.
+
+```
+targetNamespace: ''
+cleanNamespace: false
+bucket: {}
+parameters: {}
+packages:
+  - name: default
+    shared: false
+    clean: false
+    environment: []
+    parameters: []
+    annotations: []
+    actions: []
+```
+
+Adding a sample
+
+```
+> nim project create example6 --config --sample
+```
+
+gives you a _project.yml_ that also covers the sample action with more default values.
+
+```
+targetNamespace: ''
+cleanNamespace: false
+bucket: {}
+parameters: {}
+packages:
+  - name: default
+    shared: false
+    clean: false
+    environment: []
+    parameters: []
+    annotations: []
+    actions:
+      - name: hello
+        clean: false
+        binary: false
+        main: ''
+        runtime: 'nodejs:default'
+        web: true
+        webSecure: false
+        parameters: {}
+        environment: {}
+        annotations: {}
+        limits: {}
+```
+
+All of the properties in these examples will be explained below.  You can also hand-edit _project.yml_ from scratch but having an all-defaults template to start from can be helpful.
+
+The project configuration is merged with what is inferred from file and directory names, so it’s only necessary to put information in the configuration that can’t be inferred from file or directory names or for which the defaults aren’t what you want.  If you generate your _project.yml_ using `nim project create`, you can remove entries that denote defaults without changing the subsequent behavior.
 
 We’ll cover configuration for packages and actions first, then configuration for web content, including an example of generated content such as a React web app. Then we’ll cover symbolic variables and file substitution.
-
 
 <h3 id="project-configuration-for-packages-and-actions">Project configuration for packages and actions</h3>
 
@@ -1244,11 +1354,11 @@ There are also some useful global members of the configuration.
 
 <h5 id="targetNamespace">targetNamespace </h5>
 
-Selects the namespace to which the project will be deployed. This option is unnecessary unless you have multiple namespaces (discussed under [Managing Multiple Namespaces](#create-and-manage-multiple-namespaces)).
+Selects the namespace to which the project will be deployed. This option is unnecessary unless you have multiple namespaces (discussed under [Managing Multiple Namespaces](#create-and-manage-multiple-namespaces)).  It can be set initially in a new project using the `--target` flag on `nim project create`.
 
 <h5 id="cleannamespace">cleanNamespace </h5>
 
-May be `true` or `false` (default). It causes the entire namespace to be cleared of content prior to deployment: actions, package, and web content. Set this option to `true` only if you intend the project to have total ownership of the namespace.
+May be `true` or `false` (default). It causes the entire namespace to be cleared of content prior to deployment: actions, package, and web content. Set this option to `true` only if you intend the project to have total ownership of the namespace.  It can be set initially in a new project using the `--clean` flag on `nim project create`.
 
 **Notes:**
 
