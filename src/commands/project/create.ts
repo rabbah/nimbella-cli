@@ -32,8 +32,8 @@ export default class ProjectCreate extends NimBaseCommand {
   static flags = {
     target: flags.string({ description: 'target namespace for the project' }),
     clean: flags.boolean({ description: 'clean the namespace before every deploy', allowNo: true }),
-    sample: flags.boolean({ description: 'start off with hello world in javascript' }),
-    language: flags.string({ description: 'start off with hello world in specified language' }),
+    sample: flags.boolean({ description: 'start off with hello world (default language javascript)' }),
+    language: flags.string({ description: 'language for the sample (implies --sample' }),
     config: flags.boolean({ description: 'generate template config file' }),
     ...NimBaseCommand.flags
   }
@@ -109,10 +109,8 @@ export async function createOrUpdateProject(updating: boolean, args: any, flags:
 // Make a more fully populated config (with defaults filled in and comments)
 // TODO we don't have an internal representation of comments, so we punt on that for the moment.
 function configTemplate(): DeployStructure {
-    const config: DeployStructure = { web: [], packages: [], bucket: {}, parameters: {}, cleanNamespace: false, actionWrapPackage: '',
-        targetNamespace: '' }
-    const defPkg: PackageSpec = { name: 'default', shared: false, actions: [], clean: false, environment: [], parameters: [],
-        annotations: [] }
+    const config: DeployStructure = { targetNamespace: '', cleanNamespace: false, bucket: {}, parameters: {}, packages: []  }
+    const defPkg: PackageSpec = { name: 'default', shared: false, clean: false, environment: [], parameters: [], annotations: [], actions: [] }
     config.packages.push(defPkg)
     return config
 }
@@ -143,8 +141,8 @@ function generateSample(kind: string, config: DeployStructure|undefined, sampleT
     if (config) {
         // Here we assume if we are given a config it is a full template already containing a default package
         const defPkg = config.packages.find(pkg => pkg.name === 'default')
-        const action: ActionSpec = { name: 'hello', annotations: {}, binary: false, clean: false, environment: {}, limits: {},
-            parameters: {}, main: '', runtime: kind, web: true, webSecure: false }
+        const action: ActionSpec = { name: 'hello', clean: false, binary: false, main: '', runtime: kind, web: true, webSecure: false,
+            parameters: {}, environment: {}, annotations: {}, limits: {} }
         defPkg.actions.push(action)
     }
 }
