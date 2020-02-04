@@ -2,7 +2,6 @@
   "annotations": {
     "exec": "nodejs-lambda:10",
     "final": true,
-    "partition-arguments": true,
     "provide-api-key": false,
     "raw-http": false,
     "web-export": true,
