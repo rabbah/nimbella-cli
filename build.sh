@@ -166,7 +166,7 @@ if [ -n "$PKG" ]; then
 		mv nimbella-cli-*.tgz dist/nimbella-cli.tgz
 
 		# Add documentation and licenses
-		cp nim.html license.html thirdparty-licenses.html dist
+		cp doc/nim.html doc/*.svg license.html thirdparty-licenses.html dist
 
 		# Clean up
 		git checkout userREADME.md

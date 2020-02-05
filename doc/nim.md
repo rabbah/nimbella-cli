@@ -1,4 +1,4 @@
-rep % How To Use the Nimbella Command Line Tool
+% How To Use the Nimbella Command Line Tool
 %
 %
 
@@ -126,10 +126,8 @@ If you don’t want a global installation but rather want to make nim a dependen
 <h3 id="install-nim-for-shell-invocation-globally">Install nim globally</h3>
 
 1. Install nim according to your operating system:
-   *   On Windows, download and run [the Windows installer]
-       (https://apigcp.nimbella.io/downloads/nim/win/nim-x64.exe).
-   *   On Mac, download and run [the Mac installer]
-       (https://apigcp.nimbella.io/downloads/nim/macos/nim.pkg).
+   *   On Windows, download and run [the Windows installer](https://apigcp.nimbella.io/downloads/nim/win/nim-x64.exe).
+   *   On Mac, download and run [the Mac installer](https://apigcp.nimbella.io/downloads/nim/macos/nim.pkg).
    *   On Linux, run the following script:
        `curl https://apigcp.nimbella.io/downloads/nim/nim-install-linux.sh | sudo bash`
 2. When the installation completes, run the following command: `nim update`
