@@ -33,7 +33,7 @@ export default class Doc extends NimBaseCommand {
 
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
     try {
-      const html = require.resolve('../../nim.html')
+      const html = require.resolve('../../doc/nim.html')
       if (!open) {
         open = require('open')
       }

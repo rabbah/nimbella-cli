@@ -114,7 +114,7 @@ fi
 set -e
 
 # Build the HTML forms of the documentation and the LICENSE
-pandoc -o nim.html -f markdown -s -t html < doc/nim.md
+pandoc -o doc/nim.html -f markdown -s -H doc/globalStyles.css -t html < doc/nim.md
 pandoc -o license.html -f markdown -t html < LICENSE
 pandoc -o thirdparty-licenses.html -f markdown_strict -t html < thirdparty-licenses.md
 

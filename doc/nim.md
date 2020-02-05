@@ -1,10 +1,10 @@
-% How To Use the Nimbella Command Line Tool
+rep % How To Use the Nimbella Command Line Tool
 %
 %
 
 This document provides information about the Nimbella Command Line Tool, called nim, and its Command Line Interface (CLI). There are also several [Nimbella demo projects at GitHub](https://github.com/nimbella/demo-projects) that you can try out.
 
-##Table of Contents
+## Table of Contents
 
  - [Your Nimbella cloud account](#your-nimbella-cloud-account)
  - [Install the Nimbella Command Line Tool (nim)](#install-the-nimbella-command-line-tool-nim)
@@ -97,7 +97,7 @@ This document provides information about the Nimbella Command Line Tool, called 
 
 ---
 
-##<span id="your-nimbella-cloud-account"/>Your Nimbella cloud account
+## <span id="your-nimbella-cloud-account"/>Your Nimbella cloud account
 
 Your Nimbella cloud account gives you the following benefits:
 
@@ -114,7 +114,7 @@ Once you [create your first Nimbella Cloud namespace](#create-a-nimbella-namespa
 ---
 
 
-##<span id="install-the-nimbella-command-line-tool-nim"/>Install the Nimbella Command Line Tool (nim)
+## <span id="install-the-nimbella-command-line-tool-nim"/>Install the Nimbella Command Line Tool (nim)
 
 In most cases, we recommend that you use nim as a command to be invoked globally from shells or scripts. Here are the advantages of shell invocation:
 
@@ -151,7 +151,7 @@ Use this method only to make nim a dependency of some other package. To invoke n
 ---
 
 
-##<span id="nim-command-overview"/>nim command overview
+## <span id="nim-command-overview"/>nim command overview
 
 The Nimbella Command Line Tool (nim) is your primary portal to Nimbella services. Typing `nim` at a command prompt produces the latest version of help output, similar to the following.
 
@@ -599,8 +599,8 @@ A project represents a logical unit of functionality whose boundaries are up to 
 
 A project has a fixed directory structure, which determines how projects are deployed. Here’s a diagram that summarizes the directory structure of an individual project with no project configuration, with explanation below.
 
-<img src="./fig3-nim-project-directory-structure.svg" height="300">
-<h6>Figure 3: Basic directory structure of a project</h6>
+<center><img src="./fig3-nim-project-directory-structure.svg" height="300"></center>
+<center>**Figure 3: Basic directory structure of a project**</b></center>
 
 The project has a root directory, within which a certain small number of directory names are significant to the deployer, specifically:
 
@@ -671,8 +671,8 @@ Zipped actions are usually created in a separate build step. As an alternative, 
 
 By creating a directory under the package directory, named for the action, and containing its source file(s), you can expand to multiple source files and they will be zipped automatically. Certain conditions must be met for this to work. Suppose the [example1 project](#example-create-and-deploy-a-project-with-a-single-action) has a `hello` action with two source files: _helloMain.js_ and _helloAux.js_. To create the `demo/hello` action, add a `hello` directory as a child of the `demo` directory, as shown in this diagram.
 
-<img src="./fig4-nim-example2-project-directory-structure.svg" height="450">
-<h6>Figure 4: Two source files in an action directory for automatic zipping</h6>
+<center><img src="./fig4-nim-example2-project-directory-structure.svg" height="450"></center>
+<center>**Figure 4: Two source files in an action directory for automatic zipping**</center>
 
 The difference from the [example1 directory structure](#figure-2-directory-structure-of-the-example1-project) is that the `hello` action is a _directory_ rather than a single source file. The source files in the directory are zipped automatically to form the action.
 
@@ -687,8 +687,8 @@ These conditions can be relaxed by using [project configuration](#adding-project
 
 Subdirectories can be present under an action directory (for example, a `node_modules` directory as in the following diagram). These directories are zipped up with everything else under the action directory.
 
-<img src="./fig5-nim-example2-complex-directory-structure.svg" height="450">
-<h6>Figure 5: Autozipping a subdirectory of an action directory</h6>
+<center><img src="./fig5-nim-example2-complex-directory-structure.svg" height="450"></center>
+<center>**Figure 5: Autozipping a subdirectory of an action directory**</center>
 
 You can optionally limit the files to be zipped in either of two ways:
 
@@ -741,8 +741,8 @@ example3/web/favicon.ico
 
 Here’s a diagram of the `example3` project structure.
 
-<img src="./fig6-nim-example3-project-directory-structure.svg" height="450">
-<h6>Figure 6: A project with static web content</h6>
+<center><img src="./fig6-nim-example3-project-directory-structure.svg" height="450"></center>
+<center>**Figure 6: A project with static web content**</center>
 
 Here’s the output when the project is deployed.
 
@@ -1431,8 +1431,8 @@ You can use both `strip` and `prefixPath` to remove existing segments and then a
 
 Here’s an example of a basic _web_ directory structure when you use a tool to generate web content. Chances are the tool puts its output in a specific directory. Here’s an example diagram of the _web_ directory for an `example4` project, using React to generate the web content.
 
-<img src="./fig7-nim-examples-project-chat-react-directory-structure.svg" height="550">
-<h6 id="figure-7-project-web-directory-structure-for-generated-web-content">Figure 7: Project web directory structure for generated web content</h6>
+<center><img src="./fig7-nim-examples-project-chat-react-directory-structure.svg" height="550"></center>
+<center>**Figure 7: Project web directory structure for generated web content**</center>
 
 The _web_ directory contains a _.include_ file and some other files related to building not shown in the diagram. The _public_ and _src_ directories contain the source of the React web application. The _build_ directory is generated by the React build and contains all of the content to be deployed.
 
@@ -1454,13 +1454,15 @@ The strip option strips one path segment from the deployed web content. See [Str
 Deploy as follows:
 
 ```
-FIXME
 > nim project deploy chat
-Running './build.sh in chat/web
-Result of deploying project '.../chat' to namespace 'chatdemo'
-  on host 'https://apigcp.nimbella.io'
-Deployed 24 web content items to
-  https://chatdemo-apigcp.nimbella.io
+Deploying project '.../chat'
+  to namespace '...'
+  on host 'https://...nimbella.io'
+Started running ./build.sh in chat/web
+Finished running ./build.sh in chat/web
+
+Deployed 25 web content items to
+  https://...nimbella.io
 Deployed actions:
   - chatadmin/create
   ...
@@ -1486,7 +1488,7 @@ You can specify the environment file explicitly on the command line, as in this 
 nim project deploy myProject --env test.env
 ```
 
-**Note:** If there is a file with a _.env_ extension located in the root of the project, it will be used as the environment file, and you don’t need the `--env` option on the command line.
+**Note:** If there is a file named `.env` located in the root of the project, it will be used as the environment file, and you don’t need the `--env` option on the command line.
 
 Substitution occurs as follows:
 

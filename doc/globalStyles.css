@@ -1,0 +1,176 @@
+<style>
+html {
+  scroll-behavior: smooth !important;
+  box-sizing: border-box;
+  font-size: 62.5%;
+  min-height: 100%;
+  background: #ffffff;
+}
+
+body {
+  font-family: 'Open Sans', 'Helvetica-Neue', 'Helvetica', arial, sans-serif;
+  min-height: 100%;
+  position: relative;
+  background: white;
+  color: #586163;
+  font-size: 1.8em;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  padding: 1rem;
+}
+
+html, body { height: 100%; }
+
+a {
+  color: #0a9db7;
+  text-decoration: none !important;
+  transition: color .3s ease-in-out;
+}
+
+a:hover {
+  color: #027084;
+}
+
+strong {
+  font-weight: 600;
+}
+
+p {
+  margin-top: 0;
+  margin-bottom: 1em;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  margin-bottom: 0.5em;
+}
+
+h1{ font-size: 2.2em; }
+h2{ font-size: 1.6em; }
+h3{ font-size: 1.4em; }
+h4{ font-size: 1.2em; }
+h5{ font-size: 1em; }
+h6{ font-size: 0.8em; }
+
+pre {
+  background: #232323;
+  line-height: 1.45;
+  border-radius: 3px;
+  padding: 16px;
+  overflow: auto;
+}
+
+code {
+  padding: 0.15em 0;
+  background: var(--lightGrey);
+  border-radius: 3px;
+  color: #e83e8c;
+  background-color: #efefef;
+}
+code:before,
+code:after {
+  letter-spacing: -0.2em;
+  content: '\00a0';
+}
+pre code {
+  font-size: inherit;
+  color: #e6e1dc;
+  background-color: transparent;
+}
+pre code:before,
+pre code:after {
+  display: none;
+}
+blockquote {
+  margin-left: 0;
+  padding-left: 1em;
+  line-height: 1.1;
+  font-size: 1em;
+  font-style: italic;
+  border-left: 2px solid #46a8b9;
+}
+
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;       /* Remove default arrow */
+  border: none;
+  background-color: white;
+  width: 100%;
+  color: #586163;
+  outline: none;
+}
+
+hr {
+  border: 1px solid #efefef;
+  margin: 3rem auto 5rem;
+}
+
+li {
+  word-break: break-word;
+}
+
+img {
+  display: block;
+  margin: 0 auto;
+  height: auto;
+}
+
+img[src='./fig1-nim-commands.svg'] {
+  width: 70%;
+}
+
+img[src='./fig2-nim-example1-project-directory-structure.svg'] {
+  width: 25%;
+}
+
+img[src='./fig3-nim-project-directory-structure.svg'] {
+  width: 50%;
+}
+
+img[src='./fig4-nim-example2-project-directory-structure.svg'] {
+  width: 25%;
+}
+
+img[src='./fig5-nim-example2-complex-directory-structure.svg'] {
+  width: 25%;
+}
+
+img[src='./fig6-nim-example3-project-directory-structure.svg'] {
+  width: 50%;
+}
+
+img[src='./fig7-nim-examples-project-chat-react-directory-structure.svg'] {
+  width: 50%;
+}
+
+@media (max-width: 812px) {
+  img[src='./fig2-nim-example1-project-directory-structure.svg'],
+  img[src='./fig4-nim-example2-project-directory-structure.svg'],
+  img[src='./fig5-nim-example2-complex-directory-structure.svg'] {
+    width: 35%;
+  }
+  img[src='./fig1-nim-commands.svg'],
+  img[src='./fig3-nim-project-directory-structure.svg'],
+  img[src='./fig6-nim-example3-project-directory-structure.svg'],
+  img[src='./fig7-nim-examples-project-chat-react-directory-structure.svg'] {
+    width: 100%;
+  }
+}
+
+@media (max-width: 414px) {
+  img[src='./fig2-nim-example1-project-directory-structure.svg'],
+  img[src='./fig4-nim-example2-project-directory-structure.svg'],
+  img[src='./fig5-nim-example2-complex-directory-structure.svg'] {
+    width: 100%;
+  }
+  body { font-size: 1.4em;}
+}
+</style>
