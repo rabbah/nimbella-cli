@@ -176,13 +176,15 @@ const javascript = `function main(args) {
   let greeting = 'Hello ' + name + '!'
   console.log(greeting)
   return {"greeting": greeting}
-}`
+}
+`
 
 const python = `def main(args):
     name = args.get("name", "stranger")
     greeting = "Hello " + name + "!"
     print(greeting)
-    return {"greeting": greeting}`
+    return {"greeting": greeting}
+`
 
 const swift = `func main(args: [String:Any]) -> [String:Any] {
     if let name = args["name"] as? String {
@@ -194,7 +196,8 @@ const swift = `func main(args: [String:Any]) -> [String:Any] {
         print(greeting)
         return [ "greeting" : greeting ]
     }
-}`
+}
+`
 
 const php = `<?php
 function main(array $args) : array
@@ -203,7 +206,8 @@ function main(array $args) : array
     $greeting = "Hello $name!";
     echo $greeting;
     return ["greeting" => $greeting];
-}`
+}
+`
 
 const java = `import com.google.gson.JsonObject;
 
@@ -217,7 +221,8 @@ public class Main {
         response.addProperty("body", greeting);
         return response;
     }
-}`
+}
+`
 
 const go = `package main
 
@@ -229,7 +234,8 @@ func Main(args map[string]interface{}) map[string]interface{} {
   msg := make(map[string]interface{})
   msg["body"] = "Hello, " + name + "!"
   return msg
-}`
+}
+`
 
 const samples = { javascript, python, php, swift, java, go }
 const defaultSample = { kind: 'nodejs:default', sampleText: javascript }
