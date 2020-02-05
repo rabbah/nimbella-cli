@@ -1,0 +1,27 @@
+targetNamespace: test
+cleanNamespace: false
+bucket: {}
+parameters: {}
+packages:
+  - name: default
+    shared: false
+    clean: false
+    environment: []
+    parameters: []
+    annotations: []
+    actions:
+      - name: hello
+        clean: false
+        binary: false
+        main: ''
+        runtime: 'nodejs:default'
+        web: true
+        webSecure: false
+        parameters: ${
+				  A
+					B
+					C
+				}
+        environment: {}
+        annotations: {}
+        limits: {}

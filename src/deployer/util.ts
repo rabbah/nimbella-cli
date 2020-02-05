@@ -594,12 +594,15 @@ export function promiseFilesAndFilterFiles(root: string): Promise<string[]> {
 // ${<path} reads the contents of a file at the given path relative to the project root.
 // The semantics of variable substitution are purely textual (whatever is in the variable is substituted).
 // The semantics of file substitution are richer (see getSubstituteFromFile)
+// The form ${ token1 token2 token3 } where tokens are non-whitespace separated by whitespace is a special shorthand
+// that expands to { token1: value, token2: value, token3: value } where the values are obtained by looking up the
+// tokens in the process environment (higher precedence) or property file located at 'envPath'.
 export function substituteFromEnvAndFiles(input: string, envPath: string, projectPath: string): string {
-    // console.log("before:")
-    // console.log(input)
     let result = ""  // Will accumulate the result
     const badVars: string[] = [] // Will accumulate failures to resolve
     const props = envPath ? getPropsFromFile(envPath) : {}
+    // console.log('envPath', envPath)
+    // console.log('props', props)
     let nextBreak = input.indexOf("${")
     while (nextBreak >= 0) {
         const before = input.substr(0, nextBreak)
@@ -609,8 +612,11 @@ export function substituteFromEnvAndFiles(input: string, envPath: string, projec
             throw new Error("Runaway variable name or path directive in project.yml")
         }
         let subst: string
-        const envar = after.substr(0, endVar)
-        if (envar.startsWith('<')) {
+        const envar = after.substr(0, endVar).trim()
+        // console.log('envar', envar)
+        if (/\s/.test(envar)) {
+            subst = getMultipleSubstitutions(envar, props)
+        } else if (envar.startsWith('<')) {
             const fileSubst = path.join(projectPath, envar.slice(1))
             subst = getSubstituteFromFile(fileSubst)
         } else {
@@ -620,6 +626,7 @@ export function substituteFromEnvAndFiles(input: string, envPath: string, projec
             badVars.push(envar)
             subst=""
         }
+        // console.log('subst', subst)
         result = result + before + subst
         input = after.substr(endVar + 1)
         nextBreak = input.indexOf("${")
@@ -629,6 +636,17 @@ export function substituteFromEnvAndFiles(input: string, envPath: string, projec
         throw new Error("The following substitutions could not be resolved: " + formatted)
     }
     return result + input
+}
+
+// Get multiple substitutions as a stringified object, given whitespace separated tokens.  Each token is
+// looked up in the process environment or env file
+function getMultipleSubstitutions(tokens: string, props: object): string {
+    const ans = {}
+    for (const tok of tokens.split(/\s+/)) {
+        //console.log('tok', tok)
+        ans[tok] = process.env[tok] || props[tok]
+    }
+    return JSON.stringify(ans)
 }
 
 // Get a substitution JSON string from a file.  The file is read and, if it is valid JSON, it is simply used as is.

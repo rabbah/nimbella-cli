@@ -33,7 +33,7 @@ function runTest() {
     echo "test$1 succeeded"
 }
 
-for i in SplitParams SharedBuild Filtering WebInclude Ignoring EmptyReduce Incremental Environment Errors Unweb ValidateRuntime LoginAuth; do
+for i in MultiSubstitute SplitParams SharedBuild Filtering WebInclude Ignoring EmptyReduce Incremental Environment Errors Unweb ValidateRuntime LoginAuth; do
    runTest $i
 done
 runTest MainActions $1
