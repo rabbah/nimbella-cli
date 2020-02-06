@@ -21,7 +21,8 @@
  // Gather together the major deployer exports for convenient import in other packages
 
 export { deployProject, readPrepareAndBuild, readAndPrepare, deploy, readProject, buildProject, prepareToDeploy, wipeNamespace } from './api'
-export { DeployStructure, DeployResponse, OWOptions, Credentials, CredentialRow, Flags, PackageSpec, ActionSpec } from './deploy-struct'
+export { DeployStructure, DeployResponse, OWOptions, Credentials, CredentialRow, Flags, PackageSpec, ActionSpec,
+    CredentialHostMap, CredentialNSMap, DeployerAnnotation } from './deploy-struct'
 export { doLogin, doAdminLogin, addCredentialAndSave, getCredentials, getCredentialList, getCredentialsForNamespace, forgetNamespace, switchNamespace,
     Persister, fileSystemPersister, browserPersister } from './login'
 export { computeBucketName, cleanBucket } from './deploy-to-bucket'
