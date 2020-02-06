@@ -20,7 +20,7 @@
 
 import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
 import { flags } from '@oclif/command'
-import { getCredentials } from '../../deployer/login'
+import { getCredentials } from '../../deployer'
 
 export default class AuthInspect extends NimBaseCommand {
   static description = 'Get current namespace with optional details'

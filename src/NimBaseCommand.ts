@@ -39,7 +39,7 @@ import * as Errors from '@oclif/errors'
 import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
 import * as createDebug  from 'debug'
 import { format } from 'util'
-import { fileSystemPersister, browserPersister } from './deployer/login';
+import { fileSystemPersister, browserPersister } from './deployer';
 
 const debug = createDebug('nimbella-cli')
 

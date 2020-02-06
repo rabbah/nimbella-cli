@@ -20,10 +20,7 @@
 
 import { flags } from '@oclif/command'
 import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
-import { getCredentialsForNamespace, getCredentials } from '../../deployer/login'
-import { wipeNamespace } from '../../deployer/api'
-import { computeBucketName, cleanBucket } from '../../deployer/deploy-to-bucket'
-import { Credentials } from '../../deployer/deploy-struct'
+import { getCredentialsForNamespace, getCredentials, wipeNamespace, computeBucketName, cleanBucket, Credentials } from '../../deployer'
 import { Storage } from '@google-cloud/storage'
 
 let cli

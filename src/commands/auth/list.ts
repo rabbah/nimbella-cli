@@ -19,8 +19,7 @@
  */
 
 import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
-import { getCredentialList } from '../../deployer/login'
-import { CredentialRow } from '../../deployer/deploy-struct'
+import { getCredentialList, CredentialRow } from '../../deployer'
 
 // Constants used in formatting the credential list
 const LIST_HEADER = 'Namespace            Current Storage   Redis API Host'

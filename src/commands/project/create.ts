@@ -22,9 +22,8 @@ import { flags } from '@oclif/command'
 import { NimBaseCommand, NimLogger } from '../../NimBaseCommand'
 import * as fs from 'fs'
 import * as path from 'path'
-import { extFromRuntime } from '../../deployer/util'
+import { extFromRuntime, DeployStructure, PackageSpec, ActionSpec } from '../../deployer'
 import * as yaml from 'js-yaml'
-import { DeployStructure, PackageSpec, ActionSpec } from '../../deployer/deploy-struct'
 
 export default class ProjectCreate extends NimBaseCommand {
   static description = 'Create a Nimbella Project'

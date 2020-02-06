@@ -20,7 +20,7 @@
 
 import { flags } from '@oclif/command'
 import { NimBaseCommand, NimLogger, parseAPIHost, authPersister } from '../../NimBaseCommand'
-import { forgetNamespace } from '../../deployer/login'
+import { forgetNamespace } from '../../deployer'
 import { disambiguateNamespace } from '../project/deploy'
 
 export default class AuthLogout extends NimBaseCommand {

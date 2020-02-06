@@ -20,7 +20,7 @@
 
 import { NimBaseCommand, NimLogger } from '../../NimBaseCommand'
 import { ProjectDeploy, processCredentials, doDeploy } from './deploy'
-import { Flags, Credentials, OWOptions } from '../../deployer/deploy-struct'
+import { Flags, Credentials, OWOptions } from '../../deployer'
 import * as fs from 'fs'
 import * as path from 'path'
 
