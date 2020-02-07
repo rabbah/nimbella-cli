@@ -69,8 +69,8 @@ This document provides information about the Nimbella Command Line Tool, called 
                - [environment](#environment)
                - [clean](#cleanpkgs)
            - [Global modifiers allowed in project.yml](#global-modifiers-allowed-in-project-yml)
-               - [targetNamespace ](#cleannamespace)
-               - [cleanNamespace ](#cleannamespace)
+               - [targetNamespace](#targetnamespace)
+               - [cleanNamespace](#cleannamespace)
                - [parameters](#parameters)
       - [Project configuration for web content](#project-configuration-for-web-content)
            - [Use the YAML bucket member to configure how web content is deployed](#use-the-yaml-bucket-member-to-configure-how-web-content-is-deployed)
@@ -1264,7 +1264,7 @@ The main entry point for the action.
 
 May be true or false. The value true indicates the need for base64 encoding when transmitting the action for deployment. Normally this is inferred from the file suffix.
 
-<h5 id="webSecure">webSecure </h5>
+<h5 id="webSecure">webSecure</h5>
 
 Secures the website with a secret that the user must provide in order to create an action. The value may be `true` (nim generates the secret for you),  a string containing the secret, or `false` (the default, which means anyone can create an action).
 
@@ -1349,11 +1349,11 @@ May be `true` or `false`, indicating whether you want any previous package with 
 
 There are also some useful global members of the configuration.
 
-<h5 id="targetNamespace">targetNamespace </h5>
+<h5 id="targetnamespace">targetNamespace</h5>
 
 Selects the namespace to which the project will be deployed. This option is unnecessary unless you have multiple namespaces (discussed under [Managing Multiple Namespaces](#create-and-manage-multiple-namespaces)).  It can be set initially in a new project using the `--target` flag on `nim project create`.
 
-<h5 id="cleannamespace">cleanNamespace </h5>
+<h5 id="cleannamespace">cleanNamespace</h5>
 
 May be `true` or `false` (default). It causes the entire namespace to be cleared of content prior to deployment: actions, package, and web content. Set this option to `true` only if you intend the project to have total ownership of the namespace.  It can be set initially in a new project using the `--clean` flag on `nim project create`.
 
