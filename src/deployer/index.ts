@@ -20,12 +20,12 @@
 
  // Gather together the major deployer exports for convenient import in other packages
 
-export { deployProject, readPrepareAndBuild, readAndPrepare, deploy, readProject, buildProject, prepareToDeploy, wipeNamespace } from './api'
+export { deployProject, readPrepareAndBuild, readAndPrepare, deploy, readProject, buildProject, prepareToDeploy,
+    wipeNamespace, wipePackage } from './api'
 export { DeployStructure, DeployResponse, OWOptions, Credentials, CredentialRow, Flags, PackageSpec, ActionSpec,
     CredentialHostMap, CredentialNSMap, DeployerAnnotation } from './deploy-struct'
 export { doLogin, doAdminLogin, addCredentialAndSave, getCredentials, getCredentialList, getCredentialsForNamespace, forgetNamespace, switchNamespace,
     Persister, fileSystemPersister, browserPersister } from './login'
 export { computeBucketName, cleanBucket } from './deploy-to-bucket'
 export { extFromRuntime } from './util'
-export { GithubDef, storeGithubDef, removeGithubDef, getGithubDef,   getAllGithubDefs, validateRepo, fetchProject } from './github'
-
+export { GithubDef, storeGithubDef, removeGithubDef, getGithubDef, getAllGithubDefs, validateRepo, fetchProject } from './github'

@@ -18,7 +18,7 @@
  * from Nimbella Corp.
  */
 
-import { cleanOrLoadVersions, doDeploy, actionWrap } from './deploy'
+import { cleanOrLoadVersions, doDeploy, actionWrap, cleanPackage } from './deploy'
 import { DeployStructure, DeployResponse, PackageSpec, OWOptions, WebResource, Credentials, Flags } from './deploy-struct'
 import { readTopLevel, buildStructureParts, assembleInitialStructure } from './project-reader'
 import { isTargetNamespaceValid, wrapError, wipe, saveUsFromOurselves, writeProjectStatus, getTargetNamespace } from './util'
@@ -210,11 +210,18 @@ export function getMessageFromError(err: any): string {
     return err.message
 }
 
-// Undocumented function to wipe a namespace of everything except its activations (the activations cannot be wiped via the public API)
+// Wipe a namespace of everything except its activations (the activations cannot be wiped via the public API)
 export async function wipeNamespace(host: string, auth: string) {
     // console.log("Requested wipe-namespace function with host", host, "and auth", auth)
     const init: OWOptions = { apihost: host, api_key: auth}
     const client = openwhisk(init)
     // console.log("Client opened")
     return wipe(client)
+}
+
+// Completely remove a package including its contained actions
+export async function wipePackage(name: string, host: string, auth: string): Promise<openwhisk.Package> {
+    const init: OWOptions = { apihost: host, api_key: auth}
+    const client = openwhisk(init)
+    return cleanPackage(client, name, undefined)
 }

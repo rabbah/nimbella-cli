@@ -90,18 +90,21 @@ function cleanActionsAndPackages(todeploy: DeployStructure): Promise<DeployStruc
 }
 
 // Clean a package by first deleting its contents then deleting the package itself
-async function cleanPackage(client: openwhisk.Client, name: string, versions: VersionEntry): Promise<any> {
+// The 'versions' argument can be undefined, allowing this to be used to delete packages without a project context
+export async function cleanPackage(client: openwhisk.Client, name: string, versions: VersionEntry): Promise<openwhisk.Package> {
     // console.log("Cleaning package", name)
     while (true) {
         const pkg = await client.packages.get({ name })
         if (!pkg.actions || pkg.actions.length == 0) {
             // console.log("No more actions, removing package")
-            delete versions.packageVersions[name]
+            if (versions && versions.packageVersions)
+                delete versions.packageVersions[name]
             return client.packages.delete({ name })
         }
         for (const action of pkg.actions) {
             // console.log("deleting action", action.name)
-            delete versions.actionVersions[action.name]
+            if (versions && versions.actionVersions)
+                delete versions.actionVersions[action.name]
             await client.actions.delete({ name: name + '/' + action.name })
         }
     }
