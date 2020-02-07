@@ -1,6 +1,4 @@
-% How To Use the Nimbella Command Line Tool
-%
-%
+# How To Use the Nimbella Command Line Tool
 
 This document provides information about the Nimbella Command Line Tool, called nim, and its Command Line Interface (CLI). There are also several [Nimbella demo projects at GitHub](https://github.com/nimbella/demo-projects) that you can try out.
 
