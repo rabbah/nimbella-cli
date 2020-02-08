@@ -49,7 +49,7 @@ HASH=$(cat aio.hash)
 TARBALL_NAME="adobe-aio-cli-plugin-runtime-$HASH.tgz"
 
 # Upload the tarball
-gsutil cp adobe-aio-cli-plugin-runtime.tgz gs://nimaio-apigcp.nimbella.io/$TARBALL_NAME
+gsutil cp adobe-aio-cli-plugin-runtime.tgz gs://nimaio-apigcp-nimbella-io/$TARBALL_NAME
 
 # Edit package.json so that the correct dependency is declared there
 URL="https://nimaio-apigcp.nimbella.io/$TARBALL_NAME"
