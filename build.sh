@@ -136,6 +136,8 @@ if [ -z "$NOINSTALL" ]; then
 		else
 				npm install -g nimbella-cli.tgz
 		fi
+else
+		ln -sf $SELFDIR/bin/run bin/nim
 fi
 
 # Optionally package
