@@ -772,7 +772,7 @@ See [an example of how to configure a project when you generate web content with
 <h3 id="nimbella-deployer-supported-runtimes-for-actions">Nimbella deployer supported runtimes for actions</h3>
 
 
-The Nimbella deployer determines the kind of runtime required for the action from the file suffix. The follwing runtimes are supported:
+The Nimbella deployer determines the kind of runtime required for the action from the file suffix. The following runtimes are supported:
 
 *   Node.js for suffix _.js_
 *   Python for suffix _.py_
@@ -1503,7 +1503,7 @@ parameters: ${<.parameters}
 annotations: ${<.annotations}
 ```
 
-Tnat is, you can “inline” the contents of certain files in certain places in the configuration in _project.yml_. There are constraints on how file substitution can be used, as explained below.
+That is, you can “inline” the contents of certain files in certain places in the configuration in _project.yml_. There are constraints on how file substitution can be used, as explained below.
 
 Where it is legal, you can request file inclusion by using the `<` modifier in what otherwise looks like a symbolic variable, for example:
 
