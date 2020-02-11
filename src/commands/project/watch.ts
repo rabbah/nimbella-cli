@@ -30,7 +30,7 @@ export default class ProjectWatch extends NimBaseCommand {
   static flags = {
     target: ProjectDeploy.flags.target,
     env: ProjectDeploy.flags.env,
-    apihost: ProjectDeploy.flags.env,
+    apihost: ProjectDeploy.flags.apihost,
     auth: ProjectDeploy.flags.auth,
     insecure: ProjectDeploy.flags.insecure,
     'verbose-build': ProjectDeploy.flags['verbose-build'],
