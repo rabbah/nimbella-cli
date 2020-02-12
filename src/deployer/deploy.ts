@@ -25,6 +25,11 @@ import { combineResponses, wrapError, wrapSuccess, keyVal, emptyResponse,
 import * as openwhisk from 'openwhisk'
 import { Bucket } from '@google-cloud/storage'
 import { deployToBucket, cleanBucket } from './deploy-to-bucket'
+import { ensureWebLocal, deployToWebLocal } from './web-local'
+import * as rimrafOrig from 'rimraf'
+import { promisify } from 'util'
+
+const rimraf = promisify(rimrafOrig)
 
 //
 // Main deploy logic, excluding that assigned to more specialized files
@@ -36,8 +41,12 @@ export async function cleanOrLoadVersions(todeploy: DeployStructure): Promise<De
     if (todeploy.flags.incremental) {
         await (todeploy.versions = loadVersions(todeploy.filePath, todeploy.credentials.namespace, todeploy.credentials.ow.apihost))
     } else {
-        if (todeploy.bucketClient && (todeploy.cleanNamespace || todeploy.bucket && todeploy.bucket.clean)) {
-            await cleanBucket(todeploy.bucketClient, todeploy.bucket)
+        if (todeploy.cleanNamespace || todeploy.bucket && todeploy.bucket.clean) {
+            if (todeploy.bucketClient) {
+                await cleanBucket(todeploy.bucketClient, todeploy.bucket)
+            } else if (todeploy.flags.webLocal) {
+                await rimraf(todeploy.flags.webLocal)
+            }
         }
         if (todeploy.cleanNamespace) {
             await wipe(todeploy.owClient)
@@ -50,8 +59,12 @@ export async function cleanOrLoadVersions(todeploy: DeployStructure): Promise<De
 
 // Do the actual deployment (after testing the target namespace and cleaning)
 export function doDeploy(todeploy: DeployStructure): Promise<DeployResponse> {
+    let webLocal = undefined
+    if (todeploy.flags.webLocal) {
+        webLocal = ensureWebLocal(todeploy.flags.webLocal)
+    }
     const webPromises = todeploy.web.map(res => deployWebResource(res, todeploy.actionWrapPackage, todeploy.bucket, todeploy.bucketClient,
-            todeploy.flags.incremental ? todeploy.versions : undefined))
+            todeploy.flags.incremental ? todeploy.versions : undefined, webLocal))
     return getDeployerAnnotation(todeploy.filePath).then(deployerAnnot => {
         const actionPromises = todeploy.packages.map(pkg => deployPackage(pkg, todeploy.owClient, deployerAnnot, todeploy.parameters,
             todeploy.cleanNamespace, todeploy.flags.incremental ? todeploy.versions : undefined))
@@ -110,15 +123,19 @@ export async function cleanPackage(client: openwhisk.Client, name: string, versi
     }
 }
 
-// Deploy a web resource.  Exactly one of actionWrapPackage or bucketClient will be defined, (other cases should have been thrown
-// out as errors earlier).  If actionWrapPackage is provided, this step is a no-op since the actual action
-// wrapping will have been done in the prepareToDeploy step and the fact of action wrapping will be part of the final status message
-// for deploying the action.
+// Deploy a web resource.  If this is invoked, we can assume that at least one of actionWrapPackage, bucketClient,
+// or webLocal is defined.  If actionWrapPackage is provided, this step is a no-op since the actual action wrapping
+// will have been done in the prepareToDeploy step and the fact of action wrapping will be part of the final status
+// message for deploying the action.  If webLocal is specified, the deploy is just a copy to the specified location,
+// which is assumed to exist (it should have been created already).  Otherwise, if bucketClient is specified, this
+// is a traditional deploy to the bucket.  Otherwise (none specified) it is an error.
 export function deployWebResource(res: WebResource, actionWrapPackage: string, spec: BucketSpec,
-        bucketClient: Bucket, versions: VersionEntry): Promise<DeployResponse> {
+        bucketClient: Bucket, versions: VersionEntry, webLocal: string): Promise<DeployResponse> {
     // We can rely on the fact that prepareToDeploy would have rejected the deployment if action wrapping failed.
     if (actionWrapPackage) {
         return Promise.resolve(emptyResponse())
+    } else if (webLocal) {
+        return deployToWebLocal(res, webLocal, spec)
     } else if (bucketClient) {
         return deployToBucket(res, bucketClient, spec, versions)
     } else {

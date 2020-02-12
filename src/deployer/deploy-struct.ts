@@ -83,6 +83,7 @@ export interface Flags {
     incremental: boolean
     yarn: boolean
     env: string|undefined
+    webLocal: string|undefined
 }
 
 // Provides the status of a shared build

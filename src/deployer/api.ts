@@ -145,7 +145,7 @@ export async function prepareToDeploy(inputSpec: DeployStructure, owOptions: OWO
     inputSpec.flags = flags
     //console.log("Options merged")
     // 3.  Open handles
-    const needsBucket = inputSpec.web && inputSpec.web.length > 0 && !inputSpec.actionWrapPackage
+    const needsBucket = inputSpec.web && inputSpec.web.length > 0 && !inputSpec.actionWrapPackage && !flags.webLocal
     if (needsBucket && !credentials.storageKey) {
         return Promise.reject(new Error(
             `Deployment of web content to namespace '${credentials.namespace}' requires a storage key but none is present`

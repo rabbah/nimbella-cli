@@ -39,6 +39,7 @@ export class ProjectDeploy extends NimBaseCommand {
     'verbose-zip': flags.boolean({ description: 'Display start/end of zipping phase for each action'}),
     production: flags.boolean({ hidden: true }),
     yarn: flags.boolean({ description: 'Use yarn instead of npm for node builds' }),
+    'web-local': flags.string({ description: 'a local directory to receive web deploy, instead of uploading'}),
     incremental: flags.boolean({ description: 'Deploy only changes since last deploy' }),
     ...NimBaseCommand.flags
   }
@@ -53,7 +54,8 @@ export class ProjectDeploy extends NimBaseCommand {
     }
     // Otherwise ...
     const { target, env, apihost, auth, insecure, production, yarn, incremental } = flags
-    const cmdFlags: Flags = { verboseBuild: flags['verbose-build'], verboseZip: flags['verbose-zip'], production, incremental, env, yarn }
+    const cmdFlags: Flags = { verboseBuild: flags['verbose-build'], verboseZip: flags['verbose-zip'], production, incremental, env, yarn,
+      webLocal: flags['web-local'] }
     this.debug('cmdFlags', cmdFlags)
     const { creds, owOptions } = await processCredentials(insecure, apihost, auth, target, logger)
     this.debug('creds', creds)
@@ -104,7 +106,7 @@ export async function doDeploy(project: string, cmdFlags: Flags, creds: Credenti
     displayHeader(project, todeploy.credentials, logger)
   }
   return buildProject(todeploy).then(deploy)
-    .then((result: DeployResponse) => displayResult(result, watching, logger))
+    .then((result: DeployResponse) => displayResult(result, watching, cmdFlags.webLocal, logger))
     .catch((err: Error) => {
       logger.displayError(err.message, err)
       return false
@@ -150,7 +152,7 @@ function displayHeader(project: string, creds: Credentials, logger: NimLogger) {
 }
 
 // Display the result of a successful run
-function displayResult(result: DeployResponse, watching: boolean, logger: NimLogger): boolean {
+function displayResult(result: DeployResponse, watching: boolean, webLocal: string, logger: NimLogger): boolean {
   let success = true
   if (result.successes.length == 0 && result.failures.length == 0) {
       logger.log("\nNothing deployed")
@@ -181,7 +183,9 @@ function displayResult(result: DeployResponse, watching: boolean, logger: NimLog
       }
       if (deployedWeb > 0) {
           let bucketClause = ""
-          if (result.apihost) {
+          if (webLocal) {
+            bucketClause = ` to ${webLocal}`
+          } else if (result.apihost) {
               bucketClause = ` to\n  https://${computeBucketName(result.apihost, result.namespace)}`
           }
           logger.log(`Deployed ${deployedWeb} web content items${bucketClause}`)
