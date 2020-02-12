@@ -26,6 +26,8 @@ set -e
 # Parse
 if [ "$1" == "--pack" ]; then
 		PKG=true
+elif [ "$1" == "--preview" ]; then
+		PREVIEW=true
 elif [ "$1" == "--stable" ]; then
 		STABLE=true
 		PKG=true
@@ -88,6 +90,9 @@ if [ -n "$DIRTY" ]; then
 fi
 BUILDINFO=${HASH:0:8}${DIRTY}
 VERSION=$(jq -r .version package.json)
+if [ -n "$PREVIEW" ]; then
+		VERSION="$VERSION-patch"
+fi
 echo '{ "version": "'$VERSION '('$BUILDINFO')" }' | jq . > version.json
 
 # Copy in the latest runtimes.json, productionProjects.json, and 404.html
@@ -138,6 +143,21 @@ if [ -z "$NOINSTALL" ]; then
 		fi
 else
 		ln -sf $SELFDIR/bin/run bin/nim
+fi
+
+# Optionally release as a preview
+if [ -n "$PREVIEW" ]; then
+		# Rename READMEs so the customer gets an appropriate one (not our internal one)
+		mv README.md devREADME.md
+		mv userREADME.md README.md
+		# Create preview tarball.  This is not identical to our internal use one, though close.
+		npm pack
+		mv nimbella-cli-*.tgz nimbella-cli.tgz
+		# Undo renames
+		git checkout userREADME.md
+		mv devREADME.md README.md
+		# Upload the result
+		gsutil cp nimbella-cli.tgz gs://preview-apigcp-nimbella-io
 fi
 
 # Optionally package
