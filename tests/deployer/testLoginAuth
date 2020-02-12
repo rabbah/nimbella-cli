@@ -25,13 +25,19 @@ cd $SELFDIR
 
 AUTH=af1a89e8-4c90-4155-98b3-876c53ee63ce:bvmDkQWeH92V17w4OqXHAuGJumIbQuOm2PeRUt2LMFgEARCJAkJamEETNmFj40EE
 
-rm -f ~/.nimbella/wskprops
+if [ -z "$NIMBELLA_DIR" ]; then
+	 WSKPROPS="$HOME/.nimbella/wskprops"
+else
+   WSKPROPS="$NIMBELLA_DIR/wskprops"
+fi
+
+rm -f "$WSKPROPS"
 nim auth login --auth $AUTH
-if [ ! -f "$HOME/.nimbella/wskprops" ]; then
+if [ ! -f "$WSKPROPS" ]; then
 	 echo "The wsk properties file was not properly updated"
 	 exit 1
 fi
-WSKPROPS=$(cat ~/.nimbella/wskprops)
+WSKPROPS=$(cat "$WSKPROPS")
 if [[ "$WSKPROPS" != *"bvmDkQWeH9"* ]]; then
 	 echo "The wsk properties file does not contain the correct auth"
 	 exit 1
