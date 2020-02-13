@@ -51,9 +51,18 @@ if [ -n "$CHECK_STABLE" ]; then
 	  exit 0
 fi
 
+DIRTY=$(git status --porcelain)
+
+# Check prereqs for --preview
+if [ -n "$PREVIEW" ]; then
+    if [ -n "$DIRTY" ]; then
+        echo "The nimbella-cli repo is not fully committed: a preview cannot be created"
+        exit 1
+    fi
+fi
+
 # Check prereqs for --stable
 if [ -n "$STABLE" ]; then
-    DIRTY=$(git status --porcelain)
     if [ -n "$DIRTY" ]; then
         echo "The nimbella-cli repo is not fully committed: a stable version cannot be declared"
         exit 1
@@ -84,7 +93,6 @@ fi
 
 # Store version info
 HASH=$(git rev-parse HEAD)
-DIRTY=$(git status --porcelain)
 if [ -n "$DIRTY" ]; then
     DIRTY="++"
 fi
@@ -118,10 +126,13 @@ if [ $? -ne 0 ]; then
 fi
 set -e
 
-# Build the HTML forms of the documentation and the LICENSE
+# Build the HTML forms of the documentation, LICENSE, and changes
 cp doc/pandoc-header /tmp/nim.md
 tail -n +2 < doc/README.md >> /tmp/nim.md
 pandoc -o doc/nim.html -f markdown -s -H doc/globalStyles.css -t html < /tmp/nim.md
+cp doc/change-header /tmp/changes.md
+tail -n +2 < doc/changes.md >> /tmp/changes.md
+pandoc -o changes.html -f markdown -s -t html < /tmp/changes.md
 pandoc -o license.html -f markdown -t html < LICENSE
 pandoc -o thirdparty-licenses.html -f markdown_strict -t html < thirdparty-licenses.md
 

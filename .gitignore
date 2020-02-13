@@ -16,6 +16,7 @@ productionProjects.json
 404.html
 *.tgz
 nim.html
+changes.html
 deployer/minified/
 license.html
 thirdparty-licenses.md

@@ -73,6 +73,7 @@
     "/sensitiveNamespaces.json",
     "/productionProjects.json",
     "/404.html",
+    "/changes.html",
     "/doc/nim.html",
     "/doc/*.svg"
   ],
