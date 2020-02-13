@@ -440,7 +440,6 @@ nim project deploy <projectPath>... --target <namespace>
 **Notes:**
 
 *   If your project has a _project.yml_ configuration file with a `targetNamespace` directive and also uses the `--target` option in a `project deploy` command, the latter takes precedence.
-*   A value specified with the `--target` is remembered and will apply to subsequent deployments that do not use either `targetNamespace` or `--target` to specify a new target.
 
 For more information about using _project.yml_ files to configure more complex projects, see [Adding Project Configuration](#adding-project-configuration).
 

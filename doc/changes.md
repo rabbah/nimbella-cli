@@ -1,6 +1,6 @@
 # Nimbella CLI Change History
 
-## Changes since release 0.1.11
+## Changes in release 0.1.12
 
 - Substantial documentation style and organization improvements
 - Document clarifies that unquoted values in `project.yml` can have varyting types by YAML rules
@@ -12,6 +12,7 @@
 - fix bug that caused `project watch` to misbehave when `--env` was specified
 - fixes to `trigger` commands and to `activation list` for triggers
 - added `nim info --changes`
+- a `targetNamespace` directive or the `--target` flag affects only the current deploy operation and does not change the current namespace for later deploys
 
 ## Changes in release 0.1.11
 - Release 0.1.11 supports web deployment to the current Nimbella platform (older releases do not)

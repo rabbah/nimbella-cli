@@ -26,7 +26,7 @@ import { openBucketClient } from './deploy-to-bucket'
 import { buildAllActions, buildWeb } from './finder-builder'
 import * as openwhisk from 'openwhisk'
 import * as path from 'path'
-import { switchNamespace, getCredentials, Persister } from './login';
+import { getCredentialsForNamespace, getCredentials, Persister } from './login';
 import { getGithubDef, fetchProject } from './github'
 import { inBrowser } from './../NimBaseCommand'
 
@@ -129,8 +129,8 @@ export async function prepareToDeploy(inputSpec: DeployStructure, owOptions: OWO
     // 1.  Acquire credentials if not already present
     if (!credentials) {
         if (inputSpec.targetNamespace) {
-            // The config specified a target namespace so attempt to switch to it.
-            credentials = await switchNamespace(inputSpec.targetNamespace, owOptions.apihost, persister)
+            // The config specified a target namespace so attempt to use it.
+            credentials = await getCredentialsForNamespace(inputSpec.targetNamespace, owOptions.apihost, persister)
         } else {
             // There is no target namespace so get credentials for the current one
             credentials = await getCredentials(persister)
