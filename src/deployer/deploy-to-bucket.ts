@@ -60,14 +60,7 @@ async function makeClient(bucketName: string, options: {}): Promise<Bucket> {
     // console.log("entered makeClient")
     const storage = new Storage(options)
     // console.log("made Storage handle")
-    const bucket = storage.bucket(bucketName)
-    const exists = await bucket.exists()
-    // console.dir(exists)
-    if (exists[0]) {
-        return bucket
-    }
-    const altName = bucketName.split('.').join('-')
-    return storage.bucket(altName)
+    return storage.bucket(bucketName)
 }
 
 // Deploy a single resource to the bucket
@@ -100,7 +93,8 @@ export function deployToBucket(resource: WebResource, client: Bucket, spec: Buck
     destination = destination.replace(/\\/g, '/') // windows conventions don't work on the bucket
     //console.log('fixed up destination', destination)
     // Upload
-    return client.upload(resource.filePath, { destination }).then(() => {
+    const metadata = { cacheControl: 'no-cache' }
+    return client.upload(resource.filePath, { destination, metadata }).then(() => {
         const item = `https://${client.name}/${destination}`
         const response = wrapSuccess(item, "web", false, undefined, {}, undefined)
         response.webHashes = {}
@@ -115,7 +109,7 @@ export function deployToBucket(resource: WebResource, client: Bucket, spec: Buck
 // The namespace is obtained from the OW credentials by querying the controller.
 export function computeBucketName(apiHost: string, namespace: string): string {
     const url = URL(apiHost)
-    return namespace + '-' + url.hostname
+    return namespace + '-' + url.hostname.split('.').join('-')
 }
 
 // Clean the resources from a bucket starting at the root or at the prefixPath.
