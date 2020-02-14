@@ -1,9 +1,14 @@
 # Nimbella CLI Change History
 
+## Changes since release 0.1.12
+
+- web content is now deployed with cache-control set to 'no-cache' for less surprising behavior during development
+    - in the future we will provide a way to turn on cacheing for content in production
+
 ## Changes in release 0.1.12
 
 - Substantial documentation style and organization improvements
-- Document clarifies that unquoted values in `project.yml` can have varyting types by YAML rules
+- Document clarifies that unquoted values in `project.yml` can have varying types by YAML rules
 - Where it makes sense, commands with omitted required arguments display help
 - `project create` is now documented
 - Streamlined syntax for multiple symbol substitution in `project.yml`

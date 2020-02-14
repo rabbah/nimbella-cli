@@ -23,7 +23,7 @@ import { NimBaseCommand, NimLogger, authPersister, parseAPIHost } from '../../Ni
 import { readAndPrepare, buildProject, deploy } from '../../deployer/api'
 import { Flags, OWOptions, DeployResponse, Credentials } from '../../deployer/deploy-struct'
 import { getCredentialList, getCredentialsForNamespace } from '../../deployer/login'
-import { computeBucketName } from '../../deployer/deploy-to-bucket'
+import { computeBucketDomainName } from '../../deployer/deploy-to-bucket'
 import * as path from 'path'
 
 export class ProjectDeploy extends NimBaseCommand {
@@ -186,14 +186,14 @@ function displayResult(result: DeployResponse, watching: boolean, webLocal: stri
           if (webLocal) {
             bucketClause = ` to ${webLocal}`
           } else if (result.apihost) {
-              bucketClause = ` to\n  https://${computeBucketName(result.apihost, result.namespace)}`
+              bucketClause = ` to\n  https://${computeBucketDomainName(result.apihost, result.namespace)}`
           }
           logger.log(`Deployed ${deployedWeb} web content items${bucketClause}`)
       }
       if (skippedWeb > 0) {
           let bucketClause = ""
           if (watching && result.apihost) {
-              bucketClause = ` on\n  https://${computeBucketName(result.apihost, result.namespace)}`
+              bucketClause = ` on\n  https://${computeBucketDomainName(result.apihost, result.namespace)}`
           }
           logger.log(`Skipped ${skippedWeb} unchanged web resources${bucketClause}`)
       }

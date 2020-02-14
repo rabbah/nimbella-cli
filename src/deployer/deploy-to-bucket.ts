@@ -31,7 +31,7 @@ import * as URL from 'url-parse'
 // InitOptions.  The InitOptions should have been checked for sufficient information already.
 export async function openBucketClient(credentials: Credentials, bucketSpec: BucketSpec): Promise<Bucket> {
     //console.log("bucket client open")
-    let bucketName = computeBucketName(credentials.ow.apihost, credentials.namespace)
+    let bucketName = computeBucketStorageName(credentials.ow.apihost, credentials.namespace)
     //console.log("computed bucket name")
     let bucket = await makeClient(bucketName, credentials.storageKey)
     await addWebMeta(bucket, bucketSpec)
@@ -105,11 +105,15 @@ export function deployToBucket(resource: WebResource, client: Bucket, spec: Buck
     })
 }
 
-// Compute the bucket name by adjoining the namespace to the host name portion of apiHost, separated by a dash.
-// The namespace is obtained from the OW credentials by querying the controller.
-export function computeBucketName(apiHost: string, namespace: string): string {
+// Compute the actual name of a bucket as viewed by google storage
+export function computeBucketStorageName(apiHost: string, namespace: string): string {
+    return computeBucketDomainName(apiHost, namespace).split('.').join('-')
+}
+
+// Compute the external domain name corresponding to a web bucket
+export function computeBucketDomainName(apiHost: string, namespace: string): string {
     const url = URL(apiHost)
-    return namespace + '-' + url.hostname.split('.').join('-')
+    return namespace + '-' + url.hostname
 }
 
 // Clean the resources from a bucket starting at the root or at the prefixPath.

@@ -26,6 +26,6 @@ export { DeployStructure, DeployResponse, OWOptions, Credentials, CredentialRow,
     CredentialHostMap, CredentialNSMap, DeployerAnnotation } from './deploy-struct'
 export { doLogin, doAdminLogin, addCredentialAndSave, getCredentials, getCredentialList, getCredentialsForNamespace, forgetNamespace, switchNamespace,
     Persister, fileSystemPersister, browserPersister } from './login'
-export { computeBucketName, cleanBucket } from './deploy-to-bucket'
+export { computeBucketStorageName, computeBucketDomainName, cleanBucket } from './deploy-to-bucket'
 export { extFromRuntime } from './util'
 export { GithubDef, storeGithubDef, removeGithubDef, getGithubDef, getAllGithubDefs, validateRepo, fetchProject } from './github'

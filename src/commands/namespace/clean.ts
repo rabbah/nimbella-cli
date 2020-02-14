@@ -22,7 +22,7 @@ import { flags } from '@oclif/command'
 import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
 import { getCredentialsForNamespace, getCredentials } from '../../deployer/login'
 import { wipeNamespace } from '../../deployer/api'
-import { computeBucketName, cleanBucket } from '../../deployer/deploy-to-bucket'
+import { computeBucketStorageName, cleanBucket } from '../../deployer/deploy-to-bucket'
 import { Credentials } from '../../deployer/deploy-struct'
 import { Storage } from '@google-cloud/storage'
 
@@ -80,7 +80,7 @@ export default class NamespaceClean extends NimBaseCommand {
         if (flags.justwhisk || !storageKey) {
             return
         }
-        const bucketName = computeBucketName(apihost, namespace)
+        const bucketName = computeBucketStorageName(apihost, namespace)
         const storage = new Storage(storageKey)
         const client = storage.bucket(bucketName)
         await cleanBucket(client, undefined)
