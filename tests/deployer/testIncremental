@@ -21,7 +21,6 @@
 # Test the incremental deploy feature
 
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-WBTESTS=../../../workbench/tests/workbench
 
 cd $SELFDIR
 pushd ../../../main
@@ -67,14 +66,14 @@ nim project deploy cleanProject
 rm -fr incremental
 mkdir -p incremental/packages/incremental/action5
 mkdir -p incremental/web
-cp $WBTESTS/resources/html1 incremental/web/index.html
-cp $WBTESTS/resources/action1 incremental/packages/incremental/action1.js
-cp $WBTESTS/resources/action1 incremental/packages/incremental/action2.js
-cp $WBTESTS/resources/action1 incremental/packages/incremental/action3.js
-cp $WBTESTS/resources/action1 incremental/packages/incremental/action4.js
-cp $WBTESTS/resources/action1 incremental/packages/incremental/action5/inclusion1.js
-cp $WBTESTS/resources/action1 incremental/packages/incremental/action5/inclusion2.js
-cp $WBTESTS/resources/action1 incremental/packages/incremental/action5/inclusion3.js
+cp resources/html1 incremental/web/index.html
+cp resources/action1 incremental/packages/incremental/action1.js
+cp resources/action1 incremental/packages/incremental/action2.js
+cp resources/action1 incremental/packages/incremental/action3.js
+cp resources/action1 incremental/packages/incremental/action4.js
+cp resources/action1 incremental/packages/incremental/action5/inclusion1.js
+cp resources/action1 incremental/packages/incremental/action5/inclusion2.js
+cp resources/action1 incremental/packages/incremental/action5/inclusion3.js
 
 set -e
 
@@ -91,8 +90,8 @@ done
 shouldNotHaveDeployedWeb "$RESULT"
 
 # Change code of actions 3 and 4 and redeploy incrementally
-cp $WBTESTS/resources/action2 incremental/packages/incremental/action3.js
-cp $WBTESTS/resources/action2 incremental/packages/incremental/action4.js
+cp resources/action2 incremental/packages/incremental/action3.js
+cp resources/action2 incremental/packages/incremental/action4.js
 echo -e "\nDeploying incrementally after changing code of actions 3 and 4"
 RESULT=$(nim project deploy incremental --incremental)
 echo -e "$RESULT"
@@ -112,7 +111,7 @@ echo "    - name: action1" >> incremental/project.yml
 echo "      web: false" >> incremental/project.yml
 echo "    - name: action2" >> incremental/project.yml
 echo "      web: raw" >> incremental/project.yml
-cp $WBTESTS/resources/html2 incremental/web/index.html
+cp resources/html2 incremental/web/index.html
 echo -e "\nDeploying incrementally after changing metadata of actions 1 and 2 and contents of index.html"
 RESULT=$(nim project deploy incremental --incremental)
 echo -e "$RESULT"
