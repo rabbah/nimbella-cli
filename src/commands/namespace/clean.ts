@@ -32,7 +32,7 @@ export default class NamespaceClean extends NimBaseCommand {
      static description = 'Remove content from a namespace'
 
      static flags = {
-        justwhisk: flags.boolean({ description: 'Remove only OpenWhisk entitities, leaving other content'}),
+        justwhisk: flags.boolean({ description: 'Remove only OpenWhisk entities, leaving other content'}),
         force: flags.boolean({ description: 'just do it, omitting confirmatory prompt'}),
         apihost: flags.string({ description: 'the API host of the namespace to be cleaned'}),
         auth: flags.string({char: 'u', description: 'the API key for the namespace to be cleaned'}),
