@@ -41,7 +41,7 @@ import * as createDebug  from 'debug'
 import { format } from 'util'
 import { fileSystemPersister, browserPersister } from './deployer/login';
 
-const debug = createDebug('nimbella-cli')
+const debug = createDebug('nimbella-cli/base')
 
 // Flag indicating running in browser
 export const inBrowser = (typeof process === 'undefined') || (!process.release) || (process.release.name !== 'node')
@@ -99,6 +99,10 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   // Generic oclif run() implementation.   Parses and then invokes the abstract runCommand method
   async run() {
     const { argv, args, flags } = this.parse(this.constructor as typeof NimBaseCommand)
+    debug('run with rawArgv: %O, argv: %O, args: %O, flags: %O', this.argv, argv, args, flags)
+    const bad = argv.find(arg => arg.startsWith('-'))
+    if (bad)
+      this.handleError(`Unrecognized flag: ${bad}`)
     await this.runCommand(this.argv, argv, args, flags, this)
   }
 
