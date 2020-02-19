@@ -127,6 +127,9 @@
       },
       "trigger": {
         "description": "work with triggers"
+      },
+      "web": {
+        "description": "work with web contents"
       }
     }
   },
