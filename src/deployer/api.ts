@@ -18,6 +18,8 @@
  * from Nimbella Corp.
  */
 
+// Contains the main public (library) API of the deployer (some exports in 'util' may also be used externally but are incidental)
+
 import { cleanOrLoadVersions, doDeploy, actionWrap, cleanPackage } from './deploy'
 import { DeployStructure, DeployResponse, PackageSpec, OWOptions, WebResource, Credentials, Flags } from './deploy-struct'
 import { readTopLevel, buildStructureParts, assembleInitialStructure } from './project-reader'
@@ -27,17 +29,15 @@ import { buildAllActions, buildWeb } from './finder-builder'
 import * as openwhisk from 'openwhisk'
 import * as path from 'path'
 import { getCredentialsForNamespace, getCredentials, Persister } from './login';
-import { getGithubDef, fetchProject } from './github'
-import { inBrowser } from './../NimBaseCommand'
-
-// Contains the main public (library) API of the deployer (some exports in 'util' may also be used externally but are incidental)
+import * as makeDebug from 'debug'
+const debug = makeDebug('nimbella-cli/deployer-api')
 
 // Deploy a disk-resident project given its path and options to pass to openwhisk.  The options are merged
 // with those in the config; the result must include api or apihost, and must include api_key.
 export function deployProject(path: string, owOptions: OWOptions, credentials: Credentials|undefined, persister: Persister,
-        flags: Flags): Promise<DeployResponse> {
+        flags: Flags, userAgent: string): Promise<DeployResponse> {
     //console.log("deployProject invoked with incremental", flags.incremental)
-    return readPrepareAndBuild(path, owOptions, credentials, persister, flags).then(deploy).catch((err) => {
+    return readPrepareAndBuild(path, owOptions, credentials, persister, flags, userAgent).then(deploy).catch((err) => {
         //console.log("An error was caught")
         //console.dir(err, { depth: null })
         return Promise.resolve(wrapError(err, undefined))
@@ -46,21 +46,24 @@ export function deployProject(path: string, owOptions: OWOptions, credentials: C
 
 // Combines the read, prepare, and build phases but does not deploy
 export function readPrepareAndBuild(path: string, owOptions: OWOptions, credentials: Credentials, persister: Persister,
-        flags: Flags): Promise<DeployStructure> {
-    return readAndPrepare(path, owOptions, credentials, persister, flags).then((spec) => buildProject(spec))
+        flags: Flags, userAgent: string): Promise<DeployStructure> {
+    return readAndPrepare(path, owOptions, credentials, persister, flags, userAgent).then((spec) => buildProject(spec))
 }
 
 // Combines the read and prepare phases but does not build or deploy
 export function readAndPrepare(path: string, owOptions: OWOptions, credentials: Credentials, persister: Persister,
-        flags: Flags): Promise<DeployStructure> {
-    return readProject(path, flags.env).then((spec) => prepareToDeploy(spec, owOptions, credentials, persister, flags))
+        flags: Flags, userAgent: string): Promise<DeployStructure> {
+    return readProject(path, flags.env, userAgent).then((spec) =>
+        prepareToDeploy(spec, owOptions, credentials, persister, flags))
 }
 
 // Perform deployment from a deploy structure.  The 'cleanOrLoadVersions' step is currently folded into this step
 export function deploy(todeploy: DeployStructure): Promise<DeployResponse> {
-    //console.log("Starting deploy")
+    debug("Starting deploy")
     return cleanOrLoadVersions(todeploy).then(doDeploy).then(results => {
-        writeProjectStatus(todeploy.filePath, results)
+        if (!todeploy.githubPath) {
+            writeProjectStatus(todeploy.filePath, results)
+        }
         if (!results.namespace && todeploy.credentials) {
             results.namespace = todeploy.credentials.namespace
         }
@@ -69,27 +72,21 @@ export function deploy(todeploy: DeployStructure): Promise<DeployResponse> {
 }
 
 // Read the information contained in the project, initializing the DeployStructure
-export function readProject(projectPath: string, envPath: string): Promise<DeployStructure> {
-    //console.log("Starting readProject")
-    let start = Promise.resolve(projectPath)
-    if (projectPath.startsWith('*')) {
-        const def = getGithubDef(projectPath.slice(1), inBrowser)
-        if (!def) {
-            return Promise.reject(new Error(`'${projectPath}' is not a valid github reference`))
-        }
-        start = fetchProject(def)
-    }
-    return start.then(projectPath => readTopLevel(projectPath, envPath)).then(buildStructureParts).then(assembleInitialStructure)
+export function readProject(projectPath: string, envPath: string, userAgent: string): Promise<DeployStructure> {
+    debug("Starting readProject, projectPath=%s, envPath=%s, userAgent=%s", projectPath, envPath, userAgent)
+    return readTopLevel(projectPath, envPath, userAgent).then(buildStructureParts).then(assembleInitialStructure)
         .catch((err) => { return Promise.reject(err) })
 }
 
 // 'Build' the project by running the "finder builder" steps in each action-as-directory and in the web directory
 export function buildProject(project: DeployStructure): Promise<DeployStructure> {
-    //console.log("Starting buildProject")
+    debug("Starting buildProject")
     let webPromise: Promise<WebResource[]> = undefined
     project.sharedBuilds = { }
     if (project.webBuild) {
-        webPromise = buildWeb(project.webBuild, project.sharedBuilds, path.join(project.filePath, 'web'), project.flags)
+        const displayPath = project.githubPath || project.filePath
+        webPromise = buildWeb(project.webBuild, project.sharedBuilds, path.join(project.filePath, 'web'),
+            path.join(displayPath, 'web'), project.flags)
     }
     const actionPromise: Promise<PackageSpec[]> = buildAllActions(project.packages, project.sharedBuilds, project.flags)
     if (webPromise) {
@@ -125,7 +122,7 @@ export function buildProject(project: DeployStructure): Promise<DeployStructure>
 //    are not deleted but are not deployed as such.
 export async function prepareToDeploy(inputSpec: DeployStructure, owOptions: OWOptions, credentials: Credentials, persister: Persister,
         flags: Flags): Promise<DeployStructure> {
-    //console.log("Starting prepare")
+    debug("Starting prepare")
     // 1.  Acquire credentials if not already present
     if (!credentials) {
         if (inputSpec.targetNamespace) {
@@ -136,8 +133,8 @@ export async function prepareToDeploy(inputSpec: DeployStructure, owOptions: OWO
             credentials = await getCredentials(persister)
         }
     }
-    //console.log('owOptions', owOptions)
-    //console.log('credentials.ow', credentials.ow)
+    debug('owOptions: %O', owOptions)
+    debug('credentials.ow: %O', credentials.ow)
     const wskoptions = Object.assign({}, credentials.ow, owOptions || {})
     //console.log('wskoptions', wskoptions)
     inputSpec.credentials = credentials

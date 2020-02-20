@@ -32,25 +32,23 @@ import * as fs from 'fs'
 import * as Octokit from '@octokit/rest'
 import * as rimrafOrig from 'rimraf'
 import { promisify } from 'util'
-import { nimbellaDir } from './login'
+import * as makeDebug from 'debug'
+import { authPersister } from '../NimBaseCommand'
 
 const rimraf = promisify(rimrafOrig)
+const debug = makeDebug('nimbella-cli/github')
 
 const TEMP = process.platform == 'win32' ? process.env['TEMP'] : '/tmp'
 const CACHE_DIR = "deployer-git-cache"
-const PROJECT_MAP_KEY = 'wb.project_map'
-const PROJECT_MAP_FILE = 'gitProjectMap.json'
-const userAgent = 'nimbella-cli v1.0.0'  // TODO get the version dynamically
 function cacheDir() {
     return Path.join(TEMP, CACHE_DIR)
 }
-function projectMapFile() {
-    return Path.join(nimbellaDir(), PROJECT_MAP_FILE)
-}
 
-// Project definition structure
+const prefixes = [ 'github:', 'https://github.com/', 'git@github.com:' ]
+
+// Github coordinate definition structure
 export interface GithubDef {
-    name: string
+    cachedir: string
     owner: string
     repo: string
     path: string
@@ -58,72 +56,75 @@ export interface GithubDef {
     ref?: string
 }
 
-// Project map structure
-type ProjectMap = { [key: string]: GithubDef }
-
- // Find project definition in the PROJECT_MAP
-export function getGithubDef(projectName: string, inBrowser: boolean): GithubDef {
-    const map = readProjectMap(inBrowser)
-    return map[projectName]
-}
-
-// Get all the github defs
-export function getAllGithubDefs(inBrowser: boolean): GithubDef[] {
-    const map = readProjectMap(inBrowser)
-    return Object.values(map)
-}
-
-// Write a project definition into the project map
-export function storeGithubDef(def: GithubDef, inBrowser: boolean, replace: boolean): boolean {
-    const map = readProjectMap(inBrowser)
-    if (map[def.name] && !replace) {
-        return false
+// Test whether a project path is a github ref
+export function isGithubRef(projectPath: string): boolean {
+    for (const prefix of prefixes) {
+        if (projectPath.startsWith(prefix)) {
+            return true
+        }
     }
-    map[def.name] = def
-    storeProjectMap(map, inBrowser)
-    return true
+    return false
 }
 
-// Remove a project definition from the map
-export function removeGithubDef(name: string, inBrowser: boolean): boolean {
-    const map = readProjectMap(inBrowser)
-    const entry = map[name]
-    if (!entry) {
-        return false
+// Parse a project path that claims to be a github ref into a GithubDef.  Throws on ill-formed
+export function parseGithubRef(projectPath: string): GithubDef {
+    let toParse: string = undefined
+    for (const prefix of prefixes) {
+        if (projectPath.startsWith(prefix)) {
+            toParse = projectPath.replace(prefix, '')
+            break
+        }
     }
-    delete map[name]
-    storeProjectMap(map, inBrowser)
-    return true
-}
-
-// Validate a def (test existence of the repo and path and whether auth permits retrieval; also whether the path superficially appears to be a project)
-export async function validateRepo(def: GithubDef) {
-    const contents = await readContents(makeClient(def), def, def.path)
-     if (!seemsToBeProject(contents)) {
-        throw new Error(`Although '${def.name}' denotes a valid github location, that location does not contain a 'nim' project`)
+    if (!toParse) {
+        throw new Error('internal error: parseGithubRef should not have been called')
     }
+    while (toParse.startsWith('/')) toParse = toParse.slice(1)
+    const hashSplit = toParse.split('#')
+    let ref: string = undefined
+    if (hashSplit.length > 2) {
+        throw new Error('too many # characters in github reference')
+    } else if (hashSplit.length == 2) {
+        ref = hashSplit[1]
+        toParse = hashSplit[0]
+    }
+    const slashSplit = toParse.split('/')
+    if (slashSplit.length < 2) {
+        throw new Error('too few / characters in github reference; at least <owner>/<repo> is required')
+    }
+    const owner = slashSplit[0]
+    const repo = slashSplit[1]
+    const path = slashSplit.slice(2).join('/')
+    const store = authPersister.loadCredentialStoreIfPresent()
+    let auth = undefined
+    if (store && store.github && store.currentGithub) {
+        auth = store.github[store.currentGithub]
+    }
+    const cachedir = `${owner}_${repo}_${path.split('/').join('_')}`
+    return { cachedir, owner, repo, path, auth, ref}
 }
 
 // Fetch a project into the cache, returning a path to its location
-export async function fetchProject(def: GithubDef): Promise<string> {
+export async function fetchProject(def: GithubDef, userAgent: string): Promise<string> {
     if (!fs.existsSync(cacheDir())) {
         fs.mkdirSync(cacheDir())
     }
-    const location = Path.join(cacheDir(), def.name)
+    const location = Path.join(cacheDir(), def.cachedir)
     await rimraf(location)
     fs.mkdirSync(location)
-    await fetchDir(makeClient(def), def, def.path, location)
+    debug('fetching project %O', def)
+    await fetchDir(makeClient(def, userAgent), def, def.path, location, true)
     return location
 }
 
 // Make a github client
-function makeClient(def: GithubDef): Octokit {
+function makeClient(def: GithubDef, userAgent: string): Octokit {
     return new Octokit({ auth: def.auth, userAgent })
 }
 
 // Get contents from a github repo at specific coordinates (path and ref).  All but the path
 // are taken from a GithubDef.  The path is specified as an argument.
 async function readContents(client: Octokit, def: GithubDef, path: string) {
+    debug('reading %O at %s', def, path)
     const {owner, repo, ref} = def
     const contents = await client.repos.getContents(ref ? {owner, repo, path, ref} : { owner, repo, path })
     if (contents.status !== 200) {
@@ -148,63 +149,41 @@ function seemsToBeProject(data: Octokit.ReposGetContentsResponse): boolean {
 }
 
 // Fetch a directory into a cache location.
-async function fetchDir(client: Octokit, def: GithubDef, path: string, location: string) {
+async function fetchDir(client: Octokit, def: GithubDef, path: string, location: string, validate: boolean) {
     const contents = await readContents(client, def, path)
     if (!Array.isArray(contents)) {
         console.dir(contents, { depth: null })
         throw new Error(`Path '${path} should be a directory but is not`)
     }
-    const promises: Promise<any>[] = []
+    if (validate && !seemsToBeProject(contents)) {
+        throw new Error(`Github location does not contain a 'nim' project`)
+    }
+    let promise: Promise<any> = Promise.resolve(undefined)
     for (const item of contents as Octokit.ReposGetContentsResponseItem[]) {
         const target = Path.join(location, item.name)
         if (item.type == 'dir') {
             fs.mkdirSync(target)
-            promises.push(fetchDir(client, def, item.path, target))
+            promise = promise.then(() => fetchDir(client, def, item.path, target, false))
         } else {
-            promises.push(fetchFile(client, def, item.path, target))
+            promise = promise.then(() => fetchFile(client, def, item.path, target))
         }
     }
-    await Promise.all(promises)
+    await promise
 }
 
 // Fetch a file into a cache location.   The 'def' argument is used to supply owner,
 // repo and ref.   The auth member is already encoded in the client.  The path is taken from the path argument
 async function fetchFile(client: Octokit, def: GithubDef, path: string, location: string) {
     const data = await readContents(client, def, path)
-    if (!data['content'] || !data['encoding']) {
+    // Careful with the following: we want to support empty files but the empty string is falsey.
+    if (typeof data['content'] !== 'string'  || !data['encoding']) {
         console.dir(data, { depth: null })
         throw new Error(`Response from 'fetchFile' was not interpretable`)
     }
     const toWrite = Buffer.from(data['content'], data['encoding'])
-    fs.writeFileSync(location, toWrite)
-}
-
-// Read the project map
-function readProjectMap(inBrowser: boolean): ProjectMap {
-    let json: string
-    if (inBrowser) {
-        json = window.localStorage.getItem(PROJECT_MAP_KEY)
-        if (!json) {
-            return {}
-        }
-    }  else {
-        if (!fs.existsSync(projectMapFile())) {
-           return {}
-        }
-        json = String(fs.readFileSync(projectMapFile()))
+    let mode = 0o666
+    if (location.endsWith('.sh') || location.endsWith('.cmd')) {
+        mode = 0o777
     }
-    return JSON.parse(json)
-}
-
-// Store the project map
-function storeProjectMap(map: ProjectMap, inBrowser: boolean) {
-    const toStore = JSON.stringify(map, undefined, 2)
-    if (inBrowser) {
-        window.localStorage.setItem(PROJECT_MAP_KEY, toStore)
-    }  else {
-        if (!fs.existsSync(nimbellaDir())) {
-           fs.mkdirSync(nimbellaDir())
-        }
-        fs.writeFileSync(projectMapFile(), toStore)
-    }
+    fs.writeFileSync(location, toWrite, { mode })
 }

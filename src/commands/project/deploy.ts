@@ -25,6 +25,7 @@ import { Flags, OWOptions, DeployResponse, Credentials } from '../../deployer/de
 import { getCredentialList, getCredentialsForNamespace } from '../../deployer/login'
 import { computeBucketDomainName } from '../../deployer/deploy-to-bucket'
 import * as path from 'path'
+import { isGithubRef } from '../../deployer';
 
 export class ProjectDeploy extends NimBaseCommand {
   static description = 'Deploy Nimbella projects'
@@ -63,7 +64,7 @@ export class ProjectDeploy extends NimBaseCommand {
     // Deploy each project
     let success = true
     for (const project of argv) {
-      success = success && await doDeploy(project, cmdFlags, creds, owOptions, false, logger)
+      success = success && await doDeploy(project, cmdFlags, creds, owOptions, false, logger, this.config.userAgent)
     }
     if (!success) {
       logger.exit(1)
@@ -74,8 +75,8 @@ export class ProjectDeploy extends NimBaseCommand {
 // Functions also used by 'project watch'
 
 // Process credentials, possibly select non-current namespace
-export async function processCredentials(ignore_certs: boolean, apihost: string|undefined, auth: string|undefined, target: string|undefined,
-    logger: NimLogger): Promise<{ creds: Credentials|undefined, owOptions: OWOptions }> {
+export async function processCredentials(ignore_certs: boolean, apihost: string|undefined, auth: string|undefined,
+    target: string|undefined, logger: NimLogger): Promise<{ creds: Credentials|undefined, owOptions: OWOptions }> {
   const owOptions: OWOptions = { ignore_certs }  // No explicit undefined
   if (apihost) {
     owOptions.apihost = parseAPIHost(apihost)
@@ -99,8 +100,8 @@ export async function processCredentials(ignore_certs: boolean, apihost: string|
 
 // Deploy one project
 export async function doDeploy(project: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions, watching: boolean,
-    logger: NimLogger): Promise<boolean> {
-  const todeploy = await readAndPrepare(project, owOptions, creds, authPersister, cmdFlags)
+    logger: NimLogger, userAgent: string): Promise<boolean> {
+  const todeploy = await readAndPrepare(project, owOptions, creds, authPersister, cmdFlags, userAgent)
     .catch(err => logger.handleError(err.message, err))
   if (!watching) {
     displayHeader(project, todeploy.credentials, logger)
@@ -148,7 +149,8 @@ function displayHeader(project: string, creds: Credentials, logger: NimLogger) {
   if (creds && creds.ow.apihost) {
       hostClause = `\n  on host '${creds.ow.apihost}'`
   }
-  logger.log(`Deploying project '${path.resolve(project)}'${namespaceClause}${hostClause}`)
+  const projectPath = isGithubRef(project) ? project : path.resolve(project)
+  logger.log(`Deploying project '${projectPath}'${namespaceClause}${hostClause}`)
 }
 
 // Display the result of a successful run

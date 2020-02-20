@@ -23,9 +23,15 @@ import * as path from 'path'
 import { DeployStructure, PackageSpec, ActionSpec, WebResource } from './deploy-struct'
 import { emptyStructure, actionFileToParts, filterFiles, convertToResources, promiseFilesAndFilterFiles, loadProjectConfig } from './util'
 import { getBuildForAction, getBuildForWeb } from  './finder-builder'
+import { GithubDef, isGithubRef, parseGithubRef, fetchProject } from './github'
+import { promisify } from 'util'
+import * as makeDebug from 'debug'
+const debug = makeDebug('nimbella-cli/project-reader')
+
 const CONFIG_FILE = 'project.yml'
 const LEGACY_CONFIG_FILE = 'projectConfig.yml'
 const ENV_FILE = '.env'
+const readdir = promisify(fs.readdir)
 
 // Read the top level files and dirs of the project.  Only one file and two dirs are legal at this level; everything else is a 'stray'
 interface TopLevel {
@@ -35,57 +41,70 @@ interface TopLevel {
     env?: string
     strays: string[]
     filePath: string
+    githubPath: string
 }
-export function readTopLevel(filePath: string, env: string): Promise<TopLevel> {
+export function readTopLevel(filePath: string, env: string, userAgent: string): Promise<TopLevel> {
     // If the 'env' argument is defined it takes precedence over .env found in the project
+    let githubPath: string = undefined
+    let start = Promise.resolve(filePath)
+    if (isGithubRef(filePath)) {
+        const github = parseGithubRef(filePath)
+        if (!github.auth) {
+            console.log('Warning: access to github will be un-authenticated; rate will be severely limited')
+        }
+        githubPath = filePath
+        start = fetchProject(github, userAgent)
+    }
     const webDir = 'web', pkgDir = 'packages'
-    return new Promise(function(resolve, reject) {
-       fs.readdir(filePath, {withFileTypes: true}, (err, items: fs.Dirent[]) => {
-            if (err) {
-                reject(err)
-            } else {
-                items = filterFiles(items)
-                let web: string
-                let config: string
-                let notconfig: string
-                let legacyConfig: string
-                let packages: string
-                const strays: string[] = []
-                for (const item of items) {
-                    if (item.isDirectory()) {
-                        switch(item.name) {
-                            case webDir:
-                                web = path.join(filePath, webDir)
-                                break
-                            case pkgDir:
-                                packages = path.join(filePath, pkgDir)
-                                break
-                            case '.nimbella':
-                                break
-                            default:
-                                strays.push(item.name)
-                        }
-                    } else if (item.isFile() && item.name == CONFIG_FILE) {
-                        config = path.join(filePath, item.name)
-                    } else if (item.isFile() && item.name == LEGACY_CONFIG_FILE) {
-                        legacyConfig = path.join(filePath, item.name)
-                    } else if (item.isFile() && (item.name.endsWith(".yml") || item.name.endsWith(".yaml"))) {
-                        notconfig = item.name
-                    } else if (!env && item.isFile() && item.name == ENV_FILE) {
-                        env = path.join(filePath, item.name)
-                    } else {
-                        strays.push(item.name)
+    return start.then(filePath => {
+        return readdir(filePath, {withFileTypes: true}).then(items => {
+            items = filterFiles(items)
+            let web: string
+            let config: string
+            let notconfig: string
+            let legacyConfig: string
+            let packages: string
+            const strays: string[] = []
+            for (const item of items) {
+                if (item.isDirectory()) {
+                    switch(item.name) {
+                        case webDir:
+                            web = path.join(filePath, webDir)
+                            break
+                        case pkgDir:
+                            packages = path.join(filePath, pkgDir)
+                            break
+                        case '.nimbella':
+                            break
+                        default:
+                            strays.push(item.name)
                     }
+                } else if (item.isFile() && item.name == CONFIG_FILE) {
+                    config = path.join(filePath, item.name)
+                } else if (item.isFile() && item.name == LEGACY_CONFIG_FILE) {
+                    legacyConfig = path.join(filePath, item.name)
+                } else if (item.isFile() && (item.name.endsWith(".yml") || item.name.endsWith(".yaml"))) {
+                    notconfig = item.name
+                } else if (!env && item.isFile() && item.name == ENV_FILE) {
+                    env = path.join(filePath, item.name)
+                } else {
+                    strays.push(item.name)
                 }
-                if (legacyConfig && !config) {
-                    config = legacyConfig
-                    console.log(`Warning: the name '${LEGACY_CONFIG_FILE}' is deprecated; please rename to '${CONFIG_FILE}' soon`)
-                }
-                if (notconfig && !config) {
-                    console.log("Warning: found", notconfig, "but no", CONFIG_FILE)
-                }
-                resolve({ web, packages, config, strays, filePath, env })
             }
+            if (legacyConfig && !config) {
+                config = legacyConfig
+                console.log(`Warning: the name '${LEGACY_CONFIG_FILE}' is deprecated; please rename to '${CONFIG_FILE}' soon`)
+            }
+            if (notconfig && !config) {
+                console.log("Warning: found", notconfig, "but no", CONFIG_FILE)
+            }
+            if (githubPath) {
+                debug('githhub path was %s', githubPath)
+                debug('filePath is %s', filePath)
+            }
+            const ans = { web, packages, config, strays, filePath, env, githubPath }
+            debug('readTopLevel returning %O', ans)
+            return ans
         })
     })
 }
@@ -93,11 +112,18 @@ export function readTopLevel(filePath: string, env: string): Promise<TopLevel> {
 // Probe the top level structure to obtain the major parts of the final config.  Spawn builders for those parts and
 // assemble a "Promise.all" for the combined work
 export function buildStructureParts(topLevel: TopLevel): Promise<DeployStructure[]> {
-    const { web, packages, config, strays, filePath, env } = topLevel
+    const { web, packages, config, strays, filePath, env, githubPath } = topLevel
+    let packagesGithub = packages
+    if (githubPath) {
+        if (packages) {
+            packagesGithub = path.join(githubPath, path.relative(filePath, packages))
+        }
+    }
+    debug('display path for actions is %O', packagesGithub)
     return new Promise(function(resolve) {
         const webPart = getBuildForWeb(web).then(build => buildWebPart(web, build))
-        const actionsPart = buildActionsPart(packages)
-        const configPart = readConfig(config, env, filePath, strays)
+        const actionsPart = buildActionsPart(packages, packagesGithub)
+        const configPart = readConfig(config, env, filePath, strays, githubPath)
         resolve(Promise.all([webPart, actionsPart, configPart]))
     })
 }
@@ -247,17 +273,18 @@ function buildWebPart(webdir: string, build: string): Promise<DeployStructure> {
 
 // Read the resources of the web directory
 function readWebResources(webdir: string): Promise<WebResource[]> {
+    debug('readWebResources for %s', webdir)
     return promiseFilesAndFilterFiles(webdir).then((items: string[]) => {
         return convertToResources(items, webdir.length + 1)
     })
 }
 
 // Probe the packages directory
-function buildActionsPart(pkgsdir: string): Promise<DeployStructure> {
+function buildActionsPart(pkgsdir: string, displayPath: string): Promise<DeployStructure> {
     if (!pkgsdir) {
         return Promise.resolve(emptyStructure())
     } else {
-        return buildPkgArray(pkgsdir).then((values) => {
+        return buildPkgArray(pkgsdir, displayPath).then((values) => {
             const [ strays, pkgs] = values
             return { web: [], packages: pkgs, strays: strays }
         })
@@ -265,66 +292,56 @@ function buildActionsPart(pkgsdir: string): Promise<DeployStructure> {
 }
 
 // Accumulate the arrays of PackageSpecs and Strays in the 'packages' directory
-function buildPkgArray(pkgsDir): Promise<any> {
+function buildPkgArray(pkgsDir: string, displayPath: string): Promise<any> {
     // console.log("Building package array")
-    return new Promise(function(resolve, reject) {
-       fs.readdir(pkgsDir, {withFileTypes: true}, (err, items: fs.Dirent[]) => {
-            if (err) {
-                reject(err)
-            } else {
-                items = filterFiles(items)
-                const strays = items.filter(dirent => !dirent.isDirectory()).map(dirent => dirent.name)
-                const pkgNames = items.filter(dirent => dirent.isDirectory()).map(dirent => dirent.name)
-                const rdrs: Promise<PackageSpec>[] = []
-                for (const name of pkgNames) {
-                    const pkgPath = path.join(pkgsDir, name)
-                    rdrs.push(readPackage(pkgPath, name))
-                }
-                resolve(Promise.all([Promise.resolve(strays), Promise.all(rdrs)]))
-            }
-        })
+    return readdir(pkgsDir, {withFileTypes: true}).then((items: fs.Dirent[]) => {
+        items = filterFiles(items)
+        const strays = items.filter(dirent => !dirent.isDirectory()).map(dirent => dirent.name)
+        const pkgNames = items.filter(dirent => dirent.isDirectory()).map(dirent => dirent.name)
+        const rdrs: Promise<PackageSpec>[] = []
+        for (const name of pkgNames) {
+            const pkgPath = path.join(pkgsDir, name)
+            rdrs.push(readPackage(pkgPath, displayPath, name))
+        }
+        return Promise.all([Promise.resolve(strays), Promise.all(rdrs)])
     })
 }
 
 // Read the contents of a directory defining a package.  By convention, actions not requiring a build step are stored directly in the
 // package directory.  Those requiring a build are stored in a subdirectory.  The name of each action is the single file name (sans suffix)
 // or the name of the subdirectory.
-function readPackage(pkgPath: string, name: string): Promise<PackageSpec> {
-    // console.log("reading information for package", pkgPath)
-    return new Promise(function(resolve, reject) {
-       fs.readdir(pkgPath, {withFileTypes: true}, (err, items: fs.Dirent[]) => {
-            if (err) {
-                reject(err)
-            } else {
-                items = filterFiles(items)
-                const promises: Promise<ActionSpec>[] = []
-                const seen = {}
-                for (const item of items) {
-                    const filepath = path.join(pkgPath, item.name)
-                    if (item.isFile()) {
-                        // Directly deployable action not requiring a build.
-                        const { name, runtime, binary, zipped } = actionFileToParts(item.name)
-                        const before = seen[name]
-                        if (before) {
-                            reject(duplicateName(name, before, runtime))
-                        }
-                        seen[name] = runtime
-                        promises.push(Promise.resolve({ name, file: filepath, runtime, binary, zipped, web: true}))
-                    } else if (item.isDirectory()) {
-                        // Build-dependent action or renamed action
-                        const before = seen[item.name]
-                        if (before) {
-                            reject(duplicateName(item.name, before, "*"))
-                        }
-                        seen[item.name] = "*"
-                        promises.push(getBuildForAction(filepath).then(build => {
-                            return { name: item.name, file: filepath, build }
-                        }))
-                    }
+function readPackage(pkgPath: string, displayPath: string, name: string): Promise<PackageSpec> {
+    debug("reading information for package '%s' with display path '%s'", pkgPath, displayPath)
+    return readdir(pkgPath, {withFileTypes: true}).then((items: fs.Dirent[]) => {
+        items = filterFiles(items)
+        const promises: Promise<ActionSpec>[] = []
+        const seen = {}
+        for (const item of items) {
+            const file = path.join(pkgPath, item.name)
+            const displayFile = path.join(displayPath, item.name)
+            debug('item %s has display path %s', item.name, displayFile)
+            if (item.isFile()) {
+                // Directly deployable action not requiring a build.
+                const { name, runtime, binary, zipped } = actionFileToParts(item.name)
+                const before = seen[name]
+                if (before) {
+                    throw duplicateName(name, before, runtime)
                 }
-                resolve(Promise.all(promises))
+                seen[name] = runtime
+                promises.push(Promise.resolve({ name, file, displayFile, runtime, binary, zipped, web: true}))
+            } else if (item.isDirectory()) {
+                // Build-dependent action or renamed action
+                const before = seen[item.name]
+                if (before) {
+                    throw duplicateName(item.name, before, "*")
+                }
+                seen[item.name] = "*"
+                promises.push(getBuildForAction(file).then(build => {
+                    return { name: item.name, file, displayFile, build }
+                }))
             }
-        })
+        }
+        return Promise.all(promises)
     }).then((actions: ActionSpec[]) => {
         return { name: name, actions: actions, shared: false }
     })
@@ -339,12 +356,12 @@ function duplicateName(actionName: string, formerUse: string, newUse: string) {
 }
 
 // Read the config file if present.  For convenience, the extra information not provide elsewhere is tacked on here
-function readConfig(configFile: string, envPath: string, filePath: string, strays: string[]): Promise<DeployStructure> {
+function readConfig(configFile: string, envPath: string, filePath: string, strays: string[], githubPath: string): Promise<DeployStructure> {
     if (!configFile) {
         // console.log("No config file found")
-        const ans = Object.assign({}, emptyStructure(), { strays, filePath })
+        const ans = Object.assign({}, emptyStructure(), { strays, filePath, githubPath })
         return Promise.resolve(ans)
     }
     // console.log("Reading config file")
-    return loadProjectConfig(configFile, envPath, filePath).then(config => Object.assign({strays, filePath}, config))
+    return loadProjectConfig(configFile, envPath, filePath).then(config => Object.assign({strays, filePath, githubPath}, config))
 }

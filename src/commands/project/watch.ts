@@ -54,12 +54,13 @@ export default class ProjectWatch extends NimBaseCommand {
         incremental: true, env, yarn, webLocal: flags['web-local'] }
     this.debug('cmdFlags', cmdFlags)
     const { creds, owOptions } = await processCredentials(insecure, apihost, auth, target, logger)
-    argv.forEach(project => watch(project, cmdFlags, creds, owOptions, logger))
+    argv.forEach(project => watch(project, cmdFlags, creds, owOptions, logger, this.config.userAgent))
   }
 }
 
 // Validate a project and start watching it if it actually looks like a project
-function watch(project: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions, logger: NimLogger) {
+function watch(project: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions,
+        logger: NimLogger, userAgent: string) {
     const msg = validateProject(project)
     if (msg) {
         logger.handleError(msg, new Error(msg))
@@ -75,7 +76,7 @@ function watch(project: string, cmdFlags: Flags, creds: Credentials|undefined, o
     const watch = () => {
         // logger.log("Opening new watcher")
         watcher = fs.watch(project, { recursive: true, persistent: true}, async (_, filename) =>
-            await fireDeploy(project, filename, cmdFlags, creds, owOptions, logger, reset, watch))
+            await fireDeploy(project, filename, cmdFlags, creds, owOptions, logger, userAgent, reset, watch))
     }
     watch()
 }
@@ -83,14 +84,14 @@ function watch(project: string, cmdFlags: Flags, creds: Credentials|undefined, o
 // Fire a deploy cycle.  Suspends the watcher so that mods made to the project by the deployer won't cause a spurious re-trigger.
 // Displays an informative message before deploying.
 async function fireDeploy(project: string, filename: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions,
-        logger: NimLogger, reset: ()=>void, watch: ()=>void) {
+        logger: NimLogger, userAgent: string, reset: ()=>void, watch: ()=>void) {
     if (excluded(filename)) {
         return
     }
     reset()
     logger.log(`\nDeploying '${project}' due to change in '${filename}'`)
     let error = false
-    await doDeploy(project, cmdFlags, creds, owOptions, true, logger).catch(err => {
+    await doDeploy(project, cmdFlags, creds, owOptions, true, logger, userAgent).catch(err => {
         logger.displayError(err.message, err)
         error = true
     })

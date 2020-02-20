@@ -26,6 +26,8 @@ import * as fs from 'fs'
 import ignore from 'ignore'
 import * as archiver from 'archiver'
 import * as touch from 'touch'
+import * as makeDebug from 'debug'
+const debug = makeDebug('nimbella-cli/finder-builder')
 
 // Type to use with the ignore package.
 interface Ignore {
@@ -94,18 +96,19 @@ function buildAction(action: ActionSpec, buildTable: BuildTable, flags: Flags): 
     if (!action.build) {
         return Promise.resolve(action)
     }
+    debug('building action %O', action)
     switch (action.build) {
         case 'build.sh':
-            return scriptBuilder('./build.sh', action.file, flags).then(() => identifyActionFiles(action,
+            return scriptBuilder('./build.sh', action.file, action.displayFile, flags).then(() => identifyActionFiles(action,
                 flags.incremental, flags.verboseZip))
         case 'build.cmd':
-            return scriptBuilder('build.cmd', action.file, flags).then(() => identifyActionFiles(action,
+            return scriptBuilder('build.cmd', action.file, action.displayFile, flags).then(() => identifyActionFiles(action,
                 flags.incremental, flags.verboseZip))
         case '.build':
-            return outOfLineBuilder(action.file, buildTable, true, flags).then(() => identifyActionFiles(action,
+            return outOfLineBuilder(action.file, action.displayFile, buildTable, true, flags).then(() => identifyActionFiles(action,
                 flags.incremental, flags.verboseZip))
         case 'package.json':
-            return npmBuilder(action.file, flags).then(() => identifyActionFiles(action,
+            return npmBuilder(action.file, action.displayFile, flags).then(() => identifyActionFiles(action,
                 flags.incremental, flags.verboseZip))
         case '.include':
         case 'identify':
@@ -219,7 +222,8 @@ function readFileAsList(file: string): Promise<string[]> {
 
 // Perform a build using either a script or a directory pointed to by a .build directive
 // The .build directive is known to exist but has not been read yet.
-function outOfLineBuilder(filepath: string, sharedBuilds: BuildTable, isAction: boolean, flags: Flags): Promise<any> {
+function outOfLineBuilder(filepath: string, displayPath: string, sharedBuilds: BuildTable,
+        isAction: boolean, flags: Flags): Promise<any> {
     const buildPath = path.join(filepath, ".build")
     return readFileAsList(buildPath).then(contents => {
         if (contents.length == 0 || contents.length > 1) {
@@ -229,7 +233,7 @@ function outOfLineBuilder(filepath: string, sharedBuilds: BuildTable, isAction: 
         const stat = fs.lstatSync(redirected)
         if (stat.isFile()) {
             // Simply run linked-to script in the current directory
-            return scriptBuilder(redirected, filepath, flags)
+            return scriptBuilder(redirected, filepath, displayPath, flags)
         } else if (stat.isDirectory) {
             // Look in the directory to find build to run
             return readDirectory(redirected).then(items => {
@@ -241,10 +245,10 @@ function outOfLineBuilder(filepath: string, sharedBuilds: BuildTable, isAction: 
                     case 'build.cmd':
                         const script = path.resolve(redirected, special)
                         // Like the direct link case, just a different way of doing it
-                        build = () => scriptBuilder(script, cwd, flags)
+                        build = () => scriptBuilder(script, cwd, displayPath, flags)
                         break
                     case 'package.json':
-                        build = () => npmBuilder(cwd, flags)
+                        build = () => npmBuilder(cwd, displayPath, flags)
                         break
                     default:
                         return Promise.reject(new Error(redirected + ' is a directory but contains no build information'))
@@ -322,17 +326,18 @@ export function getBuildForWeb(filepath: string): Promise<string> {
 }
 
 // Build the web directory
-export function buildWeb(build: string, sharedBuilds: BuildTable, filepath: string, flags: Flags): Promise<WebResource[]> {
+export function buildWeb(build: string, sharedBuilds: BuildTable, filepath: string, displayPath: string,
+        flags: Flags): Promise<WebResource[]> {
     switch (build) {
         case 'build.sh':
-            return scriptBuilder('./build.sh', filepath, flags).then(() => identifyWebFiles(filepath))
+            return scriptBuilder('./build.sh', filepath, displayPath, flags).then(() => identifyWebFiles(filepath))
         case 'build.cmd':
             //console.log('cwd for windows build is', filepath)
-            return scriptBuilder('build.cmd', filepath, flags).then(() => identifyWebFiles(filepath))
+            return scriptBuilder('build.cmd', filepath, displayPath, flags).then(() => identifyWebFiles(filepath))
         case '.build':
-            return outOfLineBuilder(filepath, sharedBuilds, false, flags).then(() => identifyWebFiles(filepath))
+            return outOfLineBuilder(filepath, displayPath, sharedBuilds, false, flags).then(() => identifyWebFiles(filepath))
         case 'package.json':
-            return npmBuilder(filepath, flags).then(() => identifyWebFiles(filepath))
+            return npmBuilder(filepath, displayPath, flags).then(() => identifyWebFiles(filepath))
         case '.include':
         case 'identify':
             return identifyWebFiles(filepath)
@@ -510,11 +515,13 @@ function autozipBuilder(pairs: string[][], action: ActionSpec, incremental: bool
 }
 
 // Subroutine for performing a "real" build requiring a spawn.
-function build(cmd: string, args: string[], filepath: string, infoMsg: string, errorTag: string, verbose: boolean): Promise<any> {
+function build(cmd: string, args: string[], realPath: string, displayPath: string, infoMsg: string,
+        errorTag: string, verbose: boolean): Promise<any> {
+    debug('building with realPath=%s and displayPath=%s')
     return new Promise(function(resolve, reject) {
-        console.log('Started running', infoMsg, 'in', filepath)
+        console.log('Started running', infoMsg, 'in', displayPath)
         const shell = process.platform == 'win32' ? true : process.env['shell'] || "/bin/bash"
-        const child = spawn(cmd, args, { cwd: filepath, shell })
+        const child = spawn(cmd, args, { cwd: realPath, shell })
         let result = ''
         if (verbose) {
             child.stdout.on('data', (data) => console.log(String(data)))
@@ -525,7 +532,7 @@ function build(cmd: string, args: string[], filepath: string, infoMsg: string, e
                 result += data.toString()
                 const newTime = Date.now()
                 if ((newTime - time) > 5000) {
-                    console.log('Still running', infoMsg, 'in', filepath)
+                    console.log('Still running', infoMsg, 'in', displayPath)
                     time = newTime
                 }
             }
@@ -535,12 +542,12 @@ function build(cmd: string, args: string[], filepath: string, infoMsg: string, e
         child.on('close', (code) => {
             if (code != 0) {
                 if (!verbose) {
-                    console.log('Output of failed build in', filepath)
+                    console.log('Output of failed build in', realPath, 'which caches', displayPath)
                     console.log(result)
                 }
                 reject(`'${errorTag}' exited with code ${code}`)
             } else  {
-                console.log('Finished running', infoMsg, 'in', filepath)
+                console.log('Finished running', infoMsg, 'in', displayPath)
                 resolve(undefined)
             }
         })
@@ -551,14 +558,14 @@ function build(cmd: string, args: string[], filepath: string, infoMsg: string, e
 }
 
 // The builder for a shell script
-function scriptBuilder(script: string, filepath: string, flags: Flags): Promise<any> {
-    if (flags.incremental && scriptAppearsBuilt(filepath)) {
+function scriptBuilder(script: string, realPath: string, displayPath: string, flags: Flags): Promise<any> {
+    if (flags.incremental && scriptAppearsBuilt(realPath)) {
         if (flags.verboseBuild) {
-            console.log(`Skipping build in ${filepath} because the action was previously built`)
+            console.log(`Skipping build in ${displayPath} because the action was previously built`)
         }
         return Promise.resolve(undefined)
     }
-    return build(script, [ ], filepath, script, script, flags.verboseBuild)
+    return build(script, [ ], realPath, displayPath, script, script, flags.verboseBuild)
 }
 
 // Determine if a shell-script style build appears to have been run.  For this we just check for the presence of a `.built` file since
@@ -611,7 +618,7 @@ function makeNpmPackageAppearBuilt(filepath: string) {
 }
 
 // The builder for npm|yarn install --production
-function npmBuilder(filepath: string, flags: Flags): Promise<any> {
+function npmBuilder(filepath: string, displayPath: string, flags: Flags): Promise<any> {
     const cmd = flags.yarn ? 'yarn' : 'npm'
     if (flags.incremental && npmPackageAppearsBuilt(filepath)) {
         if (flags.verboseBuild) {
@@ -621,7 +628,7 @@ function npmBuilder(filepath: string, flags: Flags): Promise<any> {
     }
     // A package.json must be present since this builder wouldn't have been invoked otherwise.
     // This doesn't mean that npm|yarn install will succeed, just that, if it fails it is for some other reason
-    return build(cmd, [ 'install', '--production' ], filepath, `'${cmd} install --production'`, `${cmd} install`,
+    return build(cmd, [ 'install', '--production' ], filepath, displayPath, `'${cmd} install --production'`, `${cmd} install`,
         flags.verboseBuild).then(() => makeNpmPackageAppearBuilt(filepath))
 }
 

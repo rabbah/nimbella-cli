@@ -57,6 +57,7 @@ export interface ActionSpec {
     name: string // The name of the action
     // The following are used to assemble 'exec'.  Currently, you can't specify exec directly
     file?: string // The path to the file comprising the action (possibly a zip file)
+    displayFile?: string // The file path but in github when applicable, otherwise undefined
     code?: string  // The code of the action (bypasses file reading; used internally; not specifiable in the config)
     runtime?: string // The runtime to use for the action
     main?: string // The 'main' directive if needed
@@ -117,6 +118,7 @@ export  interface DeployStructure {
     sharedBuilds?: BuildTable        // The build table for this project, populated as shared builds are initiated
     strays?: string[]                // files or directories found in the project that don't fit the model, not necessarily an error
     filePath?: string                // The location of the project on disk
+    githubPath?: string              // The original github path specified, if deploying from github
     owClient?: Client                // The openwhisk client for deploying actions and packages
     bucketClient?: Bucket            // The gcloud storage client for deploying to a bucket
     versions?: VersionEntry          // The VersionEntry for credentials.namespace on the selected API host if available
@@ -192,6 +194,8 @@ export interface CredentialStore {
     currentHost: string
     currentNamespace: string
     credentials: CredentialHostMap
+    currentGithub?: string
+    github?: {[ key: string ]: string}
 }
 
 export interface CredentialHostMap {
