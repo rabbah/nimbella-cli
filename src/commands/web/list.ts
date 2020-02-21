@@ -61,4 +61,4 @@ export default class WebList extends NimBaseCommand {
             logger.log(fn + pad + generation );
         }
     }
-} 
+}
