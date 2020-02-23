@@ -224,7 +224,7 @@ export async function getCredentialsForNamespace(namespace: string, apihost: str
 export async function getCredentials(persister: Persister): Promise<Credentials> {
     const store = await persister.loadCredentialStore()
     if (!store.currentHost || !store.currentNamespace) {
-        throw new Error("There are no credentials for any namespace")
+        throw new Error("You do not have a current namespace.  Use 'nim auth login' to create a new one or 'nim auth switch' to use an existing one")
     }
     const entry = store.credentials[store.currentHost][store.currentNamespace]
     const { storageKey, api_key, redis } = entry
