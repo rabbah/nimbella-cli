@@ -140,6 +140,7 @@ export function assembleInitialStructure(parts: DeployStructure[]): DeployStruct
         webPart.web ? webPart.web : configPart.web ? configPart.web : []
     configPart.packages = (actionsPart.packages && configPart.packages) ? mergePackages(actionsPart.packages, configPart.packages) :
         actionsPart.packages ? actionsPart.packages : configPart.packages ? configPart.packages : []
+    adjustWebExportFlags(configPart.packages)
     configPart.webBuild = webPart.webBuild
     if (configPart.actionWrapPackage) {
         configPart.web.forEach(res => {
@@ -221,6 +222,21 @@ function mergePackage(fs: PackageSpec, config: PackageSpec): PackageSpec {
         ans.actions = cfgActions
     }
     return ans
+}
+
+// Adjust the web export value for the actions of the project.  For each action that already has this property set, leave it alone.
+// Otherwise, if its package specifies a web export value use it.   Otherwise, apply the default of 'true'.   Must test explicitly
+// for 'undefined' type since false is a real value but is falsey.
+function adjustWebExportFlags(pkgs: PackageSpec[]) {
+    pkgs.forEach(pkg => {
+        if (pkg.actions) {
+            pkg.actions.forEach(action => {
+                if (typeof action.web === 'undefined') {
+                    action.web = (typeof pkg.web === 'undefined') ? true : pkg.web
+                }
+            })
+        }
+    })
 }
 
 // Merge the actions portion of a PackageSpec in config, if any, into the corresponding PackageSpec actions read from the file system.
@@ -328,7 +344,7 @@ function readPackage(pkgPath: string, displayPath: string, name: string): Promis
                     throw duplicateName(name, before, runtime)
                 }
                 seen[name] = runtime
-                promises.push(Promise.resolve({ name, file, displayFile, runtime, binary, zipped, web: true}))
+                promises.push(Promise.resolve({ name, file, displayFile, runtime, binary, zipped }))
             } else if (item.isDirectory()) {
                 // Build-dependent action or renamed action
                 const before = seen[item.name]
