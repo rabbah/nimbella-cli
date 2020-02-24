@@ -1,102 +1,10 @@
 # How To Use the Nimbella Command Line Tool
-
+<main>
 This document provides information about the Nimbella Command Line Tool, called nim, and its Command Line Interface (CLI). There are also several [Nimbella demo projects at GitHub](https://github.com/nimbella/demo-projects) that you can try out.
-
-## Table of Contents
-
- - [Your Nimbella cloud account](#your-nimbella-cloud-account)
- - [Install the Nimbella Command Line Tool (nim)](#install-the-nimbella-command-line-tool-nim)
-      - [Install nim globally](#install-nim-for-shell-invocation-globally)
-      - [Install nim as a dependency](#install-nim-as-a-dependency)
- - [nim command overview](#nim-command-overview)
-      - [1 Credential management to access Nimbella namespaces](#1-credential-management-to-access-nimbella-namespaces)
-      - [2 Project-level deployment commands](#2-project-level-deployment-commands)
-      - [3 Entity management commands](#3-entity-management-commands)
-      - [4 Supporting commands](#4-supporting-commands)
- - [Nimbella namespaces](#nimbella-namespaces)
-      - [Create a Nimbella namespace](#create-a-nimbella-namespace)
-      - [View the credential store](#view-the-credential-store)
-      - [Create and manage multiple namespaces](#create-and-manage-multiple-namespaces)
-           - [Switch between namespaces](#switch-between-namespaces)
-           - [Manage multiple namespaces](#manage-multiple-namespaces)
- - [Overview of Nimbella projects, actions, and deployment](#overview-of-nimbella-projects-actions-and-deployment)
- - [Example: Create and deploy a project with a single action](#example-create-and-deploy-a-project-with-a-single-action)
- - [About projects](#about-projects)
-      - [Project directory structure](#project-directory-structure)
-      - [Projects with multiple actions](#projects-with-multiple-actions)
-      - [Factors in choosing project size](#factors-in-choosing-project-size)
-      - [Factors in choosing project boundaries](#factors-in-choosing-project-boundaries)
- - [About actions](#about-actions)
-      - [Actions Have Public URLs by Default Unless the Project is Configured](#actions-have-public-urls-by-default-unless-the-project-is-configured)
-      - [Using zipped source files to form a single action](#using-zipped-source-files-to-form-a-single-action)
-      - [Multifile actions created with autozip](#multifile-actions-created-with-autozip)
-           - [Using an action source file from elsewhere in the filesystem](#using-an-action-source-file-from-elsewhere-in-the-filesystem)
- - [Adding static web content](#adding-static-web-content)
- - [About the Nimbella deployer](#about-the-nimbella-deployer)
-      - [Nimbella deployer supported runtimes for actions](#nimbella-deployer-supported-runtimes-for-actions)
-      - [Deploying projects incrementally](#deploying-projects-incrementally)
-           - [Project watching for incremental deployment](#project-watching-for-incremental-deployment)
-      - [Deployer recordkeeping](#deployer-recordkeeping)
-           - [Annotations for actions and packages deployed to your namespace](#annotations-for-actions-and-packages-deployed-to-your-namespace)
-               - [Typical action get command output](#typical-action-get-command-output)
-           - [Recordkeeping in your local project](#recordkeeping-in-your-local-project)
-               - [Typical versions.json file content](#typical-versions-json-file-content)
-           - [Comparing versions in your namespace versus local project](#comparing-versions-in-your-namespace-versus-local-project)
- - [Incorporating build steps for actions and web content](#incorporating-build-steps-for-actions-and-web-content)
-      - [Examples of building (common use cases)](#examples-of-building-common-use-cases)
-      - [Errors in builds](#errors-in-builds)
-      - [Out-of-line builds and shared builds](#out-of-line-builds-and-shared-builds)
-      - [Build states and the effect of incremental on builds](#build-states-and-the-effect-of-incremental-on-builds)
-           - [Two build states: Built and Unbuilt](#two-build-states-built-and-unbuilt)
-           - [What determines built or unbuilt states](#what-determines-built-or-unbuilt-states)
- - [Adding project configuration](#adding-project-configuration)
-      - [Project configuration for packages and actions](#project-configuration-for-packages-and-actions)
-           - [Action modifiers allowed in project.yml](#action-modifiers-allowed-in-project-yml)
-               - [web](#web)
-               - [runtime](#runtime)
-               - [main](#main)
-               - [binary](#binary)
-               - [webSecure](#webSecure)
-               - [annotations](#annotations)
-               - [parameters](#parameters)
-               - [environment](#environment)
-               - [clean](#cleanactions)
-               - [limits](#limits)
-           - [Package modifiers allowed in project.yml](#package-modifiers-allowed-in-project-yml)
-               - [shared](#shared)
-               - [annotations](#annotations)
-               - [parameters](#parameters)
-               - [environment](#environment)
-               - [clean](#cleanpkgs)
-           - [Global modifiers allowed in project.yml](#global-modifiers-allowed-in-project-yml)
-               - [targetNamespace](#targetnamespace)
-               - [cleanNamespace](#cleannamespace)
-               - [parameters](#parameters)
-      - [Project configuration for web content](#project-configuration-for-web-content)
-           - [Use the YAML bucket member to configure how web content is deployed](#use-the-yaml-bucket-member-to-configure-how-web-content-is-deployed)
-               - [Share a Nimbella namespace with prefixpath](#share-a-nimbella-namespace-with-prefixpath)
-               - [Delete previously deployed content when new content is deployed](#delete-previously-deployed-content-when-new-content-is-deployed)
-               - [Configure behavior when the URL denotes a directory](#configure-behavior-when-the-url-denotes-a-directory)
-               - [Specify the page for a 404 error](#specify-the-page-for-a-404-error)
-               - [Strip path segments](#strip-path-segments)
-           - [Configuration example for web content generated by a tool](#configuration-example-for-web-content-generated-by-a-tool)
-      - [Symbolic variables](#symbolic-variables)
-      - [File substitution](#file-substitution)
-      - [Multiple variable substitution](#multiple-variable-substitution)
- - [Information for OpenWhisk developers](#information-for-openwhisk-developers)
-      - [Using the Nimbella stack with an OpenWhisk installation](#using-the-nimbella-stack-with-an-openwhisk-installation)
-      - [Credential management commands in nim vs. wsk](#credential-management-commands-in-nim-vs-wsk)
-      - [Project commands in nim vs. wsk](#project-commands-in-nim-vs-wsk)
-      - [Entity management commands in nim vs. wsk](#entity-management-commands-in-nim-vs-wsk)
-      - [Using Whisk commands in switching namespaces](#using-whisk-commands-in-switching-namespaces)
-      - [Working with other OpenWhisk hosts](#working-with-other-openwhisk-hosts)
-      - [Nimbella actions and OpenWhisk](#nimbella-actions-and-openwhisk)
-      - [Annotations by the Nimbella deployer](#annotations-by-the-nimbella-deployer)
-      - [Project configuration](#project-configuration)
 
 ---
 
-## <span id="your-nimbella-cloud-account"/>Your Nimbella cloud account
+## Your Nimbella cloud account
 
 Your Nimbella cloud account gives you the following benefits:
 
@@ -113,7 +21,7 @@ Once you [create your first Nimbella Cloud namespace](#create-a-nimbella-namespa
 ---
 
 
-## <span id="install-the-nimbella-command-line-tool-nim"/>Install the Nimbella Command Line Tool (nim)
+## Install the Nimbella Command Line Tool (nim)
 
 In most cases, we recommend that you use nim as a command to be invoked globally from shells or scripts. Here are the advantages of shell invocation:
 
@@ -122,7 +30,7 @@ In most cases, we recommend that you use nim as a command to be invoked globally
 
 If you don’t want a global installation but rather want to make nim a dependency of some other package, you can install it as a dependency with npm or yarn. See the second procedure.
 
-<h3 id="install-nim-for-shell-invocation-globally">Install nim globally</h3>
+### Install nim globally
 
 1. Install nim according to your operating system:
    *   On Windows, download and run [the Windows installer](https://apigcp.nimbella.io/downloads/nim/win/nim-x64.exe).
@@ -133,7 +41,7 @@ If you don’t want a global installation but rather want to make nim a dependen
 
 The `nim update` command verifies that nim is installed and capable of self-updating. If the initial installation happens not to be the latest version, the update step also corrects that.
 
-<h3 id="install-nim-as-a-dependency">Install nim as a dependency</h3>
+### Install nim as a dependency
 
 Use this method only to make nim a dependency of some other package. To invoke nim globally, use the previous procedure.
 
@@ -148,7 +56,7 @@ Use this method only to make nim a dependency of some other package. To invoke n
 ---
 
 
-## <span id="nim-command-overview"/>nim command overview
+## nim command overview
 
 The Nimbella Command Line Tool (nim) is your primary portal to Nimbella services. Typing `nim` at a command prompt produces the latest version of help output, similar to the following.
 
@@ -193,7 +101,7 @@ These commands fall into four categories, shown in the following diagram and des
 If you find a case in which a blank separator doesn't work in nim, please [report it as an issue](https://github.com/nimbella/nimbella-cli/issues) or use a colon separator.
 
 
-<h3 id="1-credential-management-to-access-nimbella-namespaces">1 Credential management to access Nimbella namespaces</h3>
+### 1 Credential management to access Nimbella namespaces
 
 The `auth` subtree lets you manage Nimbella credentials for Nimbella _namespaces_, as described in the section [Nimbella Namespaces](#your-nimbella-cloud-account).
 
@@ -215,7 +123,7 @@ COMMANDS
 ```
 
 
-<h3 id="2-project-level-deployment-commands">2 Project-level deployment commands</h3>
+### 2 Project-level deployment commands
 
 The `nim project` subtree has three commands:
 
@@ -321,14 +229,14 @@ OPTIONS
 
 See [Project watching](#project-watching-for-incremental-deployment) for an example of how to use this command for incremental deployment which facilitates faster project development.
 
-<h3 id="3-entity-management-commands">3 Entity management commands</h3>
+### 3 Entity management commands
 
 The `action`, `activation`, `namespace`, `package`, `route`, `rule` and `trigger` commands each manage the corresponding type of entity.
 
-If you’re an [Apache OpenWhisk](https://openwhisk.apache.org) developer, see [Entity Management commands in nim vs. wsk](#entity-management-commands-in-nim-vs-wsk) for a comparison of entity management commands.
+If you’re an [Apache OpenWhisk](https://openwhisk.apache.org) developer, see [Entity Management commands in nim vs. wsk](#entity-management-commands-in-nim-vs.-wsk) for a comparison of entity management commands.
 
 
-<h3 id="4-supporting-commands">4 Supporting commands</h3>
+### 4 Supporting commands
 
 The `doc`, `help`, `info` and `update` commands provide the following supporting services:
 
@@ -342,14 +250,14 @@ The `doc`, `help`, `info` and `update` commands provide the following supporting
 ---
 
 
-<h2 id="nimbella-namespaces">Nimbella namespaces</h2>
+## Nimbella namespaces
 
 You must have permission to use a specific namespace on the Nimbella platform In order to deploy a nim project and use many other nim capabilities.  A Nimbella namespace comes with resources such as object store buckets for web content and database instances, which are managed as part of the namespace.
 
 This section contains information about how to create a Nimbella namespace, view the credential store, and perform other tasks involving namespaces.
 
 
-<h3 id="create-a-nimbella-namespace">Create a Nimbella namespace</h3>
+### Create a Nimbella namespace
 
 Here’s how to create a Nimbella workspace in nim.
 
@@ -366,7 +274,7 @@ stored a credential set for namespace '...' and API host '...'
 ```
 
 
-<h3 id="view-the-credential-store">View the credential store</h3>
+### View the credential store
 
 A typical namespace is provisioned with the following:
 
@@ -390,12 +298,12 @@ Namespace            Current Storage  Redis API Host
 Here’s more information about the table displayed in the response:
 
 *   The **Current** column displays `yes` when there is just one namespace. The Nimbella deployer will deploy this namespace in the absence of other directives.
-*   The **Storage** column indicates whether the namespace has provision for web content storage as discussed in [Adding static web content](https://nimbella.io/downloads/nim/nim.html#AddinsgWeb). There is also a second object storage bucket available for general use, not connected to the web.
+*   The **Storage** column indicates whether the namespace has provision for web content storage as discussed in [Adding static web content](adding-static-web-content). There is also a second object storage bucket available for general use, not connected to the web.
 *   The **Redis** column indicates whether the namespace has a Redis key-value storage instance available for use by actions.
 *   Usually, a Nimbella developer has just one **API Host** and all namespaces use the same one. To add more API hosts, see the section on [Multiple API Hosts](#working-with-other-openwhisk-hosts).
 
 
-<h3 id="create-and-manage-multiple-namespaces">Create and manage multiple namespaces</h3>
+### Create and manage multiple namespaces
 
 There are a number of reasons why it can be useful to have multiple namespaces. For example, while multiple applications can share a namespace, there are also good reasons to isolate them.
 
@@ -411,7 +319,7 @@ There are a number of reasons why it can be useful to have multiple namespaces. 
 Follow the procedure to [view your credential store](#view-the-credential-store).
 A newly added namespace is automatically set as current, indicated by a **yes** in the **Current** column.
 
-<h4 id="switch-between-namespaces">Switch between namespaces</h4>
+#### Switch between namespaces
 
 If you have more than one namespace, you can switch between them without needing to log into your account again by using the following command:
 
@@ -421,7 +329,7 @@ nim auth switch <namespace>
 
 This changes the target namespace for future project deployments.
 
-<h4 id="manage-multiple-namespaces">Manage multiple namespaces</h4>
+#### Manage multiple namespaces
 
 The easiest way to manage multiple namespaces is to maintain the rule that each project is tied to its own namespace. To do this, add the following top-level directive to a _project.yml_ configuration file for each project:
 
@@ -443,7 +351,7 @@ nim project deploy <projectPath>... --target <namespace>
 
 For more information about using _project.yml_ files to configure more complex projects, see [Adding Project Configuration](#adding-project-configuration).
 
-If you need the deployment of a project to have different characteristics depending on the target namespace, such as parameters that might differ between test and production, you can use [symbolic substitution](https://nimbella.io/downloads/nim/nim.html#SymbolicVars), for example:
+If you need the deployment of a project to have different characteristics depending on the target namespace, such as parameters that might differ between test and production, you can use [symbolic substitution](#symbolic-substitution), for example:
 
 ```
 targetNamespace: ${NAMESPACE}
@@ -454,7 +362,7 @@ Provide the value of `NAMESPACE` in an environment file along with other substit
 ---
 
 
-<h2 id="overview-of-nimbella-projects-actions-and-deployment">Overview of Nimbella projects, actions, and deployment</h2>
+## Overview of Nimbella projects, actions, and deployment
 
 A Nimbella _project_ is a logical grouping of static web content and _actions_. An action is a function or program encoded in a programming language supported by the Nimbella Cloud (e.g., JavaScript, PHP, Python, Java,  Go, or Swift). An action usually produces some output in response to an event. For example, an action can be used to convert an image to text, update a stock portfolio, or generate a QR code. Actions are usually grouped into _packages_, but you can create them without a package qualifier if you wish.
 
@@ -474,7 +382,7 @@ Finally, there are variations in how to [deploy projects](#about-projects), incl
 ---
 
 
-<h2 id="example-create-and-deploy-a-project-with-a-single-action">Example: Create and deploy a project with a single action</h2>
+## Example: Create and deploy a project with a single action
 
 Let’s start with a really simple example that shows the basics of creating the source code for an action, placing it in a directory structure for a project, and deploying the project. This project needs no configuration and creates actions automatically based on the project directory structure.
 
@@ -566,7 +474,7 @@ Deployed actions:
 
 Here’s a diagram of the project structure that was created in this procedure.
 
-<center><img src="./fig2-nim-example1-project-directory-structure.svg" height="300"></center>
+<center id="fig2"><img src="./fig2-nim-example1-project-directory-structure.svg" height="300" id=></center>
 <center>**Figure 2: Directory structure of the example1 project**</center>
 
 **Notes:**
@@ -586,12 +494,12 @@ Here’s a diagram of the project structure that was created in this procedure.
 ---
 
 
-<h2 id="about-projects">About projects</h2>
+## About projects
 
 A project represents a logical unit of functionality whose boundaries are up to you. Your app can contain one or more projects. The directory structure of a project triggers how the deployer finds and labels packages and actions, how it deploys static web content, and what it ignores. In more complex cases you can set more control over project deployment by adding a [project configuration](#adding-project-configuration).
 
 
-<h3 id="project-directory-structure">Project directory structure</h3>
+### Project directory structure
 
 A project has a fixed directory structure, which determines how projects are deployed. Here’s a diagram that summarizes the directory structure of an individual project with no project configuration, with explanation below.
 
@@ -606,11 +514,11 @@ The project has a root directory, within which a certain small number of directo
 Anything else in the root directory is ignored by the deployer, shown in blue in the diagram. This lets you store things in the root directory that need to be “off to the side,” such as build directories used by the deployer and project documentation.
 
 
-<h3 id="projects-with-multiple-actions">Projects with multiple actions</h3>
+### Projects with multiple actions
 
 Adding more actions to a project is easy when each action is related to a single source code file. You can create as many subdirectories of the packages directory as you want and add as many source code files as you want to each subdirectory. (See [Project Directory Structure](#about-projects).)
 
-<h3 id="factors-in-choosing-project-size">Factors in choosing project size</h3>
+### Factors in choosing project size
 
 There is no limit on how many packages and actions can be in a project.  However, using fewer very large projects or many small projects both have some negative ramifications, which are solved by using [incremental deployment](#deploying-projects-incrementally).
 
@@ -621,7 +529,7 @@ The other extreme is to create many small projects. You can use the `project dep
 Incremental deployment facilitates deployment of both large and small projects, so you can create projects that make sense logically.
 
 
-<h3 id="factors-in-choosing-project-boundaries">Factors in choosing project boundaries</h3>
+### Factors in choosing project boundaries
 
 Projects and actions are very flexible.
 
@@ -636,9 +544,9 @@ In other words, _you_ decide on project boundaries based on deployment convenien
 ---
 
 
-<h2 id="about-actions">About actions</h2>
+## About actions
 
-<h3 id="actions-have-public-urls-by-default-unless-the-project-is-configured">Actions Have Public URLs by Default Unless the Project is Configured</h3>
+### Actions Have Public URLs by Default Unless the Project is Configured
 
 Every action produced by a no-configuration project such as [the example project above](#example-create-and-deploy-a-project-with-a-single-action) is publicly accessible via a URL and is called a _web action_. You can retrieve the URL for any particular web action by using the `action get` command, as in the following example, which returns the URL for the `demo/hello` action created in the previous example.
 
@@ -650,7 +558,7 @@ https://....nimbella.io/api/v1/web/.../demo/hello
 If you don’t want your actions to be publicly accessible through an unprotected URL, you’ll need to [add a project configuration](#adding-project-configuration).
 
 
-<h3 id="using-zipped-source-files-to-form-a-single-action">Using zipped source files to form a single action</h3>
+### Using zipped source files to form a single action
 
 If you have more than one source file that must be bundled together to create a single action, you can zip the source files together as long as the file name and suffix take the following form _\<xxx\>.\<runtime\>.zip_.
 
@@ -663,14 +571,14 @@ Some language runtimes, such as Java, also accept specialized archives such as _
 Zipped actions are usually created in a separate build step. As an alternative, Nimbella has [an autozip feature triggered by directory structure](#multifile-actions-created-with-autozip).
 
 
-<h3 id="multifile-actions-created-with-autozip">Multifile actions created with autozip</h3>
+### Multifile actions created with autozip
 
 By creating a directory under the package directory, named for the action, and containing its source file(s), you can expand to multiple source files and they will be zipped automatically. Certain conditions must be met for this to work. Suppose the [example1 project](#example-create-and-deploy-a-project-with-a-single-action) has a `hello` action with two source files: _helloMain.js_ and _helloAux.js_. To create the `demo/hello` action, add a `hello` directory as a child of the `demo` directory, as shown in this diagram.
 
 <center><img src="./fig4-nim-example2-project-directory-structure.svg" height="450"></center>
 <center>**Figure 4: Two source files in an action directory for automatic zipping**</center>
 
-The difference from the [example1 directory structure](#figure-2-directory-structure-of-the-example1-project) is that the `hello` action is a _directory_ rather than a single source file. The source files in the directory are zipped automatically to form the action.
+The difference from the [example1 directory structure](#fig2) is that the `hello` action is a _directory_ rather than a single source file. The source files in the directory are zipped automatically to form the action.
 
 For autozipping to work in a project with no configuration, the following conditions must be met:
 
@@ -700,7 +608,7 @@ You cannot have both a `.include` and `.ignore` in the same action directory.
 *   Only one file is left after applying the rules in `.ignore`.
 
 
-<h4 id="using-an-action-source-file-from-elsewhere-in-the-filesystem">Using an action source file from elsewhere in the filesystem</h4>
+#### Using an action source file from elsewhere in the filesystem
 
 If you use an `.include` file, it can contain entries that denote files or directories outside the action directory. Entries can be either absolute paths or paths that are relative to the action directory using standard `../` notation.
 
@@ -714,7 +622,7 @@ Entries in `.include` are interpreted differently if they are absolute or relati
 ---
 
 
-<h2 id="adding-static-web-content">Adding static web content</h2>
+## Adding static web content
 
 To add static web content to a project, add a directory called _web_ as a peer of the directory called _packages_. This directory should contain files whose suffixes imply well-known mime types for web content, such as _.html_, _.css_, or _.js_.
 
@@ -765,10 +673,10 @@ See [an example of how to configure a project when you generate web content with
 ---
 
 
-<h2 id="about-the-nimbella-deployer">About the Nimbella deployer</h2>
+## About the Nimbella deployer
 
 
-<h3 id="nimbella-deployer-supported-runtimes-for-actions">Nimbella deployer supported runtimes for actions</h3>
+### Nimbella deployer supported runtimes for actions
 
 
 The Nimbella deployer determines the kind of runtime required for the action from the file suffix. The following runtimes are supported:
@@ -781,7 +689,7 @@ The Nimbella deployer determines the kind of runtime required for the action fro
 *   Go for suffix _.go_
 
 
-<h3 id="deploying-projects-incrementally">Deploying projects incrementally</h3>
+### Deploying projects incrementally
 
 Instead of deploying your entire project each time you make a change to the file contents, you can use incremental deployment to detect and deploy changes in the following:
 
@@ -828,7 +736,7 @@ The `--incremental` option also skips rezipping large multi-file actions whose i
 The `--incremental` option is accurate in determining what has changed unless you add build steps. After you add build steps, some heuristics come into play, as discussed in [Build States and the Effect of --incremental on Builds](#build-states-and-the-effect-of-incremental-on-builds).
 
 
-<h4 id="project-watching-for-incremental-deployment">Project watching for incremental deployment</h4>
+#### Project watching for incremental deployment
 
 A good way to implement incremental deployment during project development is to use `nim project watch`. The `project watch` command typically runs until interrupted in a devoted terminal window so you can work elsewhere, such as in your favorite IDE.
 
@@ -847,10 +755,10 @@ Deployed actions:
 Deployment complete.  Resuming watch.
 ```
 
-The `project watch` command accepts a list of projects and most of the flags that project `deploy` accepts, as described in [Project-Level Deployment Commands](#2-project-level-deployment-commands). An exception is `--incremental`, which is assumed.
+The `project watch` command accepts a list of projects and most of the flags that project `deploy` accepts, as described in [Project-Level Deployment Commands](#project-level-deployment-commands). An exception is `--incremental`, which is assumed.
 
 
-<h3 id="deployer-recordkeeping">Deployer recordkeeping</h3>
+### Deployer recordkeeping
 
 The deployer creates two types of audit trails:
 
@@ -860,7 +768,7 @@ The deployer creates two types of audit trails:
 We’ll describe each type and show how they differ and how they can be used for comparison.
 
 
-<h4 id="annotations-for-actions-and-packages-deployed-to-your-namespace">Annotations for actions and packages deployed to your namespace</h4>
+#### Annotations for actions and packages deployed to your namespace
 
 Version numbers for actions and packages are incremented on each update, and the `action get` command retrieves information about a deployed package or action in your namespace.
 
@@ -868,7 +776,7 @@ Version numbers for actions and packages are incremented on each update, and the
 
 As shown in the following example, the `action get` command output shows the namespace, the name of the action or package, and and its version in the namespace. In addition, the command output displays the annotation data that the the deployer generates in each action and package it deploys. If your project is managed by git, the annotations contain a variety of information about the storage in your git repository, as described below. If your project isn’t managed by git, it contains the project path and the user who created the project.
 
-<h5 id="typical-action-get-command-output">Typical action get command output</h5>
+##### Typical action get command output
 
 In this example, the `action get` command retrieves the annotation for the `demo/hello` action from [example1](#example-create-and-deploy-a-project-with-a-single-action):
 
@@ -921,7 +829,7 @@ The `annotations` details for the key `deployer` vary according to whether the d
 *   `user` is the local user name according to the operating system.
 
 
-<h4 id="recordkeeping-in-your-local-project">Recordkeeping in your local project</h4>
+#### Recordkeeping in your local project
 
 The deployer records information about your local project in a single file called `versions.json` in a project subdirectory named `.nimbella`. For actions and packages, the deployer records the last-deployed version in your local project. For actions, packages, and web content, the deployer also creates digests, which are used for [incremental deployment](#deploying-projects-incrementally).
 Looking at the information in `versions.json` answers the question _“What did you last put in the namespace using this project?"_
@@ -929,7 +837,7 @@ Looking at the information in `versions.json` answers the question _“What did 
 **Note:** Do not edit any files in the `.nimbella` directory.
 
 
-<h5 id="typical-versions-json-file-content">Typical versions.json file content</h5>
+##### Typical versions.json file content
 
 The `versions.json_`entries for packages and actions look something like this:
 
@@ -966,7 +874,7 @@ If you have also deployed static web content, the `versions.json` file has a `we
 ```
 
 
-<h4 id="comparing-versions-in-your-namespace-versus-local-project">Comparing versions in your namespace versus local project</h4>
+#### Comparing versions in your namespace versus local project
 
 The namespace vs. local project recordkeeping is particularly useful for comparing version numbers between the local copy of the project and what’s actually in your namespace. For example, as described in [Factors in choosing project boundaries](#factors-in-choosing-project-boundaries), there can be collisions between different projects trying to install the same resource. If you use the `action get` command and find that the` demo/hello` action in your namespace is at version `0.0.2` while the `.nimbella/versions.json` content tell you that the deployer last deployed version `0.0.1` from your local project, it means that the action was updated in your namespace outside the deployer or by some other project or copy of this project. At that point, you might have to inspect the deployed action further to disambiguate the two versions.
 
@@ -977,14 +885,14 @@ The namespace vs. local project recordkeeping is particularly useful for compari
 
 ---
 
-<h2 id="incorporating-build-steps-for-actions-and-web-content">Incorporating build steps for actions and web content</h2>
+## Incorporating build steps for actions and web content
 
 The _web_ directory and any directory that represents an action can be built automatically as part of deployment. You can trigger this behavior in one of three ways.
 
 *   By placing a file called `build.sh` (for Mac or Linux), or `build.cmd` (for Windows), or both, in each directory in which you want builds to occur. This could be the web directory for web content or any of the action directories. Each build file should contain a shell script to execute with the directory in which it’s placed as the current directory.
 **Note:** If both _.sh_ and _.cmd_ files are provided, only the one appropriate for the current operating system will be used. If only one is provided, the deployer will run on systems for which that kind of script is appropriate and indicate an error on other systems.
 
-*   By placing a file called `.build` in each directory in which you want builds to occur. The rules for this option are explained under [out-of-line builds](https://nimbella.io/downloads/nim/nim.html#OutOfLineBuild) below.
+*   By placing a file called `.build` in each directory in which you want builds to occur. The rules for this option are explained under [out-of-line builds](out-of-line-builds) below.
 
 *   By placing a `package.json` file in in each directory in which you want builds to occur. The presence of this file causes the following command `npm install --production`  to be executed. To override this command to use a `yarn` installation, use the flag `--yarn` on the `nim project deploy` command, which causes `yarn install --production` to be executed instead, with the directory as the current directory.
 
@@ -998,7 +906,7 @@ Building precedes the determination of what web files to upload or which action 
 *   If the build is designed to produce a _.zip_ file directly, you must ensure that there are no other files that will be interpreted as a part of the action, or else the deployer will do its own zipping. The easiest way to ensure that there is only one zip file to consider is to use a one-line `.include` file pointing to the zip file.
 
 
-<h3 id="examples-of-building-common-use-cases">Examples of building (common use cases)</h3>
+### Examples of building (common use cases)
 
 Let’s start with a simple Node.js dependency.
 
@@ -1077,14 +985,14 @@ A project can have a mixture of actions that share builds and actions that don�
 Another way to use a common build is to use a shell script and put logic there that completely populates the actions and web content, all of which simply point to it. It will execute exactly once, walk the directory structure of the project, and do whatever needs doing.
 
 
-<h3 id="errors-in-builds">Errors in builds</h3>
+### Errors in builds
 
 The deployer decides whether a build has failed based on examining the return code from a subprocess running the build and it displays all of its output, both on `stdout` and on `stderr`. However, if there is no return code (when a build exits with code zero), the deployer does not display any output. Therefore, it’s good practice to ensure that a build will set a nonzero exit code on failure.
 
 **Tip:** If you suspect a build is not doing what you expect but there is no visible error, try rerunning `nim project deploy` with the `--verbose-build` flag. This causes the entire build output to display on the console, regardless of build status on exit. This will often reveal errors in the build that are being swallowed because the build is exiting with status code zero despite the errors.
 
 
-<h3 id="out-of-line-builds-and-shared-builds">Out-of-line builds and shared builds</h3>
+### Out-of-line builds and shared builds
 
 There are four possible outcomes when using “out-of-line” building with the _.build_ directive:
 
@@ -1104,12 +1012,12 @@ Recursive use of _.build_ is not supported.
 **Tip:** You can place directories containing out-of-line building support in the project root as long as the directory names don’t conflict with the reserved names _web_, _packages_, _.nimbella_, or _project.yml_.
 
 
-<h3 id="build-states-and-the-effect-of-incremental-on-builds">Build states and the effect of --incremental on builds</h3>
+### Build states and the effect of --incremental on builds
 
 Using the `--incremental` option has an effect on whether or not builds are executed.  To understand how this works, it’s important to understand build state, because an incremental deploy only rebuilds web or action if it's in the unbuilt state.
 
 
-<h4 id="two-build-states-built-and-unbuilt">Two build states: Built and Unbuilt</h4>
+#### Two build states: Built and Unbuilt
 
 A Built or Unbuilt state is applied to the following directory types:
 
@@ -1123,7 +1031,7 @@ If the directory is in the _unbuilt_ state, the build is run as usual, prior to 
 If the directory is in the _built_ state, incremental deployment proceeds to deciding whether a change has occurred without running the build again.
 
 
-<h4 id="what-determines-built-or-unbuilt-states">What determines built or unbuilt states</h4>
+#### What determines built or unbuilt states
 
 Build state is determined as follows:
 
@@ -1151,7 +1059,7 @@ The _package.json_ case also employs a heuristic and won’t be perfectly accura
 ---
 
 
-<h2 id="adding-project-configuration">Adding project configuration</h2>
+## Adding project configuration
 
 A feature that sets nim projects apart from many other deployment tools is that no manifest or configuration file is required in a large number of suitably simple cases. You can simply choose a directory in the file system to represent a project and lay out the content of the project under that directory using a structure that nim will recognize as a project. See [the no-configuration project example](#example-create-and-deploy-a-project-with-a-single-action).
 
@@ -1224,7 +1132,7 @@ The project configuration is merged with what is inferred from file and director
 
 We’ll cover configuration for packages and actions first, then configuration for web content, including an example of generated content such as a React web app. Then we’ll cover symbolic variables and file substitution.
 
-<h3 id="project-configuration-for-packages-and-actions">Project configuration for packages and actions</h3>
+### Project configuration for packages and actions
 
 Let’s suppose that in [the example1 project](#example-create-and-deploy-a-project-with-a-single-action), you don’t want `hello` to be a web action and the deployer cannot determine its main entry point directly from the code. Add a _project.yml_ file such as the following:
 
@@ -1241,39 +1149,39 @@ packages:
 
 The following sections contain a list of configuration members for [actions](#action-modifiers-allowed-in-project-yml), [packages](#package-modifiers-allowed-in-project-yml), and [global](#global-modifiers-allowed-in-project-yml). An additional configuration member is `bucket` which is documented in [Adding static web content](#adding-static-web-content).
 
-<h4 id="action-modifiers-allowed-in-project-yml">Action modifiers allowed in project.yml</h4>
+#### Action modifiers allowed in project.yml
 
 Here are the action modifiers that are allowed in the configuration.
 
-<h5 id="web">web</h5>
+##### web
 
 May be `true`, `false` or `raw`. The default is `true`.
 
 The `web` modifier has the same semantics as it does in `nim action create`, except for the default. The value `yes` or `true` produces a normal web action. The value `no` or `false` produces an action that is not a web action. The value `raw` produces a raw HTTP web action. The default is `true` if not specified. These behaviors are accomplished via annotations with reserved meanings that are merged with annotations provided by you.
 
-<h5 id="runtime">runtime</h5>
+##### runtime
 
 The runtime to use for the action. It should be in the form "language:version", for example "python:3" or "language:default", for example "go:default". Because of the colon, the string should be quoted, as in these examples.
 
-<h5 id="main">main</h5>
+##### main
 
 The main entry point for the action.
 
-<h5 id="binary">binary</h5>
+##### binary
 
 May be true or false. The value true indicates the need for base64 encoding when transmitting the action for deployment. Normally this is inferred from the file suffix.
 
-<h5 id="webSecure">webSecure</h5>
+##### webSecure
 
 Secures the website with a secret that the user must provide in order to create an action. The value may be `true` (nim generates the secret for you),  a string containing the secret, or `false` (the default, which means anyone can create an action).
 
-<h5 id="annotations">annotations</h5>
+##### annotations
 
 A nested map providing annotations to place on the action. See [Deployer Recordkeeping](#deployer-recordkeeping).
 
 The keys and values of annotations are up to you to create. The important thing is that both clauses are nested maps in YAML terms and can have as many keys and values as needed. See the example in the [`parameters`](#parameters) description.
 
-<h5 id="parameters">parameters</h5>
+##### parameters
 
 A nested map providing parameters, which are bound to the action and passed on each invocation.
 
@@ -1291,11 +1199,11 @@ packages:
           language: English
 ```
 
-<h5 id="environment">environment</h5>
+##### environment
 
 A nested map providing parameters that are placed in the environment of the action before each invocation
 
-<h5 id="cleanactions">clean</h5>
+##### clean
 
 May be `true` or `false`, indicating whether you want any previous action with the same name to be removed before deploying a new one. The default is `false`.
 
@@ -1303,38 +1211,38 @@ The `clean` modifier requires some explanation. The deployer installs actions us
 
 **Notes:**
 
-*   See also the [`clean`](#cleanpkgs) flag on packages and the [`cleanNamespace`](#cleannamespace) global flag.
+*   See also the [`clean`](#clean-1) flag on packages and the [`cleanNamespace`](#cleannamespace) global flag.
 *   The `clean` flags on actions are ignored when the `--incremental` flag is specified.
 
-<h5 id="limits">limits</h5>
+##### limits
 
 A nested map in which you can set limits for the timeout in milliseconds, memory in megabytes, and the number of logs. All three of these limits must be numbers and within the range permitted by the Nimbella cloud ([see this page](https://apigcp.nimbella.io/api/v1) for limits). When not specified, Nimbella Cloud defaults are assumed.
 
-<h4 id="package-modifiers-allowed-in-project-yml">Package modifiers allowed in project.yml</h4>
+#### Package modifiers allowed in project.yml
 
 The package modifiers that can go in the configuration are as follows.
 
-<h5 id="shared">shared</h5>
+##### shared
 
 May be `false` (default) or `true`. It indicates that the contents of the package are accessible to other authorized users.
 
-<h5 id="annotations">annotations</h5>
+##### annotations
 
 A nested map providing annotations to place on the package. See [Deployer Recordkeeping](#deployer-recordkeeping).
 
 The keys and values of `annotations` are up to you to create. The important thing is that both clauses are nested maps in YAML terms and can have as many keys and values as needed. See the example in the [`parameters`](#parameters) modifier for actions.
 
-<h5 id="parameters">parameters</h5>
+##### parameters
 
 A nested map providing parameters to be bound to all of the actions of the package and passed on each invocation.
 
 The keys and values of `parameters` are up to you to create. The important thing is that both clauses are nested maps in YAML terms and can have as many keys and values as needed. See the example in the [`parameters`](#parameters) modifier for actions.
 
-<h5 id="environment">environment</h5>
+##### environment
 
 A nested map providing parameters to be placed in the environment of all the actions of the package before each invocation.
 
-<h5 id="cleanpkgs">clean</h5>
+##### clean
 
 May be `true` or `false`, indicating whether you want any previous package with the same name and all of its contained actions to be removed before deploying a new one. The default is `false`.
 
@@ -1344,15 +1252,15 @@ May be `true` or `false`, indicating whether you want any previous package with 
 *   The `clean` flag on packages is ignored when the `--incremental` flag is specified.
 
 
-<h4 id="global-modifiers-allowed-in-project-yml">Global modifiers allowed in project.yml</h4>
+#### Global modifiers allowed in project.yml
 
 There are also some useful global members of the configuration.
 
-<h5 id="targetnamespace">targetNamespace</h5>
+##### targetNamespace
 
 Selects the namespace to which the project will be deployed. This option is unnecessary unless you have multiple namespaces (discussed under [Managing Multiple Namespaces](#create-and-manage-multiple-namespaces)).  It can be set initially in a new project using the `--target` flag on `nim project create`.
 
-<h5 id="cleannamespace">cleanNamespace</h5>
+##### cleanNamespace
 
 May be `true` or `false` (default). It causes the entire namespace to be cleared of content prior to deployment: actions, package, and web content. Set this option to `true` only if you intend the project to have total ownership of the namespace.  It can be set initially in a new project using the `--clean` flag on `nim project create`.
 
@@ -1361,17 +1269,17 @@ May be `true` or `false` (default). It causes the entire namespace to be cleared
 *   See also the `clean` flag on [actions](#cleanactions) and [packages](#cleanpkgs).
 *   The `cleanNamespace` global flag is ignored when the `--incremental` flag is specified.
 
-<h5 id="parameters">parameters</h5>
+##### parameters
 
 A nested map providing parameters to place on every package in the project. This option generalizes the feature by which parameters on packages are distributed to the contained actions. Placing parameters at the top level causes them to be indirectly inherited by every action in the project.
 
 
-<h3 id="project-configuration-for-web-content">Project configuration for web content</h3>
+### Project configuration for web content
 
 The _project.yml_ file can also contain configuration that controls how the web directory and web content is deployed.
 
 
-<h4 id="use-the-yaml-bucket-member-to-configure-how-web-content-is-deployed">Use the YAML bucket member to configure how web content is deployed</h4>
+#### Use the YAML bucket member to configure how web content is deployed
 
 Adding a `bucket` member at the top level of _project.yml_ provides several options for configuring deployment of your web content, as shown in the following example and described in the sections below. All entries are optional.
 
@@ -1386,19 +1294,19 @@ bucket:
 
 The following sections have a description of the `bucket` options shown in this example.
 
-<h5 id="share-a-nimbella-namespace-with-prefixpath">Share a Nimbella namespace with prefixpath</h5>
+##### Share a Nimbella namespace with prefixpath
 
 When `https://<namespace>-host.nimbella.io` is used as a URL with no additional path component, a path of _/index.html_ is assumed, but if your web content doesn’t require being placed at the root of the URL path space, you can allow web content from different projects to share a namespace and a hostname. This is done by using prefix paths to place each project’s web content in a different location. The Nimbella deployer does not rewrite URLs internal to your content, but you can configure prefix paths by adding a `prefixPath` flag.
 
 The path specified in `prefixpath` is prepended to every URL path whenever resources are uploaded. For example, given the examples above, the resource _chatroom.html_ would be deployed to _https://<namespace>-host/chatroom/chatroom.html_.
 
-<h5 id="delete-previously-deployed-content-when-new-content-is-deployed">Delete previously deployed content when new content is deployed</h5>
+##### Delete previously deployed content when new content is deployed
 
 If the `clean` flag is `true`, all previously deployed web content is deleted prior to deploying new content. The default is `false`, in which case previously deployed web content is allowed to remain.
 
 **Tip:** A top-level `cleanNamespace: true` designation clears both web content and actions prior to a new deployment.
 
-<h5 id="configure-behavior-when-the-url-denotes-a-directory">Configure behavior when the URL denotes a directory</h5>
+##### Configure behavior when the URL denotes a directory
 
 You can configure which file is served when a URL denotes a directory. By default, the file _index.html_ is served, but you can change the file name with the `mainPageSuffix` flag.
 
@@ -1409,7 +1317,7 @@ In the bucket example above, the file that is opened when the prefix path is `ch
 *   The deployer doesn’t generate _index.html_ or any other file you name here. You must provide the file as part of the web content.
 *   The `mainPageSuffix` option is global to the namespace, so if you deploy multiple web folders into the same namespace using separate projects, either use the same values in all such projects or specify them in only one of the projects. You can obtain more than one namespace from Nimbella to deal with any conflicts that are otherwise hard to resolve.
 
-<h5 id="specify-the-page-for-a-404-error">Specify the page for a 404 error</h5>
+##### Specify the page for a 404 error
 
 The `notFoundPage` option nominates a web page to be used for a URL that does not match any content. The designated page is returned with every 404 Not Found error. If you don’t specify `notFoundPage`, the default is _404.html_.
 
@@ -1417,13 +1325,13 @@ Nimbella places its own _404.html_ at the root of every namespace and preserves 
 
 **Note:** The `notFoundPage` option is global to the namespace, so if you deploy multiple web folders into the same namespace using separate projects, either use the same values in all such projects or specify them in only one of the projects. You can obtain more than one namespace from Nimbella to deal with any conflicts that are otherwise hard to resolve.
 
-<h5 id="strip-path-segments">Strip path segments</h5>
+##### Strip path segments
 
 The `strip` option removes path segments, and in this sense, it is the opposite of `prefixPath`, which adds path segments. The number value specifies the number of paths to strip.
 
 You can use both `strip` and `prefixPath` to remove existing segments and then add new ones. The `strip` option is most useful when you use a tool to generate web content because often the tool puts its output in a specific directory that you might not want in your deployed namespace. For an example, see [Example of a web directory with a tool that generates web content](#configuration-example-for-web-content-generated-by-a-tool)
 
-<h4 id="configuration-example-for-web-content-generated-by-a-tool">Configuration example for web content generated by a tool</h4>
+#### Configuration example for web content generated by a tool
 
 Here’s an example of a basic _web_ directory structure when you use a tool to generate web content. Chances are the tool puts its output in a specific directory. Here’s an example diagram of the _web_ directory for an `example4` project, using React to generate the web content.
 
@@ -1465,7 +1373,7 @@ Deployed actions:
   - chatroom/postMessage
 ```
 
-<h3 id="symbolic-variables">Symbolic variables</h3>
+### Symbolic variables
 
 The configuration can contain symbolic variables of the form `${SYMBOL}` where `SYMBOL` is chosen by you. The substitutions for these variables are taken from the process environment or optionally from an environment file.
 
@@ -1492,7 +1400,7 @@ Substitution occurs as follows:
 *   Otherwise, if there is an environment file and the symbol matches one of its keys, the value paired with that key is substituted.
 *   Otherwise, the symbol is undefined, resulting in an error indication from nim.
 
-<h3 id="file-substitution">File substitution</h3>
+### File substitution
 
 File substitution is typically used to set environment, parameters or annotations on an action or package or to set the top-level parameters, such as the following:
 
@@ -1531,7 +1439,7 @@ The file whose contents are inlined must either contain JSON or be in the form o
 
 **Warning:** All inclusions are processed _before_ the resulting YAML is parsed. For this reason, errors can be obscure when you violate the restrictions.
 
-### <span id="multiple-variable-substitution"/>Multiple variable substitution
+### Multiple variable substitution
 
 Sometimes you may have multiple parameters on individual actions or packages and a large number of parameters across the entire project, but it is wasteful to pass all parameters to all actions.  You can use a single environment file (specified on the command line or `.env` in the project root) and dole out the appropriate parts of it on a per action basis like this.
 
@@ -1560,7 +1468,7 @@ What is important is that the initial token `${` be placed somewhere where the Y
 
 ---
 
-<h2 id="information-for-openwhisk-developers">Information for OpenWhisk developers</h2>
+## Information for OpenWhisk developers
 
 Nimbella powers the “serverless computing” portion of its offering with a modified version of [Apache OpenWhisk](http://openwhisk.org/). If you’re familiar with the OpenWhisk platform, you’ll recognize many similarities and some differences in the Nimbella commands and concepts. We’ll cover some of them here.
 
@@ -1569,37 +1477,37 @@ In Nimbella, as in OpenWhisk, the unit of authorization is called a _[namespace]
 OpenWhisk has additional entities called _[rules](https://github.com/apache/incubator-openwhisk/blob/master/docs/triggers_rules.md)_, _[triggers](https://github.com/apache/incubator-openwhisk/blob/master/docs/triggers_rules.md)_, _[routes](https://github.com/apache/incubator-openwhisk/blob/master/docs/apigateway.md)_ (the “API gateway”), and _[activations](https://github.com/apache/incubator-openwhisk/blob/master/docs/actions.md)_. The `nim` command supports these entities when used individually, but not as part of a project.
 
 
-<h3 id="using-the-nimbella-stack-with-an-openwhisk-installation">Using the Nimbella stack with an OpenWhisk installation</h3>
+### Using the Nimbella stack with an OpenWhisk installation
 
 If you’re using `wsk` with some other OpenWhisk installation and using `nim` with the Nimbella stack, they will not interfere with each other. If you want to use `wsk` with the Nimbella stack, you can, but you should set the environment variable `WSK_CONFIG_FILE=$HOME/.nimbella/wskprops` so that `wsk` will use it instead of the `~/.wskprops`. This does not affect `nim`, which ignores `WSK_CONFIG_FILE`. If you sometimes use `wsk` with a different installation and sometimes with Nimbella, you have to change the environment accordingly.
 
 **Note:** Although `nim` uses the OpenWhisk Node.js client internally, it takes steps to nullify the effect of any `__OW_*` variables in the environment to prevent collisions with other uses of the client.
 
-<h3 id="credential-management-commands-in-nim-vs-wsk">Credential management commands in nim vs. wsk</h3>
+### Credential management commands in nim vs. wsk
 
 The `nim` command doesn’t read or write `~/.wskprops` the way the `wsk` binary does but instead replaces it with a more flexible [credential store](#view-the-credential-store). The `nim` command does maintain the file `~/.nimbella/wskprops` in sync with the credential store. This file has the same format as `~/.wskprops` and applies to the currently selected namespace.
 
-See [3 Credential Management to Access Nimbella Namespaces](#1-credential-management-to-access-nimbella-namespaces).
+See [Credential Management to Access Nimbella Namespaces](#credential-management-to-access-nimbella-namespaces).
 
-<h3 id="project-commands-in-nim-vs-wsk">Project commands in nim vs. wsk</h3>
+### Project commands in nim vs. wsk
 
-Note that the `project` command of `nim` is not a replacement for the `wsk` project. See [About Nimbella Projects](https://nimbella.io/downloads/nim/nim.html#Projects).
+Note that the `project` command of `nim` is not a replacement for the `wsk` project. See [About Nimbella Projects](#about-nimbella-projects).
 
 The `project` `deploy and project watch `commands can operate on a logical grouping of OpenWhisk entities as well as other types of resources.
 
-See [4 Project-Level Deployment Commands](#2-project-level-deployment-commands).
+See [Project-Level Deployment Commands](#project-level-deployment-commands).
 
-<h3 id="entity-management-commands-in-nim-vs-wsk">Entity management commands in nim vs. wsk</h3>
+### Entity management commands in nim vs. wsk
 
 The `action`, `activation`, `namespace`, `package`, `route`, `rule` and `trigger` commands in nim each manage the corresponding type of entity as defined by Apache OpenWhisk. The syntax for these seven commands approximates that of like-named commands of the `wsk` binary provided by the Apache OpenWhisk project, except that `route` is used in place of api. The implementation of these commands is derived from the Adobe I/O Runtime open source project.
 
-See [Entity Management Commands](#3-entity-management-commands).
+See [Entity Management Commands](#entity-management-commands).
 
-<h3 id="using-whisk-commands-in-switching-namespaces">Using Whisk commands in switching namespaces</h3>
+### Using Whisk commands in switching namespaces
 
 If you use the `wsk` command in conjunction with nim, note that the file ~/.nimbella/wskprops (_not_ ~/.wskprops) is updated on every switch of the target namespace via `nim auth`. You can connect your `wsk` to this Nimbella-maintained property file using the `WSK_CONFIG_FILE` environment variable.
 
-<h3 id="working-with-other-openwhisk-hosts">Working with other OpenWhisk hosts</h3>
+### Working with other OpenWhisk hosts
 
 Usually, a Nimbella developer has just one API host and all namespaces use the same one, but multiple API hosts can be accommodated as well.
 
@@ -1611,7 +1519,7 @@ Usually, a Nimbella developer has just one API host and all namespaces use the s
 > nim project deploy <projectPath>... --target <namespace> --apihost <API host>
 ```
 
-<h3 id="nimbella-actions-and-openwhisk">Nimbella actions and OpenWhisk</h3>
+### Nimbella actions and OpenWhisk
 
 The term _action_ is used to denote a serverless function, following [Apache OpenWhisk](http://openwhisk.org/) terminology, because the Nimbella stack builds on OpenWhisk. Actions are by default OpenWhisk [web action](https://github.com/openwhisk/openwhisk/blob/master/docs/webactions.md), which means the action is publicly accessible via a URL unless the project is configured. See xxx for information about how to construct the URL for a web action.
 
@@ -1619,12 +1527,13 @@ In Nimbella, as in OpenWhisk, the unit of authorization is called a _[namespace]
 
 Going beyond OpenWhisk, a Nimbella namespace contains additional resources, such as object store buckets for web content and database instances, which are managed as part of the namespace. The [Create a Nimbella Namespace](#create-a-nimbella-namespace) section explains how to obtain your first namespace. The [Create and Manage Multiple Namespaces](#create-and-manage-multiple-namespaces) section discusses how to obtain and manage additional namespaces.
 
-<h3 id="annotations-by-the-nimbella-deployer">Annotations by the Nimbella deployer</h3>
+### Annotations by the Nimbella deployer
 
 OpenWhisk supports [annotations](https://github.com/apache/incubator-openwhisk/blob/master/docs/annotations.md) on actions and packages. The deployer generates an annotation of its own in each action and package that it deploys. See [Deployer Recordkeeping](#deployer-recordkeeping).
 
-<h3 id="project-configuration">Project configuration</h3>
+### Project configuration
 
 Here are some notes for `project.yml` configuration file modifiers if you’re familiar with OpenWhisk.
 
 *   The `webSecure` action modifier has the same semantics that `--web-secure` has in the `wsk action create` command in OpenWhisk. (The `nim action create` command does not offer a similar flag). It generates the `require-whisk-auth` annotation according to whether you specify `false` (the default), a string value (a secret you select) or `true` (nim generates the secret for you).
+</main>
