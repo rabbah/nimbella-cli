@@ -18,47 +18,36 @@
  * from Nimbella Corp.
  */
 
-import { flags } from '@oclif/command'
-import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
-import { getWebStorageClient } from '../../storage/clients'
 import { Bucket } from '@google-cloud/storage'
-
-
-// Constants used in formatting the file list
-const LIST_HEADER = 'Name                                Generation     '
-const FN_LEN = 35
-const MAYBE = '    -?-         '
+import { flags } from '@oclif/command'
+import { authPersister, NimBaseCommand, NimLogger } from '../../NimBaseCommand'
+import { getWebStorageClient } from '../../storage/clients'
+import { fileMetaLong, fileMetaShort } from '../../storage/util'
 
 export default class WebList extends NimBaseCommand {
     static description = 'Lists Web Content'
 
     static flags = {
         apihost: flags.string({ description: 'the API host of the namespace to list web content from' }),
+        long: flags.boolean({ char: 'l', description: 'displays additional file info such as last update, owner and md5hash' }),
         ...NimBaseCommand.flags
     }
 
     static args = [{ name: 'namespace', description: 'the namespace to list web content from (current namespace if omitted)', required: false }]
 
     async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
-        const { bucketName, client } = await getWebStorageClient(args, flags, authPersister);
-        await this.listFiles(client, logger).catch((err: Error) => logger.handleError(err.message, err));
-        logger.log(`Web content listed from ${bucketName}`);
+        const { client } = await getWebStorageClient(args, flags, authPersister);
+        if (!client) logger.handleError(`Couldn't get to the web storage, ensure it's enabled for the ${args.namespace || 'current'} namespace`);
+        await this.listFiles(client, logger, flags.long).catch((err: Error) => logger.handleError(err.message, err));
     }
 
-    async listFiles(client: Bucket, logger: NimLogger): Promise<void> {
+    async listFiles(client: Bucket, logger: NimLogger, isLongFormat: boolean): Promise<void> {
         const [files] = await client.getFiles();
-
-        logger.log(LIST_HEADER)
-        for (const file of files) {
-            let fn = file.name;
-            let pad = ''
-            if (fn.length < FN_LEN) {
-                pad = ' '.repeat(FN_LEN - fn.length)
-            } else {
-                fn = fn.slice(0, FN_LEN - 3) + '...'
-            }
-            const generation = file.generation ? file.generation : MAYBE
-            logger.log(fn + pad + generation );
+        if (isLongFormat) {
+            await fileMetaLong(files, client, logger).catch(err => logger.handleError(err))
+        }
+        else {
+            await fileMetaShort(files, client, logger).catch(err => logger.handleError(err))
         }
     }
 }
