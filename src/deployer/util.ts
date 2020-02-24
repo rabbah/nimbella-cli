@@ -261,8 +261,6 @@ function validatePackageSpec(arg: {}): string {
         } else if (item == 'web') {
             if (!(typeof arg[item] == 'boolean' || arg[item] === 'raw')) {
                 return `${item} member of an 'package' must be a boolean or the string 'raw'`
-            } else if (isDefault && arg[item] !== true) {
-                return `'${item}' must be absent or true for the default package`
             }
         } else if (item == 'environment') {
             const envErr = validateEnvironment(arg[item])
