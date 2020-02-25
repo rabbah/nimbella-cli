@@ -25,13 +25,14 @@ import { emptyStructure, actionFileToParts, filterFiles, convertToResources, pro
 import { getBuildForAction, getBuildForWeb } from  './finder-builder'
 import { GithubDef, isGithubRef, parseGithubRef, fetchProject } from './github'
 import { promisify } from 'util'
+import { inBrowser } from '../NimBaseCommand'
 import * as makeDebug from 'debug'
 const debug = makeDebug('nimbella-cli/project-reader')
 
 const CONFIG_FILE = 'project.yml'
 const LEGACY_CONFIG_FILE = 'projectConfig.yml'
 const ENV_FILE = '.env'
-const readdir = promisify(fs.readdir)
+const readdir = inBrowser ? (() => undefined) : promisify(fs.readdir)
 
 // Read the top level files and dirs of the project.  Only one file and two dirs are legal at this level; everything else is a 'stray'
 interface TopLevel {
