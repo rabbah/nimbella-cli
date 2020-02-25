@@ -130,6 +130,9 @@
       },
       "web": {
         "description": "work with web contents"
+      },
+      "key-value": {
+        "description": "work with key-value store"
       }
     }
   },
