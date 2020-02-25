@@ -133,6 +133,9 @@
       },
       "key-value": {
         "description": "work with key-value store"
+      },
+      "objects": {
+        "description": "work with objects store"
       }
     }
   },

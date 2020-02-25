@@ -24,7 +24,7 @@ import { computeBucketStorageName } from '../deployer/deploy-to-bucket';
 import { Credentials } from '../deployer/deploy-struct';
 
 
-async function getStorageClient(args: any, flags: any, authPersister: any) {
+async function getStorageClient(args: any, flags: any, authPersister: any, bucketPrefix: string = '') {
     let namespace = args.namespace
     let creds: Credentials = undefined
     let apiHost: string = flags.apihost;
@@ -43,7 +43,7 @@ async function getStorageClient(args: any, flags: any, authPersister: any) {
         return { bucketName, storage: undefined, client: undefined };
     }
     const storage = new Storage(storageKey);
-    const client = storage.bucket(bucketName);
+    const client = storage.bucket(bucketPrefix + bucketName);
     return { bucketName, storage, client };
 }
 
@@ -52,7 +52,5 @@ export async function getWebStorageClient(args: any, flags: any, authPersister: 
 }
 
 export async function getObjectStorageClient(args: any, flags: any, authPersister: any) {
-    const { bucketName, storage, client } = await getStorageClient(args, flags, authPersister);
-    const objectStore = `gs://data-${bucketName}`
-    return { bucketName: objectStore, storage, client };
+    return await getStorageClient(args, flags, authPersister, 'data-');
 }
