@@ -1159,6 +1159,8 @@ May be `true`, `false` or `raw`. The default is `true`.
 
 The `web` modifier has the same semantics as it does in `nim action create`, except for the default. The value `yes` or `true` produces a normal web action. The value `no` or `false` produces an action that is not a web action. The value `raw` produces a raw HTTP web action. The default is `true` if not specified. These behaviors are accomplished via annotations with reserved meanings that are merged with annotations provided by you.
 
+**Note:** See also the [`web`](#web-1) modifier on packages.
+
 ##### runtime
 
 The runtime to use for the action. It should be in the form "language:version", for example "python:3" or "language:default", for example "go:default". Because of the colon, the string should be quoted, as in these examples.
@@ -1241,6 +1243,15 @@ The keys and values of `parameters` are up to you to create. The important thing
 ##### environment
 
 A nested map providing parameters to be placed in the environment of all the actions of the package before each invocation.
+
+##### web
+
+A `web` modifier to be distributed to all actions of the package that don't have their own `web` modifier.  The same values are accepted as on an action.
+
+**Notes:**
+
+* A value of `web: true` is the same as omitting the modifier since that is the default.
+* One use for this modifier is when it is not appropriate to make _any_ actions of a package be web actions, both those that exist now and those you may add in the future.  Just put `web: false` on the package.
 
 ##### clean
 
