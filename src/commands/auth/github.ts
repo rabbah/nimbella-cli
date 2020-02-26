@@ -153,7 +153,7 @@ async function getGitHubToken(username: string, userAgent: string, logger: NimLo
       cli = require('cli-ux').cli
   }
 
-  const password = await cli.prompt(`Enter the GitHub password for username '${username}'`)
+  const password = await cli.prompt(`Enter the GitHub password for username '${username}'`, { type: 'hide'})
 
   const octokit = new Octokit({
     auth: {
