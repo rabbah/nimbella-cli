@@ -28,49 +28,62 @@ export default class AuthGithub extends NimBaseCommand {
   static description = 'manage github accounts'
 
   static flags = {
-    add: flags.string({ description: 'the user name of a github account to be added'}),
+    add: flags.string({ description: 'the user name of a github account to be added' }),
+    replace: flags.boolean({ description: 'allow replacement when adding an account that was added previously' }),
+    keep: flags.boolean({ description: 'suppress fetching new credentials when adding an account that was added previously' }),
+    token: flags.string({ description: 'the github token to use when adding an account (no prompting or fetching occurs)' }),
     list: flags.boolean({ description: 'list previously added github accounts'}),
-    switch: flags.string({ description: 'switch to using a particular previously added github account'}),
-    delete: flags.string({ description: 'forget a previously added github account'}),
+    switch: flags.string({ description: 'switch to using a particular previously added github account' }),
+    delete: flags.string({ description: 'forget a previously added github account' }),
+    show: flags.string({ description: 'show the access token currently associated with a username' }),
     ...NimBaseCommand.flags
   }
 
   static args = []
 
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
-    const flagCount = [ flags.add, flags.switch, flags.list, flags.delete ].filter(Boolean).length
+    const flagCount = [ flags.add, flags.switch, flags.list, flags.delete, flags.show ].filter(Boolean).length
     if (flagCount > 1) {
-        logger.handleError(`only one of '--add', '--list', '--switch', or '--delete' may be specified`)
+        logger.handleError(`only one of '--add', '--list', '--switch', '--delete', or '--show' may be specified`)
+    }
+    if (!flags.add && (flags.keep || flags.replace || flags.token)) {
+        logger.handleError(`'--replace', '--keep', and/or '--token' may only be specified with '--add'`)
+    } else if (flags.keep && flags.replace) {
+      logger.handleError(`only one of '--keep' and '--replace' may be specified`)
     }
     if (flags.switch) {
         await this.doSwitch(flags.switch, logger)
     } else if (flags.list) {
         await this.doList(logger)
     } else if (flags.add) {
-        await this.doAdd(flags.add, logger)
+        await this.doAdd(flags.add, flags.token, flags.keep, flags.replace, logger)
     } else if (flags.delete) {
         await this.doDelete(flags.delete, logger)
+    } else if (flags.show) {
+        await this.doShow(flags.show, logger)
     } else {
         this._help()
     }
   }
 
-  async doAdd(name: string, logger: NimLogger) {
+  async doAdd(name: string, token: string, keep: boolean, replace: boolean, logger: NimLogger) {
     const store = await authPersister.loadCredentialStore()
     if (!store.github) {
         store.github = {}
     }
     if (store.github[name]) {
-        if (!cli) {
-            cli = require('cli-ux').cli
-        }
-        const ans = await cli.prompt(`${name} is already registered.  Type 'yes' to re-do the registration'`)
-        if (ans !== 'yes') {
-            logger.log('Doing nothing')
-            return
-        }
+      if (keep) {
+        store.currentGithub = name
+        authPersister.saveCredentialStore(store)
+        logger.log(`the github account of user name '${name}' was added previously and is now current`)
+        return
+      } else if (!replace) {
+        logger.handleError(`the github account of user name '${name}' was added previously and neither '--keep' nor '--replace' was specified`)
+      }
     }
-    const token = await getGitHubToken(name, this.config.userAgent, logger)
+    if (!token) {
+      token = await getGitHubToken(name, this.config.userAgent, logger)
+    }
     store.github[name] = token
     store.currentGithub = name
     authPersister.saveCredentialStore(store)
@@ -95,6 +108,15 @@ export default class AuthGithub extends NimBaseCommand {
         logger.log(`previously added github accounts: ${list}`)
     } else {
         logger.log(`no previously added github accounts`)
+    }
+  }
+
+  async doShow(name: string, logger: NimLogger) {
+    const store = await authPersister.loadCredentialStore()
+    if (store.github && store.github[name]) {
+        logger.log(store.github[name])
+    } else {
+        logger.handleError(`${name} is not a previously added github account`)
     }
   }
 
