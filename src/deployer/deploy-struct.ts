@@ -91,7 +91,7 @@ export interface Flags {
 // Provides the status of a shared build
 export interface BuildStatus {
     pending: ((arg0: Error)=>void)[]
-    built: Promise<any>
+    built: boolean
     error: Error
 }
 

@@ -54,9 +54,7 @@ export function buildAllActions(pkgs: PackageSpec[], buildTable: BuildTable, fla
     for (const pkg of pkgs) {
         if (pkg.actions && pkg.actions.length > 0) {
             const builtPackage = buildActionsOfPackage(pkg, buildTable, flags)
-            if (builtPackage) {
-                promises.push(builtPackage)
-            }
+            promises.push(builtPackage)
         }
     }
     if (promises.length == 0) {
@@ -64,31 +62,30 @@ export function buildAllActions(pkgs: PackageSpec[], buildTable: BuildTable, fla
     }
     return Promise.all(promises).then((newpkgs: PackageSpec[]) => {
         for (const pkg of newpkgs) {
-            pkgMap[pkg.name] = pkg
+            if (pkg) {
+                pkgMap[pkg.name] = pkg
+            }
         }
         return Object.values(pkgMap)
     })
 }
 
 // Build the actions of a package, returning an updated PackageSpec or undefined if nothing got built
-function buildActionsOfPackage(pkg: PackageSpec, buildTable: BuildTable, flags: Flags): Promise<PackageSpec> {
+async function buildActionsOfPackage(pkg: PackageSpec, buildTable: BuildTable, flags: Flags): Promise<PackageSpec> {
     const actionMap = mapActions(pkg.actions)
-    const promises: Promise<ActionSpec>[] = []
+    let nobuilds = true
     for (const action of pkg.actions) {
         if (action.build) {
-            promises.push(buildAction(action, buildTable, flags))
+            nobuilds = false
+            const builtAction = await buildAction(action, buildTable, flags)
+            actionMap[action.name] = builtAction
         }
     }
-    if (promises.length == 0) {
+    if (nobuilds) {
         return undefined
     }
-    return Promise.all(promises).then((newActions: ActionSpec[]) => {
-        for (const action of newActions) {
-            actionMap[action.name] = action
-        }
-        pkg.actions = Object.values(actionMap)
-        return pkg
-    })
+    pkg.actions = Object.values(actionMap)
+    return pkg
 }
 
 // Perform the build defined for an action or just return the action if there is no build step
@@ -261,19 +258,22 @@ function outOfLineBuilder(filepath: string, displayPath: string, sharedBuilds: B
                     if (buildStatus) {
                         // It's already been claimed and is either complete or in progress
                         console.log(`Skipping shared build for '${filepath}' ... already run in this deployment`)
+                        debug(`buildStatus is %O`, buildStatus)
                         if (buildStatus.built) {
-                            // Complete: all builds that come along later can use the same resolved promise
-                            return buildStatus.built
+                            debug(`Found completed build`)
+                            return Promise.resolve(true)
                         } else if (buildStatus.error) {
+                            debug(`Found error in build`)
                             return Promise.reject(buildStatus.error)
                         } else {
                             // Make a promise that will stay pending until later
+                            debug(`Found shared build still running`)
                             return new Promise(function(resolve, reject) {
                                 buildStatus.pending.push(function(err) {
                                     if (err) {
                                         reject(err)
                                     } else {
-                                        resolve(undefined)
+                                        resolve(true)
                                     }
                                 })
                             })
@@ -281,15 +281,17 @@ function outOfLineBuilder(filepath: string, displayPath: string, sharedBuilds: B
                     } else {
                         // It has not been run, so we take responsibility for running it
                         console.log(`Running shared build for '${filepath}', results may be reused`)
-                        buildStatus = { pending: [], built: undefined, error: undefined }
+                        buildStatus = { pending: [], built: false, error: undefined }
                         sharedBuilds[buildKey] = buildStatus
                         return build().then(resultPromise => {
-                            buildStatus.built = resultPromise
+                            debug('shared build completed successfully with resultPromise %O', resultPromise)
+                            buildStatus.built = true
                             const toResolve = buildStatus.pending
                             buildStatus.pending = []
                             toResolve.forEach(fcn => fcn(undefined))
-                            return undefined;
+                            return true
                         }).catch(err => {
+                            debug('shared build completed with error')
                             buildStatus.error = err
                             const toResolve = buildStatus.pending
                             toResolve.forEach(fcn => fcn(err))
@@ -563,7 +565,7 @@ function scriptBuilder(script: string, realPath: string, displayPath: string, fl
         if (flags.verboseBuild) {
             console.log(`Skipping build in ${displayPath} because the action was previously built`)
         }
-        return Promise.resolve(undefined)
+        return Promise.resolve(true)
     }
     return build(script, [ ], realPath, displayPath, script, script, flags.verboseBuild)
 }
@@ -624,7 +626,7 @@ function npmBuilder(filepath: string, displayPath: string, flags: Flags): Promis
         if (flags.verboseBuild) {
             console.log(`Skipping '${cmd} install' in ${filepath} because one was run previously`)
         }
-        return Promise.resolve(undefined)
+        return Promise.resolve(true)
     }
     // A package.json must be present since this builder wouldn't have been invoked otherwise.
     // This doesn't mean that npm|yarn install will succeed, just that, if it fails it is for some other reason
