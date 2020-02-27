@@ -169,6 +169,8 @@ if [ -n "$PREVIEW" ]; then
 		mv devREADME.md README.md
 		# Upload the result
 		gsutil cp nimbella-cli.tgz gs://preview-apigcp-nimbella-io
+		gsutil cp doc/*.html doc/*.svg doc/*.css gs://preview-apigcp-nimbella-io
+		gsutil cp changes.html gs://preview-apigcp-nimbella-io/nim-changes.html
 fi
 
 # Optionally package
