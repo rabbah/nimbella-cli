@@ -92,7 +92,10 @@ export function parseGithubRef(projectPath: string): GithubDef {
         throw new Error('too few / characters in github reference; at least <owner>/<repo> is required')
     }
     const owner = slashSplit[0]
-    const repo = slashSplit[1]
+    let repo = slashSplit[1]
+    if (repo.endsWith('.git')) {
+        repo = repo.slice(0, repo.length - 4)
+    }
     const path = slashSplit.slice(2).join('/')
     const store = authPersister.loadCredentialStoreIfPresent()
     let auth = undefined
