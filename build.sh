@@ -133,7 +133,7 @@ pandoc -o doc/nim.html -f markdown -s --css ./globalStyles.css -t html --toc --t
 cp doc/change-header /tmp/changes.md
 tail -n +2 < doc/changes.md >> /tmp/changes.md
 pandoc -o changes.html -f markdown -s -t html < /tmp/changes.md
-pandoc -o license.html -f markdown -t html < LICENSE
+pandoc -o license.html -f markdown-smart --html-q-tags -t html < LICENSE
 pandoc -o thirdparty-licenses.html -f markdown_strict -t html < thirdparty-licenses.md
 
 # Full install
