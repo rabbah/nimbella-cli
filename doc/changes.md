@@ -4,7 +4,8 @@
 
 - web content is now deployed with cache-control set to 'no-cache' for less surprising behavior during development
     - in the future we will provide a way to turn on cacheing for content in production
-- remove `nim project github` add `nim auth githib`
+- remove `nim project github` and add `nim auth github` instead
+    - this eliminates the "alias" concept for github locations but substitutes convenient management of github credentials
     - also change how github locations are specified on deploy
     - deploy from github is still considered experimental and not yet documented
 - improve error handling for illegal flags
@@ -12,6 +13,7 @@
 - support 'web' property of package in `project.yml`, distributes over all actions in the package
 - new commands to list contents of object store, web bucket, and key-value store
     - still under development and not yet documented
+- use less concurrency in running action builds to avoid blowing file handle limits
 
 ## Changes in release 0.1.12
 
