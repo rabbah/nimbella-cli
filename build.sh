@@ -101,7 +101,8 @@ VERSION=$(jq -r .version package.json)
 if [ -n "$PREVIEW" ]; then
 		VERSION="$VERSION-patch"
 fi
-echo '{ "version": "'$VERSION '('$BUILDINFO')" }' | jq . > version.json
+FULLVERSION="$VERSION ($BUILDINFO)"
+echo '{ "version": "'$FULLVERSION'" }' | jq . > version.json
 
 # Copy in the latest runtimes.json, productionProjects.json, and 404.html
 cp $SELFDIR/../main/config/runtimes.json .
@@ -168,9 +169,10 @@ if [ -n "$PREVIEW" ]; then
 		git checkout userREADME.md
 		mv devREADME.md README.md
 		# Upload the result
-		gsutil cp nimbella-cli.tgz gs://preview-apigcp-nimbella-io
-		gsutil cp doc/*.html doc/*.svg doc/*.css gs://preview-apigcp-nimbella-io
-		gsutil cp changes.html gs://preview-apigcp-nimbella-io/nim-changes.html
+		PREVIEW_SITE=gs://preview-apigcp-nimbella-io
+		gsutil -m cp nimbella-cli.tgz doc/*.html doc/*.svg doc/*.css $PREVIEW_SITE
+		echo "$FULLVERSION" | gsutil cp - $PREVIEW_SITE/nim-version.txt
+		gsutil cp changes.html $PREVIEW_SITE/nim-changes.html
 fi
 
 # Optionally package

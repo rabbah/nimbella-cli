@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Tools Preview Site</title>
+    <meta charset="utf-8"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <style>
+      .footer {
+         position: absolute;
+         bottom: 0;
+         width: 620px;
+         height: 45px;
+         background-color: #f5f5f5;
+         margin-bottom: 150px;
+      }
+    </style>
+  </head>
+  <body style="padding-top:100px">
+    <div class="container" style="width:650px;color: #43728A">
+			<h2>The Nimbella Developer Tools Preview Site</h2>
+			<p>This site contains <em>pre-release</em> versions of <b>nim</b>, workbench, and certain documents.</p>
+			<p>Use at your own risk.</p>
+			<p>The site is updated daily or after important changes.
+			<ul>
+				<li><a href="nimbella-cli.tgz">Preview of <b>nim</b></a> (use <b>npm</b> or <b>yarn</b> to install; no installer provided)
+				<ul><li>Version <b id="version"><i>unknown</i></b></ul>
+				<li><a href="workbench">Preview of workbench</a>
+				<li><a href="nim.html">Latest <b>nim</b> documentation</a>
+				<li><a href="nim-changes.html">Latest <b>nim</b> change log</a>
+			</ul>
+    </div>
+    <script type="text/javascript">
+      $('#version').load('nim-version.txt')
+    </script>
+
+  </body>
+</html>
