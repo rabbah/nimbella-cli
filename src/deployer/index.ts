@@ -22,8 +22,8 @@
 
 export { deployProject, readPrepareAndBuild, readAndPrepare, deploy, readProject, buildProject, prepareToDeploy,
     wipeNamespace, wipePackage } from './api'
-export { DeployStructure, DeployResponse, OWOptions, Credentials, CredentialRow, Flags, PackageSpec, ActionSpec,
-    CredentialHostMap, CredentialNSMap, DeployerAnnotation } from './deploy-struct'
+export { DeployStructure, DeployResponse, DeploySuccess, OWOptions, Credentials, CredentialRow, Flags, PackageSpec, ActionSpec,
+    CredentialHostMap, CredentialNSMap, DeployerAnnotation, VersionMap } from './deploy-struct'
 export { doLogin, doAdminLogin, addCredentialAndSave, getCredentials, getCredentialList, getCredentialsForNamespace, forgetNamespace, switchNamespace,
     Persister, fileSystemPersister, browserPersister } from './login'
 export { computeBucketStorageName, computeBucketDomainName, cleanBucket } from './deploy-to-bucket'
