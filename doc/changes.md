@@ -1,6 +1,6 @@
 # Nimbella CLI Change History
 
-## Changes since release 0.1.12
+## Changes in release 0.1.13
 
 - web content is now deployed with cache-control set to 'no-cache' for less surprising behavior during development
     - in the future we will provide a way to turn on cacheing for content in production
