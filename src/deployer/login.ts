@@ -154,7 +154,7 @@ export function addCredential(store: CredentialStore, apihost: string, namespace
         nsMap = {}
         store.credentials[apihost] = nsMap
     }
-    const storageKey: CredentialStorageEntry = storage ? parseStorageString(storage, undefined, undefined) : undefined
+    const storageKey: CredentialStorageEntry = storage ? parseStorageString(storage, namespace) : undefined
     nsMap[namespace] = { api_key, storageKey, redis }
     store.currentHost = apihost
     store.currentNamespace = namespace
@@ -378,28 +378,15 @@ function getUniqueCredentials(namespace: string, apihost: string|undefined, stor
     return { namespace, ow: { apihost: newHost, api_key }, storageKey, redis }
 }
 
-// Turn a raw storage string into the form used internally.  Also optionally checks for mismatch with the expected namespace and apihost
-// because our older practices can have left dangling .objectstorecreds that don't match the current wsk credentials.   We ignore
-// corrupt (unparsable) storage strings
-function parseStorageString(storage: string, namespace: string, apihost: string): CredentialStorageEntry {
+// Turn a raw storage string into the form used internally.
+function parseStorageString(storage: string, namespace: string): CredentialStorageEntry {
     let parsedStorage: { client_email: string; project_id: string; private_key: string; }
     try {
         parsedStorage = JSON.parse(storage)
     } catch {
-        return undefined
+        throw new Error(`Corrupt storage string for namespace '${namespace}'`)
     }
     const { client_email, project_id, private_key } = parsedStorage
-    if (namespace && apihost) {
-        if (!client_email.startsWith(namespace)) {
-            //console.log(`rejecting .objectstorecreds: '${client_email} does not match expected namespace '${namespace}'`)
-            return undefined
-        }
-        const expectedProject = apihost.replace("https://", "").replace(".nimbella.io", "").replace("api", "nim")
-        if (expectedProject != project_id) {
-            //console.log(`rejecting .objectstorecreds: '${project_id} does not match expected apihost '${apihost}'`)
-            return undefined
-        }
-    }
     return { project_id, credentials: { client_email, private_key }}
 }
 
