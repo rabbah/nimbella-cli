@@ -54,3 +54,4 @@ function readdir(path: string): Promise<{ name: string, isDirectory: boolean }[]
 function isExistingFile(path: string): Promise<boolean> {
     return fs_lstat(path).then((stats: fs.Stats) => stats.isFile()).catch(() => false)
 }
+

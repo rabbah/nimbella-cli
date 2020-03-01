@@ -41,7 +41,7 @@ const prefixes = [ 'github:', 'https://github.com/', 'git@github.com:' ]
 
 // Github coordinate definition structure
 export interface GithubDef {
-    cachedir: string
+    repoPath: string
     owner: string
     repo: string
     path: string
@@ -62,8 +62,10 @@ export function isGithubRef(projectPath: string): boolean {
 // Parse a project path that claims to be a github ref into a GithubDef.  Throws on ill-formed
 export function parseGithubRef(projectPath: string): GithubDef {
     let toParse: string = undefined
+    let repoPath: string = undefined
     for (const prefix of prefixes) {
         if (projectPath.startsWith(prefix)) {
+            repoPath = prefix
             toParse = projectPath.replace(prefix, '')
             break
         }
@@ -71,7 +73,10 @@ export function parseGithubRef(projectPath: string): GithubDef {
     if (!toParse) {
         throw new Error('internal error: parseGithubRef should not have been called')
     }
-    while (toParse.startsWith('/')) toParse = toParse.slice(1)
+    while (toParse.startsWith('/')) {
+        toParse = toParse.slice(1)
+        repoPath += '/'
+    }
     const hashSplit = toParse.split('#')
     let ref: string = undefined
     if (hashSplit.length > 2) {
@@ -89,14 +94,14 @@ export function parseGithubRef(projectPath: string): GithubDef {
     if (repo.endsWith('.git')) {
         repo = repo.slice(0, repo.length - 4)
     }
+    repoPath = Path.join(repoPath, owner, repo)
     const path = slashSplit.slice(2).join('/')
     const store = authPersister.loadCredentialStoreIfPresent()
     let auth = undefined
     if (store && store.github && store.currentGithub) {
         auth = store.github[store.currentGithub]
     }
-    const cachedir = `${owner}_${repo}_${path.split('/').join('_')}`
-    return { cachedir, owner, repo, path, auth, ref}
+    return { repoPath, owner, repo, path, auth, ref}
 }
 
 // Fetch a project into the cache, returning a path to its location
@@ -104,7 +109,8 @@ export async function fetchProject(def: GithubDef, userAgent: string): Promise<s
     if (!fs.existsSync(cacheDir())) {
         fs.mkdirSync(cacheDir())
     }
-    const location = Path.join(cacheDir(), def.cachedir)
+    const cachedir = `${def.owner}_${def.repo}_${def.path.split('/').join('_')}`
+    const location = Path.join(cacheDir(), cachedir)
     await rimraf(location)
     fs.mkdirSync(location)
     debug('fetching project %O', def)
@@ -119,7 +125,7 @@ export function makeClient(def: GithubDef, userAgent: string): Octokit {
 
 // Get contents from a github repo at specific coordinates (path and ref).  All but the path
 // are taken from a GithubDef.  The path is specified as an argument.
-async function readContents(client: Octokit, def: GithubDef, path: string) {
+export async function readContents(client: Octokit, def: GithubDef, path: string) {
     debug('reading %O at %s', def, path)
     const {owner, repo, ref} = def
     const contents = await client.repos.getContents(ref ? {owner, repo, path, ref} : { owner, repo, path })
@@ -133,7 +139,7 @@ async function readContents(client: Octokit, def: GithubDef, path: string) {
 }
 
 // Test whether the 'data' array of a repo read response implies that the contents are a project
-function seemsToBeProject(data: Octokit.ReposGetContentsResponse): boolean {
+export function seemsToBeProject(data: Octokit.ReposGetContentsResponse): boolean {
     if (Array.isArray(data)) {
         const items = data as Octokit.ReposGetContentsResponseItem[]
         for (const item of items) {
