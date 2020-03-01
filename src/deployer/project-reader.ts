@@ -28,6 +28,7 @@ import { promisify } from 'util'
 import { inBrowser } from '../NimBaseCommand'
 import * as makeDebug from 'debug'
 const debug = makeDebug('nim:deployer:project-reader')
+import { fileSystemProjectReader } from './file-reader'
 
 const CONFIG_FILE = 'project.yml'
 const LEGACY_CONFIG_FILE = 'projectConfig.yml'

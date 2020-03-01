@@ -19,13 +19,6 @@
  */
 
 // Adjunct to the project-reader when a project is defined as a set of github coordinates.
-// There are two levels of information store
-// 1.  a mapping of project names to GithubProject structures
-//    - can be stored in the file system or in localStorage so it can be maintained in a browser
-//    - the goal would be to read this info in a browser and send the GithubProject to a cloud service to do the rest
-// 2.  an area in the file system where projects are staged after being retrieved from github.
-//    - the retrieval and subsequent steps cannot be run in a browser
-//    - it would be run in the nim command locally (now) or in the the remote service used by nim in the browser (future)
 
 import * as Path from 'path'
 import * as fs from 'fs'
@@ -120,7 +113,7 @@ export async function fetchProject(def: GithubDef, userAgent: string): Promise<s
 }
 
 // Make a github client
-function makeClient(def: GithubDef, userAgent: string): Octokit {
+export function makeClient(def: GithubDef, userAgent: string): Octokit {
     return new Octokit({ auth: def.auth, userAgent })
 }
 
