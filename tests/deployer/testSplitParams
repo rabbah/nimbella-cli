@@ -32,9 +32,6 @@ SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 cd $SELFDIR
 set -e
-pushd ../../../main
-nimadmin user set demos test
-popd
 
 nim project deploy splitParams
 RESULT=$(nim action get authorize | tail -n +2 | jq -r '.parameters')

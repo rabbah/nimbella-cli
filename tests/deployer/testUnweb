@@ -23,17 +23,12 @@
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 cd $SELFDIR
-pushd ../../../main
-nimadmin user set demos test
-popd
 
 # For the initial deploy, use a project.yml that specifies a clean deploy and does not specify 'webby'
-echo "targetNamespace: test" > unweb/project.yml
 echo "cleanNamespace: true" >> unweb/project.yml
 nim project deploy unweb
 
 # For the second deploy, don't specify clean and set web=false
-echo "targetNamespace: test" > unweb/project.yml
 echo "packages:" >> unweb/project.yml
 echo "  - name: printer" >> unweb/project.yml
 echo "    actions:" >> unweb/project.yml

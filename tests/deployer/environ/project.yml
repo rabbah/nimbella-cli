@@ -1,4 +1,3 @@
-targetNamespace: test
 packages:
   - name: default
     actions:

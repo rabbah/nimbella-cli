@@ -23,9 +23,6 @@
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 cd $SELFDIR
-pushd ../../../main
-nimadmin user set demos test
-popd
 
 # Start by creating a clean project with a default action called 'email'.  This will cause a 'remote error' in the next step.
 nim project deploy causeRemoteError

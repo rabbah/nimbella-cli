@@ -1,4 +1,3 @@
-targetNamespace: test
 packages:
   - name: emayl
     actions:

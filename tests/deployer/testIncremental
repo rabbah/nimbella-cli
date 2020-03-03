@@ -23,9 +23,6 @@
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 cd $SELFDIR
-pushd ../../../main
-nimadmin user set demos test
-popd
 
 # Test that a given action was not deployed (otherwise error)
 function shouldNotHaveDeployed() {

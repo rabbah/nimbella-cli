@@ -33,8 +33,22 @@ function runTest() {
     echo "test$1 succeeded"
 }
 
+# If no argument or the --postdeploy argument is given, use the namespace 'test' on the current project, whatever it might be.
+# If the --ongcp argument is given, use the alternate test project wbtest@nimbella.com as defined in the local credential store on nimgcp
+# The --postdeploy flag is passed to the main tests regardless (to run them otherwise run them individually)
+
+NAMESPACE=test
+APIHOST=
+if [ "$1" == "--ongcp" ]; then
+	 NAMESPACE=wbtestni-grinjpsjnuh
+	 APIHOST="--apihost https://apigcp.nimbella.io"
+fi
+
+nim auth switch $NAMESPACE $APIHOST
+
 for i in MultiSubstitute SplitParams SharedBuild Filtering WebInclude Ignoring EmptyReduce Incremental Environment Errors Unweb ValidateRuntime LoginAuth; do
    runTest $i
 done
-runTest MainActions $1
-runTest Demos $1
+runTest MainActions --postdeploy
+runTest Demos --postdeploy
+

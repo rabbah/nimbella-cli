@@ -23,9 +23,6 @@
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 cd $SELFDIR
-pushd ../../../main
-nimadmin user set demos test
-popd
 GOOD_DEPLOY=$(nim project deploy webInclude | grep Deployed\ 1\ web)
 if [ -z "$GOOD_DEPLOY" ]; then
 	 echo "Error: public/foo.html was not correctly deployed"
