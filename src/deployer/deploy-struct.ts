@@ -125,6 +125,7 @@ export  interface DeployStructure {
     owClient?: Client                // The openwhisk client for deploying actions and packages
     bucketClient?: Bucket            // The gcloud storage client for deploying to a bucket
     includer?: Includer              // The 'includer' for deciding which packages, actions, web are included in the deploy
+    reader?: ProjectReader           // The project reader to use
     versions?: VersionEntry          // The VersionEntry for credentials.namespace on the selected API host if available
 }
 
@@ -253,4 +254,25 @@ export interface CredentialRow {
     isIncludingEverything: () => boolean
  }
 
+// Defines the general ProjectReader interface
 
+// A simplified fs.Dirent that just distinguishes files and directories (all we really have when using github)
+export type PathKind = { name: string, isDirectory: boolean, isFile: boolean, mode: number }
+
+// The method reperotoire for reading projects.
+// Path names passed to these methods may, in the most general case, be either absolute or relative to the
+// project root.  After canonicalizing `..` directives in such paths, they may point inside or outside the project.
+// For the file system, we accept absolute paths and allow a relative path to land anywhere in the file system.
+// For github we reject absolute paths ane require a relative path to land within the github repo that contains the project.
+export interface ProjectReader {
+    // Read the contents of a directory (non-recursively)
+    readdir: (path: string) => Promise<PathKind[]>
+    // Find all the file path names under a directory (recursive)
+    readAllFiles: (dir: string) => Promise<string[]>
+    // Read the contents of a file (e.g. config, code, .include ...)
+    readFileContents: (path: string) => Promise<Buffer>
+    // Test whether a file exists
+    isExistingFile: (path: string) => Promise<boolean>
+    // Get the PathKind of a path
+    getPathKind: (path: string) => Promise<PathKind>
+}

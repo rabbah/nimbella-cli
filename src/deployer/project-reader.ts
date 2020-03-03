@@ -18,22 +18,18 @@
  * from Nimbella Corp.
  */
 
-import * as fs from 'fs'
 import * as path from 'path'
-import { DeployStructure, PackageSpec, ActionSpec, WebResource, Includer } from './deploy-struct'
+import { DeployStructure, PackageSpec, ActionSpec, WebResource, Includer, ProjectReader, PathKind } from './deploy-struct'
 import { emptyStructure, actionFileToParts, filterFiles, convertToResources, promiseFilesAndFilterFiles, loadProjectConfig } from './util'
 import { getBuildForAction, getBuildForWeb } from  './finder-builder'
-import { GithubDef, isGithubRef, parseGithubRef, fetchProject } from './github'
-import { promisify } from 'util'
-import { inBrowser } from '../NimBaseCommand'
+import { isGithubRef, parseGithubRef, fetchProject } from './github'
 import * as makeDebug from 'debug'
 const debug = makeDebug('nim:deployer:project-reader')
-import { fileSystemProjectReader } from './file-reader'
+import { makeFileReader } from './file-reader';
 
 const CONFIG_FILE = 'project.yml'
 const LEGACY_CONFIG_FILE = 'projectConfig.yml'
 const ENV_FILE = '.env'
-const readdir = inBrowser ? (() => undefined) : promisify(fs.readdir)
 
 // Read the top level files and dirs of the project.  Only one file and two dirs are legal at this level; everything else is a 'stray'
 interface TopLevel {
@@ -45,6 +41,7 @@ interface TopLevel {
     filePath: string
     githubPath: string
     includer: Includer
+    reader: ProjectReader
 }
 export function readTopLevel(filePath: string, env: string, userAgent: string, includer: Includer): Promise<TopLevel> {
     // If the 'env' argument is defined it takes precedence over .env found in the project
@@ -58,9 +55,13 @@ export function readTopLevel(filePath: string, env: string, userAgent: string, i
         githubPath = filePath
         start = fetchProject(github, userAgent)
     }
+    // As a first step toward abstracting the difference between local and github we use the FileProjectReader to read
+    // everything.   We retain (for now) the initial step of always fetching the project into a cache for github and we
+    // are not yet using the GithubProjectReader
     const webDir = 'web', pkgDir = 'packages'
     return start.then(filePath => {
-        return readdir(filePath, {withFileTypes: true}).then(items => {
+        const reader = makeFileReader(filePath)
+        return reader.readdir('').then(items => {
             items = filterFiles(items)
             let web: string
             let config: string
@@ -69,28 +70,28 @@ export function readTopLevel(filePath: string, env: string, userAgent: string, i
             let packages: string
             const strays: string[] = []
             for (const item of items) {
-                if (item.isDirectory()) {
+                if (item.isDirectory) {
                     switch(item.name) {
                         case webDir:
                             if (includer.isWebIncluded)
-                                web = path.join(filePath, webDir)
+                                web = webDir
                             break
                         case pkgDir:
-                            packages = path.join(filePath, pkgDir)
+                            packages = pkgDir
                             break
                         case '.nimbella':
                             break
                         default:
                             strays.push(item.name)
                     }
-                } else if (item.isFile() && item.name == CONFIG_FILE) {
-                    config = path.join(filePath, item.name)
-                } else if (item.isFile() && item.name == LEGACY_CONFIG_FILE) {
-                    legacyConfig = path.join(filePath, item.name)
-                } else if (item.isFile() && (item.name.endsWith(".yml") || item.name.endsWith(".yaml"))) {
+                } else if (!item.isDirectory && item.name == CONFIG_FILE) {
+                    config = item.name
+                } else if (!item.isDirectory && item.name == LEGACY_CONFIG_FILE) {
+                    legacyConfig = item.name
+                } else if (!item.isDirectory && (item.name.endsWith(".yml") || item.name.endsWith(".yaml"))) {
                     notconfig = item.name
-                } else if (!env && item.isFile() && item.name == ENV_FILE) {
-                    env = path.join(filePath, item.name)
+                } else if (!env && !item.isDirectory && item.name == ENV_FILE) {
+                    env = item.name
                 } else {
                     strays.push(item.name)
                 }
@@ -106,7 +107,7 @@ export function readTopLevel(filePath: string, env: string, userAgent: string, i
                 debug('githhub path was %s', githubPath)
                 debug('filePath is %s', filePath)
             }
-            const ans = { web, packages, config, strays, filePath, env, githubPath, includer }
+            const ans = { web, packages, config, strays, filePath, env, githubPath, includer, reader }
             debug('readTopLevel returning %O', ans)
             return ans
         })
@@ -116,18 +117,18 @@ export function readTopLevel(filePath: string, env: string, userAgent: string, i
 // Probe the top level structure to obtain the major parts of the final config.  Spawn builders for those parts and
 // assemble a "Promise.all" for the combined work
 export function buildStructureParts(topLevel: TopLevel): Promise<DeployStructure[]> {
-    const { web, packages, config, strays, filePath, env, githubPath, includer } = topLevel
+    const { web, packages, config, strays, filePath, env, githubPath, includer, reader } = topLevel
     let packagesGithub = packages
     if (githubPath) {
         if (packages) {
-            packagesGithub = path.join(githubPath, path.relative(filePath, packages))
+            packagesGithub = path.join(githubPath, packages)
         }
     }
     debug('display path for actions is %O', packagesGithub)
     return new Promise(function(resolve) {
-        const webPart = getBuildForWeb(web).then(build => buildWebPart(web, build))
-        const actionsPart = buildActionsPart(packages, packagesGithub, includer)
-        const configPart = readConfig(config, env, filePath, strays, githubPath, includer)
+        const webPart = getBuildForWeb(web, reader).then(build => buildWebPart(web, build, reader))
+        const actionsPart = buildActionsPart(packages, packagesGithub, includer, reader)
+        const configPart = readConfig(config, env, filePath, strays, githubPath, includer, reader)
         resolve(Promise.all([webPart, actionsPart, configPart]))
     })
 }
@@ -281,30 +282,30 @@ function mergeAction(fs: ActionSpec, config: ActionSpec): ActionSpec {
 
 // Probe the web directory.  We find all files even under subdirectories (no strays here).  However, if we turn out to be
 // action-wrapping (which is not known at this point), file names with slashes will cause an error later.
-function buildWebPart(webdir: string, build: string): Promise<DeployStructure> {
+function buildWebPart(webdir: string, build: string, reader: ProjectReader): Promise<DeployStructure> {
     if (!webdir) {
         return Promise.resolve(emptyStructure())
     } else {
-        return readWebResources(webdir).then(resources => {
+        return readWebResources(webdir, reader).then(resources => {
             return { web: resources, webBuild: build, packages: [], strays: [] }
         })
     }
 }
 
 // Read the resources of the web directory
-function readWebResources(webdir: string): Promise<WebResource[]> {
+function readWebResources(webdir: string, reader: ProjectReader): Promise<WebResource[]> {
     debug('readWebResources for %s', webdir)
-    return promiseFilesAndFilterFiles(webdir).then((items: string[]) => {
+    return promiseFilesAndFilterFiles(webdir, reader).then((items: string[]) => {
         return convertToResources(items, webdir.length + 1)
     })
 }
 
 // Probe the packages directory
-function buildActionsPart(pkgsdir: string, displayPath: string, includer: Includer): Promise<DeployStructure> {
+function buildActionsPart(pkgsdir: string, displayPath: string, includer: Includer, reader: ProjectReader): Promise<DeployStructure> {
     if (!pkgsdir) {
         return Promise.resolve(emptyStructure())
     } else {
-        return buildPkgArray(pkgsdir, displayPath, includer).then((values) => {
+        return buildPkgArray(pkgsdir, displayPath, includer, reader).then((values) => {
             const [ strays, pkgs] = values
             return { web: [], packages: pkgs, strays: strays }
         })
@@ -312,17 +313,17 @@ function buildActionsPart(pkgsdir: string, displayPath: string, includer: Includ
 }
 
 // Accumulate the arrays of PackageSpecs and Strays in the 'packages' directory
-function buildPkgArray(pkgsDir: string, displayPath: string, includer: Includer): Promise<any> {
+function buildPkgArray(pkgsDir: string, displayPath: string, includer: Includer, reader: ProjectReader): Promise<any> {
     // console.log("Building package array")
-    return readdir(pkgsDir, {withFileTypes: true}).then((items: fs.Dirent[]) => {
+    return reader.readdir(pkgsDir).then((items: PathKind[]) => {
         items = filterFiles(items)
-        const strays = items.filter(dirent => !dirent.isDirectory()).map(dirent => dirent.name)
-        const pkgNames = items.filter(dirent => dirent.isDirectory()).map(dirent => dirent.name)
+        const strays = items.filter(dirent => !dirent.isDirectory).map(dirent => dirent.name)
+        const pkgNames = items.filter(dirent => dirent.isDirectory).map(dirent => dirent.name)
         const rdrs: Promise<PackageSpec>[] = []
         for (const name of pkgNames) {
             if (includer.isPackageIncluded(name)) {
                 const pkgPath = path.join(pkgsDir, name)
-                rdrs.push(readPackage(pkgPath, displayPath, name, includer))
+                rdrs.push(readPackage(pkgPath, displayPath, name, includer, reader))
             }
         }
         return Promise.all([Promise.resolve(strays), Promise.all(rdrs)])
@@ -332,9 +333,9 @@ function buildPkgArray(pkgsDir: string, displayPath: string, includer: Includer)
 // Read the contents of a directory defining a package.  By convention, actions not requiring a build step are stored directly in the
 // package directory.  Those requiring a build are stored in a subdirectory.  The name of each action is the single file name (sans suffix)
 // or the name of the subdirectory.
-function readPackage(pkgPath: string, displayPath: string, pkgName: string, includer: Includer): Promise<PackageSpec> {
+function readPackage(pkgPath: string, displayPath: string, pkgName: string, includer: Includer, reader: ProjectReader): Promise<PackageSpec> {
     debug("reading information for package '%s' with display path '%s'", pkgPath, displayPath)
-    return readdir(pkgPath, {withFileTypes: true}).then((items: fs.Dirent[]) => {
+    return reader.readdir(pkgPath).then((items: PathKind[]) => {
         items = filterFiles(items)
         const promises: Promise<ActionSpec>[] = []
         const seen = {}
@@ -342,7 +343,7 @@ function readPackage(pkgPath: string, displayPath: string, pkgName: string, incl
             const file = path.join(pkgPath, item.name)
             const displayFile = path.join(displayPath, item.name)
             debug('item %s has display path %s', item.name, displayFile)
-            if (item.isFile()) {
+            if (!item.isDirectory) {
                 // Directly deployable action not requiring a build.
                 const { name, runtime, binary, zipped } = actionFileToParts(item.name)
                 if (!includer.isActionIncluded(pkgName, name)) continue
@@ -352,7 +353,7 @@ function readPackage(pkgPath: string, displayPath: string, pkgName: string, incl
                 }
                 seen[name] = runtime
                 promises.push(Promise.resolve({ name, file, displayFile, runtime, binary, zipped }))
-            } else if (item.isDirectory()) {
+            } else if (item.isDirectory) {
                 // Build-dependent action or renamed action
                 if (!includer.isActionIncluded(pkgName, item.name)) continue
                 const before = seen[item.name]
@@ -360,7 +361,7 @@ function readPackage(pkgPath: string, displayPath: string, pkgName: string, incl
                     throw duplicateName(item.name, before, "*")
                 }
                 seen[item.name] = "*"
-                promises.push(getBuildForAction(file).then(build => {
+                promises.push(getBuildForAction(file, reader).then(build => {
                     return { name: item.name, file, displayFile, build }
                 }))
             }
@@ -381,15 +382,15 @@ function duplicateName(actionName: string, formerUse: string, newUse: string) {
 
 // Read the config file if present.  For convenience, the extra information not provide elsewhere is tacked on here
 function readConfig(configFile: string, envPath: string, filePath: string, strays: string[], githubPath: string,
-        includer: Includer): Promise<DeployStructure> {
+        includer: Includer, reader: ProjectReader): Promise<DeployStructure> {
     if (!configFile) {
         // console.log("No config file found")
         const ans = Object.assign({}, emptyStructure(), { strays, filePath, githubPath, includer })
         return Promise.resolve(ans)
     }
     // console.log("Reading config file")
-    return loadProjectConfig(configFile, envPath, filePath).then(config => trimConfigWithIncluder(config, includer))
-        .then(config => Object.assign({strays, filePath, githubPath, includer}, config))
+    return loadProjectConfig(configFile, envPath, filePath, reader).then(config => trimConfigWithIncluder(config, includer))
+        .then(config => Object.assign({strays, filePath, githubPath, includer, reader}, config))
 }
 
 // Given a DeployStructure with web and package sections, trim those sections according to the rules of an Includer

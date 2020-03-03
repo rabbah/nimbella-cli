@@ -18,19 +18,25 @@
  * from Nimbella Corp.
  */
 
-import { ProjectReader } from './file-reader'
+import { ProjectReader, PathKind } from './deploy-struct'
 import { GithubDef, makeClient, readContents, seemsToBeProject } from './github';
 import * as Octokit from '@octokit/rest'
 import { posix as Path } from 'path'
 
 // Defines the github version of the ProjectReader
-// Currently, paths passed to the reader functions are absolutized to the original project path argument
-// This generally needs to be compensated before invoking the github API
+// In general files passed to a ProjectReader are relative to the project path, which includes the path portion of
+// the def.   To invoke github APIs, we need to make paths relative to the github repo root, so that means joining
+// def.path with the argument and normalizing the result.  We don't want to use path.resolve because this isn't
+// a real file system and the current working directory is irrelevant.  After normalizing, the result must fall
+// within the repo
+
+// Make
 export function makeGithubReader(def: GithubDef, userAgent: string): ProjectReader {
     const client = makeClient(def, userAgent)
     return new GithubProjectReader(client, def)
 }
 
+// The implementing class
 class GithubProjectReader implements ProjectReader {
     client: Octokit
     def: GithubDef
@@ -41,23 +47,36 @@ class GithubProjectReader implements ProjectReader {
     }
 
     // Implement readdir for github
-    async readdir(path: string): Promise<{ name: string, isDirectory: boolean }[]> {
-        const effectivePath = Path.relative(this.def.repoPath, path) // computes path relative to the repo root
+    async readdir(path: string): Promise<PathKind[]> {
+        if (Path.isAbsolute(path)) {
+            throw new Error(`Deploying from github does not support absolute paths`)
+        }
+        const effectivePath = Path.normalize(Path.join(this.def.path, path))
         const contents = await readContents(this.client, this.def, effectivePath)
         if (!Array.isArray(contents)) {
             console.dir(contents, { depth: null })
             throw new Error(`Path '${effectivePath} should be a directory but is not`)
         }
-        if (path === this.def.repoPath && !seemsToBeProject(contents))     {
+        if (path === this.def.path && !seemsToBeProject(contents))     {
             throw new Error(`Github location does not contain a 'nim' project`)
         }
-        return contents.map(item => { return { name: item.name, isDirectory: item.type === 'dir' } })
+        return contents.map(this.toPathKind)
+    }
+
+    // Subroutine used by readdir; may have other uses
+    toPathKind(item: Octokit.ReposGetContentsResponseItem): PathKind {
+        let mode = 0o666
+        if (item.type === 'file' && (item.name.endsWith('.sh') || item.name.endsWith('.cmd'))) {
+            mode = 0o777
+        }
+        return { name: item.name, isDirectory: item.type === 'dir', isFile: item.type === 'file', mode }
     }
 
     // Implement readAllFiles for github
     async readAllFiles(dir: string): Promise<string[]> {
+        const effectiveDir = Path.normalize(Path.join(this.def.path, dir))
         const ans: string[] = []
-        await this.readFilesRecursively(dir, ans)
+        await this.readFilesRecursively(effectiveDir, ans)
         return ans
     }
 
@@ -76,7 +95,7 @@ class GithubProjectReader implements ProjectReader {
 
     // Implement readFileContents for github
     async readFileContents(path: string): Promise<Buffer> {
-        const effectivePath = Path.relative(this.def.repoPath, path) // computes path relative to the repo root
+        const effectivePath = Path.normalize(Path.join(this.def.path, path))
         const contents = await readContents(this.client, this.def, effectivePath)
         // Careful with the following: we want to support empty files but the empty string is falsey.
         if (typeof contents['content'] !== 'string'  || !contents['encoding']) {
@@ -88,17 +107,24 @@ class GithubProjectReader implements ProjectReader {
 
     // Implement isExistingFile for github
     async isExistingFile(path: string): Promise<boolean> {
-        if (path === this.def.repoPath) {
-            return false // the repo root can't be a file
+        const kind = await this.getPathKind(path)
+        return kind && kind.isFile
+    }
+
+    // Implement getPathKind for github
+    async getPathKind(path: string): Promise<PathKind> {
+        if (path === '' || path === '/' || path === undefined) {
+            return { name: '', isFile: false, isDirectory: true, mode: 0x777}
         }
-        const parent = Path.dirname(path)
-        const name = Path.basename(path)
+        const effectivePath = Path.normalize(Path.join(this.def.path, path))
+        const name = Path.basename(effectivePath)
+        const parent = Path.dirname(effectivePath)
         const candidates = await this.readdir(parent)
         for (const item of candidates) {
-            if (item.name === name && !item.isDirectory) {
-                return true
+            if (item.name === name) {
+                return item
             }
         }
-        return false
+        return Promise.resolve(undefined)
     }
 }

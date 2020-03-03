@@ -41,7 +41,6 @@ const prefixes = [ 'github:', 'https://github.com/', 'git@github.com:' ]
 
 // Github coordinate definition structure
 export interface GithubDef {
-    repoPath: string
     owner: string
     repo: string
     path: string
@@ -61,11 +60,19 @@ export function isGithubRef(projectPath: string): boolean {
 
 // Parse a project path that claims to be a github ref into a GithubDef.  Throws on ill-formed
 export function parseGithubRef(projectPath: string): GithubDef {
+    // First isolate the 'ref' portion from the 'real project path'
+    const hashSplit = projectPath.split('#')
+    let ref: string = undefined
+    if (hashSplit.length > 2) {
+        throw new Error('too many # characters in github reference')
+    } else if (hashSplit.length == 2) {
+        ref = hashSplit[1]
+        projectPath = hashSplit[0]
+    }
+    // Strip the prefix.  Make sure this really is a github path (should be if we are called at all)
     let toParse: string = undefined
-    let repoPath: string = undefined
     for (const prefix of prefixes) {
         if (projectPath.startsWith(prefix)) {
-            repoPath = prefix
             toParse = projectPath.replace(prefix, '')
             break
         }
@@ -73,18 +80,12 @@ export function parseGithubRef(projectPath: string): GithubDef {
     if (!toParse) {
         throw new Error('internal error: parseGithubRef should not have been called')
     }
+    // Because the prefix syntaxes ending in ':' can tolerate slashes or no slashes between the ':' and the owner field, elide
+    // any initial slashes
     while (toParse.startsWith('/')) {
         toParse = toParse.slice(1)
-        repoPath += '/'
     }
-    const hashSplit = toParse.split('#')
-    let ref: string = undefined
-    if (hashSplit.length > 2) {
-        throw new Error('too many # characters in github reference')
-    } else if (hashSplit.length == 2) {
-        ref = hashSplit[1]
-        toParse = hashSplit[0]
-    }
+    // Now parse the unprefixed project path into owner/repo/[path]
     const slashSplit = toParse.split('/')
     if (slashSplit.length < 2) {
         throw new Error('too few / characters in github reference; at least <owner>/<repo> is required')
@@ -94,14 +95,14 @@ export function parseGithubRef(projectPath: string): GithubDef {
     if (repo.endsWith('.git')) {
         repo = repo.slice(0, repo.length - 4)
     }
-    repoPath = Path.join(repoPath, owner, repo)
+    // Add auth
     const path = slashSplit.slice(2).join('/')
     const store = authPersister.loadCredentialStoreIfPresent()
     let auth = undefined
     if (store && store.github && store.currentGithub) {
         auth = store.github[store.currentGithub]
     }
-    return { repoPath, owner, repo, path, auth, ref}
+    return { owner, repo, path, auth, ref}
 }
 
 // Fetch a project into the cache, returning a path to its location
@@ -144,7 +145,7 @@ export function seemsToBeProject(data: Octokit.ReposGetContentsResponse): boolea
         const items = data as Octokit.ReposGetContentsResponseItem[]
         for (const item of items) {
             if (item.name == 'project.yml' && item.type == 'file') return true
-            if (['packages', 'actions'].includes(item.name) && item.type == 'dir') return true
+            if (['packages', 'web'].includes(item.name) && item.type == 'dir') return true
         }
     }
     return false

@@ -19,7 +19,7 @@
  */
 
 import { spawn } from 'child_process'
-import { ActionSpec, PackageSpec, WebResource, BuildTable, Flags } from './deploy-struct'
+import { ActionSpec, PackageSpec, WebResource, BuildTable, Flags, ProjectReader, PathKind } from './deploy-struct'
 import { FILES_TO_SKIP, actionFileToParts, filterFiles, mapPackages, mapActions, convertToResources, convertPairsToResources, promiseFilesAndFilterFiles } from './util'
 import * as path from 'path'
 import * as fs from 'fs'
@@ -37,14 +37,14 @@ interface Ignore {
 const ZIP_TARGET = '__deployer__.zip'
 
 // Determine the build type for an action that is defined as a directory
-export function getBuildForAction(filepath: string): Promise<string> {
-    return readDirectory(filepath).then((items: fs.Dirent[]) => findSpecialFile(items, filepath, true))
+export function getBuildForAction(filepath: string, reader: ProjectReader): Promise<string> {
+    return readDirectory(filepath, reader).then(items => findSpecialFile(items, filepath, true))
 }
 
 // Build all the actions in an array of PackageSpecs, returning a new array of PackageSpecs.  We try to return
 // undefined for the case where no building occurred at all, since we are obligated to return a full array if
 // any building occured, even if most things weren't subject to building.
-export function buildAllActions(pkgs: PackageSpec[], buildTable: BuildTable, flags: Flags): Promise<PackageSpec[]> {
+export function buildAllActions(pkgs: PackageSpec[], buildTable: BuildTable, flags: Flags, reader: ProjectReader): Promise<PackageSpec[]> {
     if (!pkgs || pkgs.length == 0) {
         return undefined
     }
@@ -53,7 +53,7 @@ export function buildAllActions(pkgs: PackageSpec[], buildTable: BuildTable, fla
     const promises: Promise<PackageSpec>[] = []
     for (const pkg of pkgs) {
         if (pkg.actions && pkg.actions.length > 0) {
-            const builtPackage = buildActionsOfPackage(pkg, buildTable, flags)
+            const builtPackage = buildActionsOfPackage(pkg, buildTable, flags, reader)
             promises.push(builtPackage)
         }
     }
@@ -71,13 +71,13 @@ export function buildAllActions(pkgs: PackageSpec[], buildTable: BuildTable, fla
 }
 
 // Build the actions of a package, returning an updated PackageSpec or undefined if nothing got built
-async function buildActionsOfPackage(pkg: PackageSpec, buildTable: BuildTable, flags: Flags): Promise<PackageSpec> {
+async function buildActionsOfPackage(pkg: PackageSpec, buildTable: BuildTable, flags: Flags, reader: ProjectReader): Promise<PackageSpec> {
     const actionMap = mapActions(pkg.actions)
     let nobuilds = true
     for (const action of pkg.actions) {
         if (action.build) {
             nobuilds = false
-            const builtAction = await buildAction(action, buildTable, flags)
+            const builtAction = await buildAction(action, buildTable, flags, reader)
             actionMap[action.name] = builtAction
         }
     }
@@ -89,7 +89,7 @@ async function buildActionsOfPackage(pkg: PackageSpec, buildTable: BuildTable, f
 }
 
 // Perform the build defined for an action or just return the action if there is no build step
-function buildAction(action: ActionSpec, buildTable: BuildTable, flags: Flags): Promise<ActionSpec> {
+function buildAction(action: ActionSpec, buildTable: BuildTable, flags: Flags, reader: ProjectReader): Promise<ActionSpec> {
     if (!action.build) {
         return Promise.resolve(action)
     }
@@ -97,20 +97,20 @@ function buildAction(action: ActionSpec, buildTable: BuildTable, flags: Flags): 
     switch (action.build) {
         case 'build.sh':
             return scriptBuilder('./build.sh', action.file, action.displayFile, flags).then(() => identifyActionFiles(action,
-                flags.incremental, flags.verboseZip))
+                flags.incremental, flags.verboseZip, reader))
         case 'build.cmd':
             return scriptBuilder('build.cmd', action.file, action.displayFile, flags).then(() => identifyActionFiles(action,
-                flags.incremental, flags.verboseZip))
+                flags.incremental, flags.verboseZip, reader))
         case '.build':
-            return outOfLineBuilder(action.file, action.displayFile, buildTable, true, flags).then(() => identifyActionFiles(action,
-                flags.incremental, flags.verboseZip))
+            return outOfLineBuilder(action.file, action.displayFile, buildTable, true, flags, reader).then(() => identifyActionFiles(action,
+                flags.incremental, flags.verboseZip, reader))
         case 'package.json':
             return npmBuilder(action.file, action.displayFile, flags).then(() => identifyActionFiles(action,
-                flags.incremental, flags.verboseZip))
+                flags.incremental, flags.verboseZip, reader))
         case '.include':
         case 'identify':
             return identifyActionFiles(action,
-                 flags.incremental, flags.verboseZip)
+                 flags.incremental, flags.verboseZip, reader)
         default:
             throw new Error("Unknown build type in ActionSpec: " + action.build)
     }
@@ -120,12 +120,12 @@ function buildAction(action: ActionSpec, buildTable: BuildTable, flags: Flags): 
 // Returns a list of pairs.  In each pair, the first member is the path of a file to be included.  The second member is its name the file
 // should assume once included.  For simple cases (files and directories that are inside the directory that contains the .include) these
 // will be the same.  For complex cases (absolute paths or .. directives) they will differ.
-function processInclude(includesPath: string, dirPath: string): Promise<string[][]> {
-    return readFileAsList(includesPath).then(items => processIncludeFileItems(items, dirPath))
+function processInclude(includesPath: string, dirPath: string, reader: ProjectReader): Promise<string[][]> {
+    return readFileAsList(includesPath, reader).then(items => processIncludeFileItems(items, dirPath, reader))
 }
 
 // Subroutine of processInclude to run after items are read
-function processIncludeFileItems(items: string[], dirPath: string): Promise<string[][]> {
+async function processIncludeFileItems(items: string[], dirPath: string, reader: ProjectReader): Promise<string[][]> {
     const complex: Promise<string[][]>[] = []
     const simple: string[][] = []
     for (const item of items) {
@@ -135,10 +135,10 @@ function processIncludeFileItems(items: string[], dirPath: string): Promise<stri
         //console.log('processing item', item)
         const oldPath = path.resolve(dirPath, item)
         //console.log("Calculated oldPath", oldPath)
-        if (!fs.existsSync(oldPath)) {
+        const lstat: PathKind = await reader.getPathKind(oldPath)
+        if (lstat) {
             return Promise.reject(new Error(`${oldPath} is included for '${dirPath}' but does not exist`))
         }
-        const lstat = fs.lstatSync(oldPath)
         let newPath: string
         const mightBeOutside = item.includes('..') || path.isAbsolute(item)
         if (mightBeOutside) {
@@ -148,10 +148,10 @@ function processIncludeFileItems(items: string[], dirPath: string): Promise<stri
         }
         const toElide = oldPath.length - newPath.length
         //console.log("Calculated newPath", newPath, "with elision", toElide)
-        if (lstat.isFile()) {
+        if (lstat.isFile) {
             simple.push([oldPath, newPath])
-        } else if (lstat.isDirectory()) {
-            const expanded = promiseFilesAndFilterFiles(oldPath).then(items => items.map(item => [item, item.slice(toElide)]))
+        } else if (lstat.isDirectory) {
+            const expanded = promiseFilesAndFilterFiles(oldPath, reader).then(items => items.map(item => [item, item.slice(toElide)]))
             //console.log("Expanded directory", oldPath)
             complex.push(expanded)
         } else {
@@ -163,27 +163,27 @@ function processIncludeFileItems(items: string[], dirPath: string): Promise<stri
 
 // Identify the files that make up an action directory, based on the files in the directory and .include. .source, or .ignore if present.
 // If there is more than one file, perform autozipping.
-function identifyActionFiles(action: ActionSpec, incremental: boolean, verboseZip: boolean): Promise<ActionSpec> {
+function identifyActionFiles(action: ActionSpec, incremental: boolean, verboseZip: boolean, reader: ProjectReader): Promise<ActionSpec> {
     let includesPath = path.join(action.file, '.include')
-    if (!fs.existsSync(includesPath)) {
+    if (!reader.isExistingFile(includesPath)) {
         // Backward compatibility: try .source also
         includesPath = path.join(action.file, '.source')
     }
-    if (fs.existsSync(includesPath)) {
+    if (reader.isExistingFile(includesPath)) {
         // If there is .include or .source, it is canonical and all else is ignored
-        return processInclude(includesPath, action.file).then(pairs => {
+        return processInclude(includesPath, action.file, reader).then(pairs => {
             if (pairs.length == 0) {
                 return Promise.reject(includesPath + " is empty")
             } else if (pairs.length > 1) {
-                return autozipBuilder(pairs, action, incremental, verboseZip)
+                return autozipBuilder(pairs, action, incremental, verboseZip, reader)
             } else {
                 return singleFileBuilder(action, pairs[0][0])
             }
         })
     }
-    return getIgnores(action.file).then(ignore => {
+    return getIgnores(action.file, reader).then(ignore => {
         const absolute = path.isAbsolute(action.file)
-        return promiseFilesAndFilterFiles(action.file).then((items: string[]) => {
+        return promiseFilesAndFilterFiles(action.file, reader).then((items: string[]) => {
             if (absolute) {
                 items = items.map(item => path.relative(action.file, item))
             }
@@ -198,42 +198,36 @@ function identifyActionFiles(action: ActionSpec, incremental: boolean, verboseZi
                     const shortName = item.substring(action.file.length + 1)
                     return [ item, shortName ]
                 })
-                return autozipBuilder(pairs, action, incremental, verboseZip)
+                return autozipBuilder(pairs, action, incremental, verboseZip, reader)
             }
         })
     })
 }
 
 // Utility for reading .include, .source, or .build
-function readFileAsList(file: string): Promise<string[]> {
-    return new Promise(function(resolve, reject) {
-        fs.readFile(file, (err, data) => {
-            if (err) {
-                reject(`Error reading ${file}: ${err}`)
-            } else {
-                resolve(String(data).split('\n').filter(line => line && line.trim().length > 0).map(line => line.trim()))
-            }
-        })
-    })
+function readFileAsList(file: string, reader: ProjectReader): Promise<string[]> {
+    return reader.readFileContents(file).then(data =>
+        (String(data).split('\n').filter(line => line && line.trim().length > 0).map(line => line.trim()))
+    )
 }
 
 // Perform a build using either a script or a directory pointed to by a .build directive
 // The .build directive is known to exist but has not been read yet.
 function outOfLineBuilder(filepath: string, displayPath: string, sharedBuilds: BuildTable,
-        isAction: boolean, flags: Flags): Promise<any> {
+        isAction: boolean, flags: Flags, reader: ProjectReader): Promise<any> {
     const buildPath = path.join(filepath, ".build")
-    return readFileAsList(buildPath).then(contents => {
+    return readFileAsList(buildPath, reader).then(async contents => {
         if (contents.length == 0 || contents.length > 1) {
             return Promise.reject(buildPath + " contains too many or too few lines")
         }
         const redirected = path.resolve(filepath, contents[0])
-        const stat = fs.lstatSync(redirected)
-        if (stat.isFile()) {
+        const stat: PathKind = await reader.getPathKind(redirected)
+        if (stat.isFile) {
             // Simply run linked-to script in the current directory
             return scriptBuilder(redirected, filepath, displayPath, flags)
         } else if (stat.isDirectory) {
             // Look in the directory to find build to run
-            return readDirectory(redirected).then(items => {
+            return readDirectory(redirected, reader).then(items => {
                 const special = findSpecialFile(items, filepath, isAction)
                 let build: () => Promise<any> = undefined
                 const cwd = path.resolve(redirected)
@@ -309,10 +303,10 @@ function outOfLineBuilder(filepath: string, displayPath: string, sharedBuilds: B
 }
 
 // Determine if a build directory reached via .build is shared by looking for a file called .shared
-function isSharedBuild(items: fs.Dirent[]): boolean {
+function isSharedBuild(items: PathKind[]): boolean {
     let shared = false
     items.forEach(item => {
-        if (item.isFile() && item.name == ".shared") {
+        if (!item.isDirectory && item.name == ".shared") {
             shared = true
         }
     })
@@ -320,47 +314,49 @@ function isSharedBuild(items: fs.Dirent[]): boolean {
 }
 
 // Determine the build step for the web directory or return undefined if there isn't one
-export function getBuildForWeb(filepath: string): Promise<string> {
+export function getBuildForWeb(filepath: string, reader: ProjectReader): Promise<string> {
     if (!filepath) {
         return Promise.resolve(undefined)
     }
-    return readDirectory(filepath).then((items: fs.Dirent[]) => findSpecialFile(items, filepath, false))
+    return readDirectory(filepath, reader).then(items => findSpecialFile(items, filepath, false))
 }
 
 // Build the web directory
 export function buildWeb(build: string, sharedBuilds: BuildTable, filepath: string, displayPath: string,
-        flags: Flags): Promise<WebResource[]> {
+        flags: Flags, reader: ProjectReader): Promise<WebResource[]> {
     switch (build) {
         case 'build.sh':
-            return scriptBuilder('./build.sh', filepath, displayPath, flags).then(() => identifyWebFiles(filepath))
+            return scriptBuilder('./build.sh', filepath, displayPath, flags).then(() => identifyWebFiles(filepath, reader))
         case 'build.cmd':
             //console.log('cwd for windows build is', filepath)
-            return scriptBuilder('build.cmd', filepath, displayPath, flags).then(() => identifyWebFiles(filepath))
+            return scriptBuilder('build.cmd', filepath, displayPath, flags).then(() => identifyWebFiles(filepath, reader))
         case '.build':
-            return outOfLineBuilder(filepath, displayPath, sharedBuilds, false, flags).then(() => identifyWebFiles(filepath))
+            return outOfLineBuilder(filepath, displayPath, sharedBuilds, false, flags, reader).then(() => identifyWebFiles(filepath, reader))
         case 'package.json':
-            return npmBuilder(filepath, displayPath, flags).then(() => identifyWebFiles(filepath))
+            return npmBuilder(filepath, displayPath, flags).then(() => identifyWebFiles(filepath, reader))
         case '.include':
         case 'identify':
-            return identifyWebFiles(filepath)
+            return identifyWebFiles(filepath, reader)
         default:
             throw new Error("Unknown build type for web directory: " + build)
     }
 }
 
 // Identify the files constituting web content.  Similar to its action counterpart but not identical (e.g. there is no zipping)
-function identifyWebFiles(filepath: string): Promise<WebResource[]> {
+async function identifyWebFiles(filepath: string, reader: ProjectReader): Promise<WebResource[]> {
     //console.log('Identifying web files')
     const includesPath = path.join(filepath, '.include')
-    if (fs.existsSync(includesPath)) {
+    if (await reader.isExistingFile(includesPath)) {
         // If there is .include, it defines what to include and we need not look elsewhere
-        return processInclude(includesPath, filepath).then(pairs => convertPairsToResources(pairs))
+        debug('processing .include')
+        return processInclude(includesPath, filepath, reader).then(pairs => convertPairsToResources(pairs))
     }
     //console.log('Processing web files using .ignore')
     // Otherwise, we take the contents modulo the ignores
-    return getIgnores(filepath).then(ignore => {
+    return getIgnores(filepath, reader).then(ignore => {
+        debug('processing .ignore and/or ignore rules')
         const absolute = path.isAbsolute(filepath)
-        return promiseFilesAndFilterFiles(filepath).then((items: string[]) => {
+        return promiseFilesAndFilterFiles(filepath, reader).then((items: string[]) => {
             if (absolute) {
                 items = items.map(item => path.relative(filepath, item))
             }
@@ -374,17 +370,9 @@ function identifyWebFiles(filepath: string): Promise<WebResource[]> {
     })
 }
 
-// Simple promise version of fs.readdir, needed for an asynchronous start to various promise chains
-function readDirectory(filepath: string): Promise<fs.Dirent[]> {
-    return new Promise(function(resolve, reject) {
-        fs.readdir(filepath, {withFileTypes: true}, (err, items) => {
-            if (err) {
-                reject(err)
-            } else {
-                resolve(filterFiles(items))
-            }
-        })
-    })
+// Read a directory and filter the result
+function readDirectory(filepath: string, reader: ProjectReader): Promise<PathKind[]> {
+    return reader.readdir(filepath).then(filterFiles)
 }
 
 // Check whether a list of names that are candidates for zipping can agree on a runtime.  This is called only when the
@@ -412,8 +400,8 @@ function agreeOnRuntime(items: string[]): string {
 //    build.cmd but no build.sh on a macos or linux system
 //    .ignore when there is also .include
 //    no files in directory (or only an .ignore file); actions only (web directory is permitted to be empty)
-function findSpecialFile(items: fs.Dirent[], filepath: string, isAction: boolean): string {
-    const files = items.filter(item => item.isFile())
+function findSpecialFile(items: PathKind[], filepath: string, isAction: boolean): string {
+    const files = items.filter(item => !item.isDirectory)
     let buildDotSh = false, buildDotCmd = false, npm = false, include = false, dotBuild = false, ignore = false
     for (const file of files) {
         if (file.name == "build.sh") {
@@ -479,13 +467,14 @@ function singleFileBuilder(action: ActionSpec, singleItem: string): Promise<Acti
 //     - an item is zipped as is otherwise
 //     - directories are zipped recursively
 // 4.  Return an ActionSpec promise describing the result.
-function autozipBuilder(pairs: string[][], action: ActionSpec, incremental: boolean, verboseZip: boolean): Promise<ActionSpec> {
+async function autozipBuilder(pairs: string[][], action: ActionSpec, incremental: boolean, verboseZip: boolean, reader: ProjectReader): Promise<ActionSpec> {
     if (verboseZip)
         console.log('Zipping action contents in', action.file )
     const targetZip = path.join(action.file, ZIP_TARGET)
     if (!action.runtime) {
         action.runtime = agreeOnRuntime(pairs.map(pair => pair[0]))
     }
+    // TODO we want to be able to do zipping without a file system
     if (fs.existsSync(targetZip)) {
         const metaFiles: string[] = [ path.join(action.file, '.include'), path.join(action.file, '.ignore') ].filter(fs.existsSync)
         if (incremental && zipFileAppearsCurrent(targetZip, pairs.map(pair => pair[0]).concat(metaFiles))) {
@@ -507,7 +496,7 @@ function autozipBuilder(pairs: string[][], action: ActionSpec, incremental: bool
     for (const pair of pairs) {
         const [oldPath, newPath ] = pair
         //console.log("Zipping file with old path", oldPath, "and new path", newPath)
-        const mode = fs.lstatSync(oldPath).mode
+        const mode = (await reader.getPathKind(oldPath)).mode
         zip.file(oldPath, { name: newPath, mode: mode })
     }
     zip.finalize()
@@ -579,6 +568,7 @@ function scriptAppearsBuilt(filepath: string): boolean {
 }
 
 // Determine if a new zip should be generated.  The existing zip is considered current if it is newer than its dependencies.
+// TODO Should be assume this step is skipped when zipping occurs in memory?
 function zipFileAppearsCurrent(zipfile: string, dependencies: string[]): boolean {
     const ziptime = fs.statSync(zipfile).mtimeMs
     for (const dep of dependencies) {
@@ -637,10 +627,10 @@ function npmBuilder(filepath: string, displayPath: string, flags: Flags): Promis
 // Get the Ignore object for screening files.  This always has the fixed entries for .ignore itself, .build, build.sh, and .build.cmd
 // but adds anything found in an .ignore file.  Note that package.json is not ignored, even though it is a build trigger.  We
 // also don't add an entry for .include (or .source) since that case is driven by a fixed set of files and not by scanning a directory.
-function getIgnores(dir: string): Promise<Ignore> {
+function getIgnores(dir: string, reader: ProjectReader): Promise<Ignore> {
     const filePath = path.join(dir, '.ignore')
     const fixedItems = ['.ignore', '.build', 'build.sh', 'build.cmd', ZIP_TARGET, ...FILES_TO_SKIP ]
-    return readFileAsList(filePath).then(items => {
+    return readFileAsList(filePath, reader).then(items => {
         return ignore().add(items.concat(fixedItems))
     }).catch(() => {
         return ignore().add(fixedItems)

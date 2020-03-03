@@ -87,10 +87,10 @@ export function buildProject(project: DeployStructure): Promise<DeployStructure>
     project.sharedBuilds = { }
     if (project.webBuild) {
         const displayPath = project.githubPath || project.filePath
-        webPromise = buildWeb(project.webBuild, project.sharedBuilds, path.join(project.filePath, 'web'),
-            path.join(displayPath, 'web'), project.flags)
+        webPromise = buildWeb(project.webBuild, project.sharedBuilds, 'web', path.join(displayPath, 'web'),
+            project.flags, project.reader)
     }
-    const actionPromise: Promise<PackageSpec[]> = buildAllActions(project.packages, project.sharedBuilds, project.flags)
+    const actionPromise: Promise<PackageSpec[]> = buildAllActions(project.packages, project.sharedBuilds, project.flags, project.reader)
     if (webPromise) {
         if (actionPromise) {
             return Promise.all([webPromise, actionPromise]).then(result => {
@@ -174,7 +174,7 @@ export async function prepareToDeploy(inputSpec: DeployStructure, owOptions: OWO
             if (!res.mimeType) {
                 throw new Error(`Could not deploy web resource ${res.filePath}; mime type cannot be determined`)
             }
-            return actionWrap(res)
+            return actionWrap(res, inputSpec.reader)
         })
         const wrapPackage = inputSpec.actionWrapPackage
         return Promise.all(wrapping).then(wrapped => {

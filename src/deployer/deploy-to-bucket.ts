@@ -19,11 +19,10 @@
  */
 
 import { Storage, Bucket } from '@google-cloud/storage'
-import { Credentials, WebResource, DeployResponse, DeploySuccess, BucketSpec, VersionEntry } from './deploy-struct'
+import { Credentials, WebResource, DeployResponse, DeploySuccess, BucketSpec, VersionEntry, ProjectReader } from './deploy-struct'
 import { wrapSuccess, wrapError } from './util';
 
 import * as path from 'path'
-import * as fs from 'fs'
 import * as crypto from 'crypto'
 import * as URL from 'url-parse'
 
@@ -64,10 +63,11 @@ async function makeClient(bucketName: string, options: {}): Promise<Bucket> {
 }
 
 // Deploy a single resource to the bucket
-export function deployToBucket(resource: WebResource, client: Bucket, spec: BucketSpec, versions: VersionEntry): Promise<DeployResponse> {
+export async function deployToBucket(resource: WebResource, client: Bucket, spec: BucketSpec, versions: VersionEntry,
+        reader: ProjectReader): Promise<DeployResponse> {
     // Determine if something will be uploaded or if that will be avoided due to a digest match in incremental mode
     // The 'versions' argument is always defined in incremental mode.
-    const data = fs.readFileSync(resource.filePath)
+    const data = await reader.readFileContents(resource.filePath)
     const hash = crypto.createHash("sha256")
     hash.update(data)
     const digest = String(hash.digest('hex'))
@@ -93,6 +93,8 @@ export function deployToBucket(resource: WebResource, client: Bucket, spec: Buck
     destination = destination.replace(/\\/g, '/') // windows conventions don't work on the bucket
     //console.log('fixed up destination', destination)
     // Upload
+    // TODO on github, the filePath can't be used directly here, you have to use the 'data' retrieved earlier.
+    // In order that that should work correctly, we have to set the content type appropriately.
     const metadata = { cacheControl: 'no-cache' }
     return client.upload(resource.filePath, { destination, metadata }).then(() => {
         const item = `https://${client.name}/${destination}`

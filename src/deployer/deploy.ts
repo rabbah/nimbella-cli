@@ -18,8 +18,8 @@
  * from Nimbella Corp.
  */
 
-import * as fs from 'fs'
-import { DeployStructure, DeployResponse, ActionSpec, PackageSpec, WebResource, BucketSpec, DeployerAnnotation, VersionEntry, Flags } from './deploy-struct'
+import { DeployStructure, DeployResponse, ActionSpec, PackageSpec, WebResource, BucketSpec, DeployerAnnotation, VersionEntry,
+    ProjectReader } from './deploy-struct'
 import { combineResponses, wrapError, wrapSuccess, keyVal, emptyResponse,
     getDeployerAnnotation, straysToResponse, wipe, makeDict, generateSecret, digestPackage, digestAction, loadVersions } from './util'
 import * as openwhisk from 'openwhisk'
@@ -66,10 +66,10 @@ export function doDeploy(todeploy: DeployStructure): Promise<DeployResponse> {
         webLocal = ensureWebLocal(todeploy.flags.webLocal)
     }
     const webPromises = todeploy.web.map(res => deployWebResource(res, todeploy.actionWrapPackage, todeploy.bucket, todeploy.bucketClient,
-            todeploy.flags.incremental ? todeploy.versions : undefined, webLocal))
+            todeploy.flags.incremental ? todeploy.versions : undefined, webLocal, todeploy.reader))
     return getDeployerAnnotation(todeploy.filePath).then(deployerAnnot => {
         const actionPromises = todeploy.packages.map(pkg => deployPackage(pkg, todeploy.owClient, deployerAnnot, todeploy.parameters,
-            todeploy.cleanNamespace, todeploy.flags.incremental ? todeploy.versions : undefined))
+            todeploy.cleanNamespace, todeploy.flags.incremental ? todeploy.versions : undefined, todeploy.reader))
         const strays = straysToResponse(todeploy.strays)
         return Promise.all(webPromises.concat(actionPromises)).then(responses => {
             responses.push(strays)
@@ -134,29 +134,25 @@ export async function cleanPackage(client: openwhisk.Client, name: string, versi
 // which is assumed to exist (it should have been created already).  Otherwise, if bucketClient is specified, this
 // is a traditional deploy to the bucket.  Otherwise (none specified) it is an error.
 export function deployWebResource(res: WebResource, actionWrapPackage: string, spec: BucketSpec,
-        bucketClient: Bucket, versions: VersionEntry, webLocal: string): Promise<DeployResponse> {
+        bucketClient: Bucket, versions: VersionEntry, webLocal: string, reader: ProjectReader): Promise<DeployResponse> {
     // We can rely on the fact that prepareToDeploy would have rejected the deployment if action wrapping failed.
     if (actionWrapPackage) {
         return Promise.resolve(emptyResponse())
     } else if (webLocal) {
         return deployToWebLocal(res, webLocal, spec)
     } else if (bucketClient) {
-        return deployToBucket(res, bucketClient, spec, versions)
+        return deployToBucket(res, bucketClient, spec, versions, reader)
     } else {
         return Promise.resolve(wrapError(new Error(`No bucket client and/or bucket spec for '${res.simpleName}'`), 'web resources'))
     }
 }
 
 // Wrap a web resource in an action.   Returns a promise of the resulting ActionSpec
-export function actionWrap(res: WebResource): Promise<ActionSpec> {
-    return new Promise(function(resolve, reject) {
-        fs.readFile(res.filePath, (err, data) => {
-            if (err) {
-                reject(err)
-            } else {
-                let contents = String(data)
-                contents = contents.split('\\').join('\\\\').split('`').join('\\`')
-                let code = `
+export function actionWrap(res: WebResource, reader: ProjectReader): Promise<ActionSpec> {
+    return reader.readFileContents(res.filePath).then(data => {
+        let contents = String(data)
+        contents = contents.split('\\').join('\\\\').split('`').join('\\`')
+        let code = `
 const body = \`${contents}\`
 
 function main() {
@@ -166,18 +162,17 @@ function main() {
        body: body
     }
 }`
-                const name = res.simpleName.endsWith('.html') ? res.simpleName.replace('.html', '') : res.simpleName
-                resolve({ name, file: res.filePath, runtime: "nodejs:default", binary: false, web: true, code, wrapping: res.filePath })
-            }
-        })
+        const name = res.simpleName.endsWith('.html') ? res.simpleName.replace('.html', '') : res.simpleName
+        return { name, file: res.filePath, runtime: "nodejs:default", binary: false, web: true, code, wrapping: res.filePath }
     })
 }
 
 // Deploy a package, then deploy everything in it (currently just actions)
-export async function deployPackage(pkg: PackageSpec, wsk: openwhisk.Client,
-        deployerAnnot: DeployerAnnotation, projectParams: openwhisk.Dict, namespaceIsClean: boolean, versions: VersionEntry): Promise<DeployResponse> {
+export async function deployPackage(pkg: PackageSpec, wsk: openwhisk.Client, deployerAnnot: DeployerAnnotation,
+        projectParams: openwhisk.Dict, namespaceIsClean: boolean, versions: VersionEntry, reader: ProjectReader): Promise<DeployResponse> {
     if (pkg.name == 'default') {
-        return Promise.all(pkg.actions.map(action => deployAction(action, wsk, "", deployerAnnot, namespaceIsClean, versions))).then(combineResponses)
+        return Promise.all(pkg.actions.map(action => deployAction(action, wsk, "", deployerAnnot, namespaceIsClean, versions, reader)))
+            .then(combineResponses)
     }
     // Check whether the package metadata needs to be deployed; if so, deploy it.  If not, make a vacuous response with the existing package
     // VersionInfo.   That is needed so that the new versions.json will have the information in it.
@@ -211,27 +206,21 @@ export async function deployPackage(pkg: PackageSpec, wsk: openwhisk.Client,
     }
     // Now deploy (or skip) the actions of the package
     const prefix = pkg.name + '/'
-    const promises = pkg.actions.map(action => deployAction(action, wsk, prefix, deployerAnnot, pkg.clean || namespaceIsClean, versions))
-        .concat(Promise.resolve(pkgResponse))
+    const promises = pkg.actions.map(action => deployAction(action, wsk, prefix, deployerAnnot, pkg.clean || namespaceIsClean,
+        versions, reader)).concat(Promise.resolve(pkgResponse))
     return Promise.all(promises).then(responses => combineResponses(responses))
 }
 
 // Deploy an action
 function  deployAction(action: ActionSpec, wsk: openwhisk.Client, prefix: string, deplAnnot: DeployerAnnotation,
-        actionIsClean: boolean, versions: VersionEntry): Promise<DeployResponse> {
+        actionIsClean: boolean, versions: VersionEntry, reader: ProjectReader): Promise<DeployResponse> {
     if (action.code) {
         return deployActionFromCode(action, prefix, action.code, wsk, deplAnnot, actionIsClean, versions)
     }
     const codeFile = action.file
-    return new Promise(function(resolve, reject) {
-        fs.readFile(codeFile, (err, data) => {
-           if (err) {
-                reject(err)
-           } else {
-                const code = action.binary ? data.toString('base64') : String(data)
-                resolve(code)
-           }
-        })
+    return reader.readFileContents(codeFile).then(data => {
+        const code = action.binary ? data.toString('base64') : String(data)
+        return code
     }).then((code: string) => deployActionFromCode(action, prefix, code, wsk, deplAnnot, actionIsClean, versions))
     .catch(err => Promise.resolve(wrapError(err, `action '${prefix}${action.name}'`)))
 }

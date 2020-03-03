@@ -19,7 +19,7 @@
  */
 
 import { DeployStructure, DeployResponse, DeploySuccess, DeployKind, ActionSpec, PackageSpec,
-    DeployerAnnotation, WebResource, VersionMap, VersionEntry, BucketSpec, Includer } from './deploy-struct'
+    DeployerAnnotation, WebResource, VersionMap, VersionEntry, BucketSpec, Includer, PathKind, ProjectReader } from './deploy-struct'
 import * as openwhisk from 'openwhisk'
 import * as fs from 'fs'
 import * as os from 'os'
@@ -28,7 +28,6 @@ import * as simplegit from 'simple-git/promise'
 import * as mime from 'mime-types'
 import * as randomstring from 'randomstring'
 import * as crypto from 'crypto'
-import { promiseFiles } from 'node-dir'
 import * as yaml  from 'js-yaml'
 import * as makeDebug from 'debug'
 import { isArray } from 'util';
@@ -42,41 +41,35 @@ export const FILES_TO_SKIP = [ '.gitignore', '.DS_Store' ]
 //
 
 // Read the project config file, with validation
-export function loadProjectConfig(configFile: string, envPath: string, filePath: string): Promise<object> {
-    return new Promise(function(resolve, reject) {
-        fs.readFile(configFile, (err, data) => {
-            if (err) {
-                reject(err)
+export function loadProjectConfig(configFile: string, envPath: string, filePath: string, reader: ProjectReader): Promise<object> {
+    return reader.readFileContents(configFile).then(async data => {
+        try {
+            const content = await substituteFromEnvAndFiles(String(data), envPath, filePath, reader)
+            let config: {}
+            if (configFile.endsWith(".json")) {
+                config = JSON.parse(content)
             } else {
-                try {
-                    const content = substituteFromEnvAndFiles(String(data), envPath, filePath)
-                    let config: {}
-                    if (configFile.endsWith(".json")) {
-                        config = JSON.parse(content)
-                    } else {
-                        if (content.includes('\t')) {
-                            reject(new Error("YAML configuration may not contain tabs"))
-                            return
-                        } else {
-                            config = yaml.safeLoad(content)
-                        }
-                    }
-                    const configError = validateDeployConfig(config)
-                    if (configError) {
-                        reject(new Error(configError))
-                    } else {
-                        removeEmptyStringMembers(config)
-                        resolve(config)
-                    }
-                } catch (error) {
-                    if (error.message) {
-                        // Attempt to remove crufty overhead from js-yaml
-                        error = new Error(error.message)
-                    }
-                    reject(error)
+                if (content.includes('\t')) {
+                    Promise.reject(new Error("YAML configuration may not contain tabs"))
+                    return
+                } else {
+                    config = yaml.safeLoad(content)
                 }
             }
-        })
+            const configError = validateDeployConfig(config)
+            if (configError) {
+                Promise.reject(new Error(configError))
+            } else {
+                removeEmptyStringMembers(config)
+                return config
+            }
+        } catch (error) {
+            if (error.message) {
+                // Attempt to remove crufty overhead from js-yaml
+                error = new Error(error.message)
+            }
+            Promise.reject(error)
+        }
     })
 }
 
@@ -602,9 +595,9 @@ function binaryFromExt(ext: string): boolean {
 }
 
 // Filters temp files from an array of Dirent structures
-export function filterFiles(entries: fs.Dirent[]): fs.Dirent[] {
+export function filterFiles(entries: PathKind[]): PathKind[] {
     return entries.filter(entry => {
-        if (entry.isFile()) {
+        if (!entry.isDirectory) {
             return !entry.name.endsWith('~') && FILES_TO_SKIP.every(_ => entry.name !== _)
         } else {
             return entry
@@ -613,8 +606,8 @@ export function filterFiles(entries: fs.Dirent[]): fs.Dirent[] {
 }
 
 // Combines promiseFiles (from node-dir) with the equivalent of filterFiles
-export function promiseFilesAndFilterFiles(root: string): Promise<string[]> {
-    return promiseFiles(root).then((items: string[]) => items.filter((item: string) => !item.endsWith('~')))
+export function promiseFilesAndFilterFiles(root: string, reader: ProjectReader): Promise<string[]> {
+    return reader.readAllFiles(root).then((items: string[]) => items.filter((item: string) => !item.endsWith('~')))
 }
 
 // Substitute from the environment and from files.  Variable references look like template variables: ${FOO} reads the
@@ -626,10 +619,11 @@ export function promiseFilesAndFilterFiles(root: string): Promise<string[]> {
 // The form ${ token1 token2 token3 } where tokens are non-whitespace separated by whitespace is a special shorthand
 // that expands to { token1: value, token2: value, token3: value } where the values are obtained by looking up the
 // tokens in the process environment (higher precedence) or property file located at 'envPath'.
-export function substituteFromEnvAndFiles(input: string, envPath: string, projectPath: string): string {
+export async function substituteFromEnvAndFiles(input: string, envPath: string, projectPath: string,
+        reader: ProjectReader): Promise<string> {
     let result = ""  // Will accumulate the result
     const badVars: string[] = [] // Will accumulate failures to resolve
-    const props = envPath ? getPropsFromFile(envPath) : {}
+    const props = envPath ? await getPropsFromFile(envPath, reader) : {}
     // console.log('envPath', envPath)
     // console.log('props', props)
     let nextBreak = input.indexOf("${")
@@ -647,7 +641,7 @@ export function substituteFromEnvAndFiles(input: string, envPath: string, projec
             subst = getMultipleSubstitutions(envar, props)
         } else if (envar.startsWith('<')) {
             const fileSubst = path.join(projectPath, envar.slice(1))
-            subst = getSubstituteFromFile(fileSubst)
+            subst = await getSubstituteFromFile(fileSubst, reader)
         } else {
             subst = process.env[envar] || props[envar]
          }
@@ -682,21 +676,21 @@ function getMultipleSubstitutions(tokens: string, props: object): string {
 // Get a substitution JSON string from a file.  The file is read and, if it is valid JSON, it is simply used as is.
 // Otherwise, it is reparsed as a properties file and the result is converted to JSON.  If the file is neither a valid JSON
 // file nor a valid properties file, that is an error.
-function getSubstituteFromFile(path: string): string {
-    if (!fs.existsSync(path) || !fs.lstatSync(path).isFile()) {
+async function getSubstituteFromFile(path: string, reader: ProjectReader): Promise<string> {
+    if (!reader.isExistingFile(path)) {
         return undefined
     }
-    const props = getPropsFromFile(path)
+    const props = await getPropsFromFile(path, reader)
     const answer = JSON.stringify(props)
     return answer === '{}' ? undefined : answer
 }
 
 // Get properties from a file, which may be a properties file or JSON
-function getPropsFromFile(filePath: string): object {
-    if (!fs.existsSync(filePath)) {
+async function getPropsFromFile(filePath: string, reader: ProjectReader): Promise<object> {
+    if (!reader.isExistingFile(filePath)) {
         return {}
     }
-    const contents = String(fs.readFileSync(filePath))
+    const contents = String(await reader.readFileContents(filePath))
     try {
         return JSON.parse(contents)
     } catch {}

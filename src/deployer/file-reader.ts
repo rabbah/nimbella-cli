@@ -20,8 +20,12 @@
 
 import { promiseFiles } from 'node-dir'
 import * as fs from 'fs'
+import * as Path from 'path'
 import { promisify } from 'util'
 import { inBrowser } from '../NimBaseCommand'
+import { ProjectReader, PathKind } from './deploy-struct'
+import * as makeDebug from 'debug'
+const debug = makeDebug('nimbella-cli/file-reader')
 
 // Guard with inBrowser in order to safely declare as module constants.  If used correctly
 // the functions will never be called in a browser.
@@ -29,29 +33,70 @@ const fs_readdir = inBrowser ? (() => undefined) : promisify(fs.readdir)
 const fs_readfile = inBrowser ? (() => undefined) : promisify(fs.readFile)
 const fs_lstat = inBrowser ? (() => undefined) : promisify(fs.lstat)
 
-// Defines the general ProjectReader interface and contains the file system implementation for it
+// The file system implementation of ProjectReader
+// The file system implementation accepts absolute paths and relative paths landing anywhere in the filesystem.
+// At 'make' time, the path of the project (within the file system is provided)
 
-export interface ProjectReader {
-    readdir: (path: string) => Promise<{ name: string, isDirectory: boolean }[]>
-    readAllFiles: (dir: string) => Promise<string[]>
-    readFileContents: (path: string) => Promise<Buffer>
-    isExistingFile: (path: string) => Promise<boolean>
+// Make
+export function makeFileReader(basepath: string): ProjectReader {
+    debug("making file reader on basepath '%s'", basepath)
+    return new FileProjectReader(basepath)
 }
 
-// The file system implementation
-export const fileSystemProjectReader: ProjectReader = {
-    readdir, readAllFiles: promiseFiles, readFileContents: fs_readfile, isExistingFile
-}
+// Implementing class
+class FileProjectReader implements ProjectReader {
+    // Project location in the file system
+    basepath: string
 
-// File system implementation of readdir.
-function readdir(path: string): Promise<{ name: string, isDirectory: boolean }[]> {
-    return fs_readdir(path).then((entries: fs.Dirent[]) => entries.map(entry => {
-        return  { name: entry.name, isDirectory: entry.isDirectory() }
-    }))
-}
+    constructor(basepath: string) {
+        this.basepath = basepath
+    }
 
-// File system implementation of isExistingFile
-function isExistingFile(path: string): Promise<boolean> {
-    return fs_lstat(path).then((stats: fs.Stats) => stats.isFile()).catch(() => false)
-}
+    // File system implementation of readdir.
+    readdir(path: string): Promise<PathKind[]> {
+        debug("request to read directory '%s'", path)
+        path = Path.resolve(this.basepath, path)
+        debug("resolved to directory '%s", path)
+        return fs_readdir(path, { withFileTypes: true }).then((entries: fs.Dirent[]) => entries.map(entry => {
+            return  { name: entry.name, isDirectory: entry.isDirectory(), isFile: entry.isFile() }
+        }))
+    }
 
+    // File system implementation of readAllFiles
+    readAllFiles(dir: string): Promise<string[]> {
+        dir = Path.resolve(this.basepath, dir)
+        return promiseFiles(dir)
+    }
+
+    // File system implementation of readFileContents
+    readFileContents(path: string): Promise<Buffer> {
+        path = Path.resolve(this.basepath, path)
+        return fs_readfile(path)
+    }
+
+    // File system implementation of isExistingFile
+    isExistingFile(path: string): Promise<boolean> {
+        debug("testing existence for file '%s'", path)
+        path = Path.resolve(this.basepath, path)
+        debug("resolved to file '%s", path)
+        return fs_lstat(path).then((stats: fs.Stats) => {
+            if (stats.isFile()) {
+                debug("file exists")
+                return true
+            }
+            debug("path exists but is not a file")
+            return false
+        }).catch(() => {
+            debug("lstat failed for path %s", path)
+            return false
+        })
+    }
+
+    // File system implementation  of getPathKind
+    getPathKind(path: string): Promise<PathKind> {
+        path = Path.resolve(this.basepath, path)
+        return fs_lstat(path).then((stats: fs.Stats) => {
+            return { name: Path.basename(path), isFile: stats.isFile(), isDirectory: stats.isDirectory(), mode: stats.mode }
+        })
+    }
+}
