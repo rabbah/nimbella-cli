@@ -52,6 +52,11 @@ class FileProjectReader implements ProjectReader {
         this.basepath = basepath
     }
 
+    // Retrieve the basepath
+    getFSLocation(): string {
+        return this.basepath
+    }
+
     // File system implementation of readdir.
     readdir(path: string): Promise<PathKind[]> {
         debug("request to read directory '%s'", path)

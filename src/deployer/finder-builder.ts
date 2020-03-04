@@ -124,6 +124,12 @@ function processInclude(includesPath: string, dirPath: string, reader: ProjectRe
     return readFileAsList(includesPath, reader).then(items => processIncludeFileItems(items, dirPath, reader))
 }
 
+// Used instead of path.resolve to deal with possible '..' directives.  We don't want absolute path names
+// as a result, nor do we want the current directory to be consulted, just path concatenation and normalization.
+function joinAndNormalize(...paths: string[]): string {
+    return path.normalize(path.join(...paths))
+}
+
 // Subroutine of processInclude to run after items are read
 async function processIncludeFileItems(items: string[], dirPath: string, reader: ProjectReader): Promise<string[][]> {
     const complex: Promise<string[][]>[] = []
@@ -133,7 +139,7 @@ async function processIncludeFileItems(items: string[], dirPath: string, reader:
             continue
         }
         //console.log('processing item', item)
-        const oldPath = path.resolve(dirPath, item)
+        const oldPath = joinAndNormalize(dirPath, item)
         //console.log("Calculated oldPath", oldPath)
         const lstat: PathKind = await reader.getPathKind(oldPath)
         if (lstat) {
@@ -220,7 +226,7 @@ function outOfLineBuilder(filepath: string, displayPath: string, sharedBuilds: B
         if (contents.length == 0 || contents.length > 1) {
             return Promise.reject(buildPath + " contains too many or too few lines")
         }
-        const redirected = path.resolve(filepath, contents[0])
+        const redirected = joinAndNormalize(filepath, contents[0])
         const stat: PathKind = await reader.getPathKind(redirected)
         if (stat.isFile) {
             // Simply run linked-to script in the current directory

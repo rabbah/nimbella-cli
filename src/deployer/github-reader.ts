@@ -46,6 +46,11 @@ class GithubProjectReader implements ProjectReader {
         this.def = def
     }
 
+    // Implement getFSLocation for github (throws an error)
+    getFSLocation(): string {
+        throw new Error("Github project has no local file system location")
+    }
+
     // Implement readdir for github
     async readdir(path: string): Promise<PathKind[]> {
         if (Path.isAbsolute(path)) {

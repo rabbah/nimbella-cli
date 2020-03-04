@@ -275,4 +275,6 @@ export interface ProjectReader {
     isExistingFile: (path: string) => Promise<boolean>
     // Get the PathKind of a path
     getPathKind: (path: string) => Promise<PathKind>
+    // Get the location of the project in a real file system (throws for github)
+    getFSLocation: () => string
 }
