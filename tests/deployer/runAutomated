@@ -41,7 +41,9 @@ function runTest() {
 if [ "$1" == "--ongcp" ]; then
 	 nim auth switch wbtestni-grinjpsjnuh --apihost https://apigcp.nimbella.io
 else
-   nimadmin user set demos test
+   pushd $SELFDIR/../../../main
+   bin/nimadmin user set demos test
+	 popd
 fi
 
 for i in MultiSubstitute SplitParams SharedBuild Filtering WebInclude Ignoring EmptyReduce Incremental Environment Errors Unweb ValidateRuntime LoginAuth; do
