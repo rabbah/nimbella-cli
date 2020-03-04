@@ -30,7 +30,6 @@ import * as randomstring from 'randomstring'
 import * as crypto from 'crypto'
 import * as yaml  from 'js-yaml'
 import * as makeDebug from 'debug'
-import { isArray } from 'util';
 const debug = makeDebug('nim:deployer:util')
 
 // List of files to skip as actions inside packages, or from auto-zipping
@@ -605,9 +604,39 @@ export function filterFiles(entries: PathKind[]): PathKind[] {
     })
 }
 
-// Combines promiseFiles (from node-dir) with the equivalent of filterFiles
+// Emulates promiseFiles (from node-dir) using a ProjectReader and adds filtering like filterFiles
 export function promiseFilesAndFilterFiles(root: string, reader: ProjectReader): Promise<string[]> {
-    return reader.readAllFiles(root).then((items: string[]) => items.filter((item: string) => !item.endsWith('~')))
+    return promiseFiles(root, reader).then((items: string[]) => items.filter((item: string) => !item.endsWith('~')
+        && FILES_TO_SKIP.every(_ => item !== _)))
+}
+
+// Emulate promiseFiles using a ProjectReader
+async function promiseFiles(dir: string, reader: ProjectReader): Promise<string[]> {
+    debug("promiseFiles called on directory %s", dir)
+    const files: string[] = []
+    let subdirs = await promiseFilesRound(dir, files, [], reader)
+    while (subdirs.length > 0) {
+        const next = subdirs.pop()
+        debug("promiseFiles recursing on subdirectory '%s', with '%d' files accumulated and '%d' subdirectories still pending",
+            next, files.length, subdirs.length)
+        subdirs = await promiseFilesRound(next, files, subdirs, reader)
+    }
+    debug('promiseFiles returning with %d files', files.length)
+    return files
+}
+
+// Working subroutine of promiseFiles
+async function promiseFilesRound(dir: string, files: string[], subdirs: string[], reader: ProjectReader): Promise<string[]> {
+    const items = await reader.readdir(dir)
+    items.forEach(async item => {
+        const itemPath = path.join(dir, item.name)
+        if (item.isDirectory) {
+            subdirs.push(itemPath)
+        } else {
+            files.push(itemPath)
+        }
+    })
+    return subdirs
 }
 
 // Substitute from the environment and from files.  Variable references look like template variables: ${FOO} reads the

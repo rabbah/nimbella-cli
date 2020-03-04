@@ -453,6 +453,7 @@ function findSpecialFile(items: PathKind[], filepath: string, isAction: boolean)
 // The 'builder' for use when the action is a single file after all other processing
 function singleFileBuilder(action: ActionSpec, singleItem: string): Promise<ActionSpec> {
     const file = joinAndNormalize(action.file, singleItem)
+    debug("single file builder for '%s'", file)
     let newMeta = actionFileToParts(file)
     delete newMeta.name
     newMeta['web'] = true
@@ -480,36 +481,56 @@ async function autozipBuilder(pairs: string[][], action: ActionSpec, incremental
     if (!action.runtime) {
         action.runtime = agreeOnRuntime(pairs.map(pair => pair[0]))
     }
-    // TODO we want to be able to do zipping without a file system
-    targetZip = path.resolve(reader.getFSLocation(), targetZip)
+    // TODO we want to be able to do zipping without a file system.  But, for the moment we require one so we
+    // fix up the paths accordingly.
+    const location = reader.getFSLocation()
+    targetZip = path.resolve(location, targetZip)
+    pairs = pairs.map(pair => [ path.resolve(location, pair[0]), pair[1] ])
     if (fs.existsSync(targetZip)) {
-        const metaFiles: string[] = [ path.join(action.file, '.include'), path.join(action.file, '.ignore') ].filter(fs.existsSync)
+        const metaFiles: string[] = [ path.resolve(location, action.file, '.include'),
+            path.resolve(location, action.file, '.ignore') ].filter(fs.existsSync)
         if (incremental && zipFileAppearsCurrent(targetZip, pairs.map(pair => pair[0]).concat(metaFiles))) {
             return singleFileBuilder(action, ZIP_TARGET)
         }
+        debug("deleting old target zip")
         fs.unlinkSync(targetZip)
     }
+    debug("zipping to %s", targetZip)
     const output = fs.createWriteStream(targetZip);
     const zip = archiver('zip')
     const outputPromise = new Promise(function(resolve, reject) {
         zip.on('error', err => {
+            debug("zip error occurred: %O", err)
             reject(err)
         })
         output.on('close', () => {
+            debug('zipfile successfully closed')
             resolve(undefined)
         })
-    })
+        output.on('end', () => {
+            debug('zipfile data has been drained');
+        })
+        zip.on('warning', err => {
+            debug('warning issued from archiver %O', err)
+            if (err.code !== 'ENOENT') {
+                reject(err)
+            }
+        })
+     })
     zip.pipe(output)
+    debug('zipping %d files', pairs.length)
     for (const pair of pairs) {
         const [oldPath, newPath ] = pair
-        //console.log("Zipping file with old path", oldPath, "and new path", newPath)
         const mode = (await reader.getPathKind(oldPath)).mode
+        //debug("Zipping file with old path '%s', new path '%s', and mode %d", oldPath, newPath, mode)
         zip.file(oldPath, { name: newPath, mode: mode })
     }
     zip.finalize()
-    if (verboseZip)
-        console.log('Zipping complete in', action.file )
-    return outputPromise.then(() => singleFileBuilder(action, ZIP_TARGET))
+    return outputPromise.then(() => {
+        if (verboseZip)
+            console.log('Zipping complete in', action.file )
+        return singleFileBuilder(action, ZIP_TARGET)
+    })
 }
 
 // Subroutine for performing a "real" build requiring a spawn.
