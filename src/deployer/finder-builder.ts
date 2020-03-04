@@ -138,11 +138,11 @@ async function processIncludeFileItems(items: string[], dirPath: string, reader:
         if (!item || item.length == 0) {
             continue
         }
-        //console.log('processing item', item)
+        debug('processing include item %s', item)
         const oldPath = joinAndNormalize(dirPath, item)
-        //console.log("Calculated oldPath", oldPath)
+        debug("Calculated oldPath '%s'", oldPath)
         const lstat: PathKind = await reader.getPathKind(oldPath)
-        if (lstat) {
+        if (!lstat) {
             return Promise.reject(new Error(`${oldPath} is included for '${dirPath}' but does not exist`))
         }
         let newPath: string
@@ -153,12 +153,12 @@ async function processIncludeFileItems(items: string[], dirPath: string, reader:
             newPath = item
         }
         const toElide = oldPath.length - newPath.length
-        //console.log("Calculated newPath", newPath, "with elision", toElide)
+        debug("Calculated newPath '%s' with elision %d", newPath, toElide)
         if (lstat.isFile) {
             simple.push([oldPath, newPath])
         } else if (lstat.isDirectory) {
             const expanded = promiseFilesAndFilterFiles(oldPath, reader).then(items => items.map(item => [item, item.slice(toElide)]))
-            //console.log("Expanded directory", oldPath)
+            debug("Expanded directory '%s'", oldPath)
             complex.push(expanded)
         } else {
             return Promise.reject(new Error(`'${item}' is neither a file nor a directory`))
@@ -236,11 +236,11 @@ function outOfLineBuilder(filepath: string, displayPath: string, sharedBuilds: B
             return readDirectory(redirected, reader).then(items => {
                 const special = findSpecialFile(items, filepath, isAction)
                 let build: () => Promise<any> = undefined
-                const cwd = path.resolve(redirected)
+                const cwd = path.resolve(reader.getFSLocation(), redirected)
                 switch (special) {
                     case 'build.sh':
                     case 'build.cmd':
-                        const script = path.resolve(redirected, special)
+                        const script = path.resolve(reader.getFSLocation(),  redirected, special)
                         // Like the direct link case, just a different way of doing it
                         build = () => scriptBuilder(script, cwd, displayPath, flags)
                         break
@@ -253,7 +253,7 @@ function outOfLineBuilder(filepath: string, displayPath: string, sharedBuilds: B
                 // Before running the selected build, check for shared build
                 if (isSharedBuild(items)) {
                     // The build is shared so we only run it once
-                    const buildKey = path.resolve(redirected)
+                    const buildKey = path.resolve(reader.getFSLocation(), redirected)
                     let buildStatus = sharedBuilds[buildKey]
                     if (buildStatus) {
                         // It's already been claimed and is either complete or in progress
@@ -452,7 +452,7 @@ function findSpecialFile(items: PathKind[], filepath: string, isAction: boolean)
 
 // The 'builder' for use when the action is a single file after all other processing
 function singleFileBuilder(action: ActionSpec, singleItem: string): Promise<ActionSpec> {
-    const file = path.resolve(action.file, singleItem)
+    const file = joinAndNormalize(action.file, singleItem)
     let newMeta = actionFileToParts(file)
     delete newMeta.name
     newMeta['web'] = true
@@ -476,11 +476,12 @@ function singleFileBuilder(action: ActionSpec, singleItem: string): Promise<Acti
 async function autozipBuilder(pairs: string[][], action: ActionSpec, incremental: boolean, verboseZip: boolean, reader: ProjectReader): Promise<ActionSpec> {
     if (verboseZip)
         console.log('Zipping action contents in', action.file )
-    const targetZip = path.join(action.file, ZIP_TARGET)
+    let targetZip = path.join(action.file, ZIP_TARGET)
     if (!action.runtime) {
         action.runtime = agreeOnRuntime(pairs.map(pair => pair[0]))
     }
     // TODO we want to be able to do zipping without a file system
+    targetZip = path.resolve(reader.getFSLocation(), targetZip)
     if (fs.existsSync(targetZip)) {
         const metaFiles: string[] = [ path.join(action.file, '.include'), path.join(action.file, '.ignore') ].filter(fs.existsSync)
         if (incremental && zipFileAppearsCurrent(targetZip, pairs.map(pair => pair[0]).concat(metaFiles))) {
