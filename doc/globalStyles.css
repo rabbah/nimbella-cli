@@ -20,7 +20,73 @@ body {
   padding: 1rem;
 }
 
+:target {
+  padding-top: 130px;
+  margin-top: -130px;
+}
+
 html, body { height: 100%; }
+
+header { position: fixed; top: 0; background: white; width: 100%; border-bottom: 1px solid #efefef; padding: 3rem 0; }
+header h1 { margin-bottom: 0; line-height: 1; color: #122A2E; }
+
+nav, main {
+  padding: 1rem;
+  box-sizing: border-box;
+  padding-bottom: 80vh;
+}
+
+nav {
+  position: fixed;
+  top: 118px;
+  left: 0;
+  width: 25%;
+  font-size: 0.9em;
+  height: 100vh;
+  overflow-y: auto;
+  background-color: #122A2E;
+  padding-left: 0.5em;
+  color: white;
+}
+
+/*nav ul
+  padding-left: 0.5rem;
+}*/
+
+/*nav ul li {
+  line-height: 1.6em;
+}*/
+
+
+nav > ul {
+  margin-top: 0;
+}
+
+nav > ul > li {
+  padding: 0.5em 0;
+}
+
+nav > ul > li > a {
+  color: white;
+  font-weight: 600;
+}
+
+nav a {
+  color: #99a7ab;
+  text-decoration: none !important;
+  transition: color .3s ease-in-out;
+}
+
+nav a:hover, nav a:focus {
+  color: #00b7d8;
+}
+
+main {
+  width: 74%;
+  float: left;
+  margin-left: 26%;
+  margin-top: 105px;
+}
 
 a {
   color: #0a9db7;
@@ -109,7 +175,7 @@ select {
 
 hr {
   border: 1px solid #efefef;
-  margin: 3rem auto 5rem;
+  margin: 3rem auto;
 }
 
 li {
@@ -162,6 +228,18 @@ img[src='./fig7-nim-examples-project-chat-react-directory-structure.svg'] {
   img[src='./fig7-nim-examples-project-chat-react-directory-structure.svg'] {
     width: 100%;
   }
+
+  nav, main, header {
+    width: 100%;
+    position: unset;
+    margin: auto;
+    font-size: 1em;
+    height: auto;
+    overflow-y: auto;
+    padding-bottom: unset;
+  }
+
+  :target { padding-top: unset; margin-top: unset; };
 }
 
 @media (max-width: 414px) {
