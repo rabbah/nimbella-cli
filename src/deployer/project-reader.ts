@@ -91,7 +91,8 @@ export function readTopLevel(filePath: string, env: string, userAgent: string, i
                 } else if (!item.isDirectory && (item.name.endsWith(".yml") || item.name.endsWith(".yaml"))) {
                     notconfig = item.name
                 } else if (!env && !item.isDirectory && item.name == ENV_FILE) {
-                    env = item.name
+                    // Env file reading will not go through the reader so use a path that includes a path to the project
+                    env = path.join(filePath, item.name)
                 } else {
                     strays.push(item.name)
                 }

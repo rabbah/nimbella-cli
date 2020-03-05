@@ -121,6 +121,7 @@ function buildAction(action: ActionSpec, buildTable: BuildTable, flags: Flags, r
 // should assume once included.  For simple cases (files and directories that are inside the directory that contains the .include) these
 // will be the same.  For complex cases (absolute paths or .. directives) they will differ.
 function processInclude(includesPath: string, dirPath: string, reader: ProjectReader): Promise<string[][]> {
+    debug("processing includes from '%s'", includesPath)
     return readFileAsList(includesPath, reader).then(items => processIncludeFileItems(items, dirPath, reader))
 }
 
@@ -175,13 +176,13 @@ async function processIncludeFileItems(items: string[], dirPath: string, reader:
 
 // Identify the files that make up an action directory, based on the files in the directory and .include. .source, or .ignore if present.
 // If there is more than one file, perform autozipping.
-function identifyActionFiles(action: ActionSpec, incremental: boolean, verboseZip: boolean, reader: ProjectReader): Promise<ActionSpec> {
+async function identifyActionFiles(action: ActionSpec, incremental: boolean, verboseZip: boolean, reader: ProjectReader): Promise<ActionSpec> {
     let includesPath = path.join(action.file, '.include')
-    if (!reader.isExistingFile(includesPath)) {
+    if (!await reader.isExistingFile(includesPath)) {
         // Backward compatibility: try .source also
         includesPath = path.join(action.file, '.source')
     }
-    if (reader.isExistingFile(includesPath)) {
+    if (await reader.isExistingFile(includesPath)) {
         // If there is .include or .source, it is canonical and all else is ignored
         return processInclude(includesPath, action.file, reader).then(pairs => {
             if (pairs.length == 0) {

@@ -43,7 +43,7 @@ export const FILES_TO_SKIP = [ '.gitignore', '.DS_Store' ]
 export function loadProjectConfig(configFile: string, envPath: string, filePath: string, reader: ProjectReader): Promise<object> {
     return reader.readFileContents(configFile).then(async data => {
         try {
-            const content = await substituteFromEnvAndFiles(String(data), envPath, filePath, reader)
+            const content = substituteFromEnvAndFiles(String(data), envPath, filePath)
             let config: {}
             if (configFile.endsWith(".json")) {
                 config = JSON.parse(content)
@@ -648,11 +648,10 @@ async function promiseFilesRound(dir: string, files: string[], subdirs: string[]
 // The form ${ token1 token2 token3 } where tokens are non-whitespace separated by whitespace is a special shorthand
 // that expands to { token1: value, token2: value, token3: value } where the values are obtained by looking up the
 // tokens in the process environment (higher precedence) or property file located at 'envPath'.
-export async function substituteFromEnvAndFiles(input: string, envPath: string, projectPath: string,
-        reader: ProjectReader): Promise<string> {
+export function substituteFromEnvAndFiles(input: string, envPath: string, projectPath: string): string {
     let result = ""  // Will accumulate the result
     const badVars: string[] = [] // Will accumulate failures to resolve
-    const props = envPath ? await getPropsFromFile(envPath, reader) : {}
+    const props = envPath ? getPropsFromFile(envPath) : {}
     // console.log('envPath', envPath)
     // console.log('props', props)
     let nextBreak = input.indexOf("${")
@@ -670,7 +669,7 @@ export async function substituteFromEnvAndFiles(input: string, envPath: string, 
             subst = getMultipleSubstitutions(envar, props)
         } else if (envar.startsWith('<')) {
             const fileSubst = path.join(projectPath, envar.slice(1))
-            subst = await getSubstituteFromFile(fileSubst, reader)
+            subst = getSubstituteFromFile(fileSubst)
         } else {
             subst = process.env[envar] || props[envar]
          }
@@ -705,23 +704,24 @@ function getMultipleSubstitutions(tokens: string, props: object): string {
 // Get a substitution JSON string from a file.  The file is read and, if it is valid JSON, it is simply used as is.
 // Otherwise, it is reparsed as a properties file and the result is converted to JSON.  If the file is neither a valid JSON
 // file nor a valid properties file, that is an error.
-async function getSubstituteFromFile(path: string, reader: ProjectReader): Promise<string> {
-    if (!reader.isExistingFile(path)) {
+function getSubstituteFromFile(path: string): string {
+    if (!fs.existsSync(path)) {
         return undefined
     }
-    const props = await getPropsFromFile(path, reader)
+    const props = getPropsFromFile(path)
     const answer = JSON.stringify(props)
     return answer === '{}' ? undefined : answer
 }
 
 // Get properties from a file, which may be a properties file or JSON
-async function getPropsFromFile(filePath: string, reader: ProjectReader): Promise<object> {
-    if (!reader.isExistingFile(filePath)) {
+// This function does not use the project reader because the environment file is specified separately
+function getPropsFromFile(filePath: string): object {
+    if (!fs.existsSync(filePath)) {
         return {}
     }
-    const contents = String(await reader.readFileContents(filePath))
+    const contents = fs.readFileSync(filePath)
     try {
-        return JSON.parse(contents)
+        return JSON.parse(String(contents))
     } catch {}
     // It's not JSON, so see if it's a properties file
     const propParser = require('dotenv')
