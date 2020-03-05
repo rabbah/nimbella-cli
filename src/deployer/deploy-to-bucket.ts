@@ -93,10 +93,11 @@ export async function deployToBucket(resource: WebResource, client: Bucket, spec
     destination = destination.replace(/\\/g, '/') // windows conventions don't work on the bucket
     //console.log('fixed up destination', destination)
     // Upload
-    // TODO on github, the filePath can't be used directly here, you have to use the 'data' retrieved earlier.
-    // In order that that should work correctly, we have to set the content type appropriately.
     const metadata = { cacheControl: 'no-cache' }
-    return client.upload(resource.filePath, { destination, metadata }).then(() => {
+    // TODO on github, the filePath can't be used directly here, you have to use the 'data' retrieved earlier.
+    // In order that that should work correctly, we have to set the content type appropriately.   For now:
+    const filePath = path.resolve(reader.getFSLocation(), resource.filePath)
+    return client.upload(filePath, { destination, metadata }).then(() => {
         const item = `https://${client.name}/${destination}`
         const response = wrapSuccess(item, "web", false, undefined, {}, undefined)
         response.webHashes = {}

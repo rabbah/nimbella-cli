@@ -130,6 +130,12 @@ function joinAndNormalize(...paths: string[]): string {
     return path.normalize(path.join(...paths))
 }
 
+// Convert a path that is relative to the project root into a path usable with 'fs'.  This should be done only for things
+// that require real building since it will abort the deploy when the project root is a github location.
+function makeLocal(reader: ProjectReader, ...paths: string[]): string {
+    return path.resolve(reader.getFSLocation(), ...paths)
+}
+
 // Subroutine of processInclude to run after items are read
 async function processIncludeFileItems(items: string[], dirPath: string, reader: ProjectReader): Promise<string[][]> {
     const complex: Promise<string[][]>[] = []
@@ -198,7 +204,7 @@ function identifyActionFiles(action: ActionSpec, incremental: boolean, verboseZi
                 items = items.map(item => path.join(action.file, item))
             }
             if (items.length == 1) {
-                return singleFileBuilder(action, items[0].substring(action.file.length + 1))
+                return singleFileBuilder(action, items[0])
             } else {
                 const pairs = items.map(item => {
                     const shortName = item.substring(action.file.length + 1)
@@ -236,11 +242,11 @@ function outOfLineBuilder(filepath: string, displayPath: string, sharedBuilds: B
             return readDirectory(redirected, reader).then(items => {
                 const special = findSpecialFile(items, filepath, isAction)
                 let build: () => Promise<any> = undefined
-                const cwd = path.resolve(reader.getFSLocation(), redirected)
+                const cwd = makeLocal(reader, redirected)
                 switch (special) {
                     case 'build.sh':
                     case 'build.cmd':
-                        const script = path.resolve(reader.getFSLocation(),  redirected, special)
+                        const script = makeLocal(reader,  redirected, special)
                         // Like the direct link case, just a different way of doing it
                         build = () => scriptBuilder(script, cwd, displayPath, flags)
                         break
@@ -253,7 +259,7 @@ function outOfLineBuilder(filepath: string, displayPath: string, sharedBuilds: B
                 // Before running the selected build, check for shared build
                 if (isSharedBuild(items)) {
                     // The build is shared so we only run it once
-                    const buildKey = path.resolve(reader.getFSLocation(), redirected)
+                    const buildKey = makeLocal(reader, redirected)
                     let buildStatus = sharedBuilds[buildKey]
                     if (buildStatus) {
                         // It's already been claimed and is either complete or in progress
@@ -330,16 +336,18 @@ export function getBuildForWeb(filepath: string, reader: ProjectReader): Promise
 // Build the web directory
 export function buildWeb(build: string, sharedBuilds: BuildTable, filepath: string, displayPath: string,
         flags: Flags, reader: ProjectReader): Promise<WebResource[]> {
+    const scriptPath = makeLocal(reader, filepath)
     switch (build) {
         case 'build.sh':
-            return scriptBuilder('./build.sh', filepath, displayPath, flags).then(() => identifyWebFiles(filepath, reader))
+            return scriptBuilder('./build.sh', scriptPath, displayPath, flags).then(() => identifyWebFiles(filepath, reader))
         case 'build.cmd':
             //console.log('cwd for windows build is', filepath)
-            return scriptBuilder('build.cmd', filepath, displayPath, flags).then(() => identifyWebFiles(filepath, reader))
+            return scriptBuilder('build.cmd', scriptPath, displayPath, flags).then(() => identifyWebFiles(filepath, reader))
         case '.build':
+            // Does its own localizing
             return outOfLineBuilder(filepath, displayPath, sharedBuilds, false, flags, reader).then(() => identifyWebFiles(filepath, reader))
         case 'package.json':
-            return npmBuilder(filepath, displayPath, flags).then(() => identifyWebFiles(filepath, reader))
+            return npmBuilder(scriptPath, displayPath, flags).then(() => identifyWebFiles(filepath, reader))
         case '.include':
         case 'identify':
             return identifyWebFiles(filepath, reader)
@@ -452,14 +460,12 @@ function findSpecialFile(items: PathKind[], filepath: string, isAction: boolean)
 
 // The 'builder' for use when the action is a single file after all other processing
 function singleFileBuilder(action: ActionSpec, singleItem: string): Promise<ActionSpec> {
-    const file = joinAndNormalize(action.file, singleItem)
-    debug("single file builder for '%s'", file)
-    let newMeta = actionFileToParts(file)
+    let newMeta = actionFileToParts(singleItem)
     delete newMeta.name
     newMeta['web'] = true
     // After a build, only the file takes precedence over what's in the action already.  Metadata calcuated from the file name is filled
     // in, as is the default for web, but these apply only if not already specified in the action.
-    const newAction = Object.assign(newMeta, action, { file })
+    const newAction = Object.assign(newMeta, action, { file: singleItem })
     return Promise.resolve(newAction)
 }
 
@@ -483,20 +489,18 @@ async function autozipBuilder(pairs: string[][], action: ActionSpec, incremental
     }
     // TODO we want to be able to do zipping without a file system.  But, for the moment we require one so we
     // fix up the paths accordingly.
-    const location = reader.getFSLocation()
-    targetZip = path.resolve(location, targetZip)
-    pairs = pairs.map(pair => [ path.resolve(location, pair[0]), pair[1] ])
+    const localTargetZip = makeLocal(reader, targetZip)
+    pairs = pairs.map(pair => [ makeLocal(reader, pair[0]), pair[1] ])
     if (fs.existsSync(targetZip)) {
-        const metaFiles: string[] = [ path.resolve(location, action.file, '.include'),
-            path.resolve(location, action.file, '.ignore') ].filter(fs.existsSync)
-        if (incremental && zipFileAppearsCurrent(targetZip, pairs.map(pair => pair[0]).concat(metaFiles))) {
-            return singleFileBuilder(action, ZIP_TARGET)
+        const metaFiles: string[] = [ makeLocal(reader, action.file, '.include'), makeLocal(reader, action.file, '.ignore') ].filter(fs.existsSync)
+        if (incremental && zipFileAppearsCurrent(localTargetZip, pairs.map(pair => pair[0]).concat(metaFiles))) {
+            return singleFileBuilder(action, targetZip)
         }
         debug("deleting old target zip")
-        fs.unlinkSync(targetZip)
+        fs.unlinkSync(localTargetZip)
     }
     debug("zipping to %s", targetZip)
-    const output = fs.createWriteStream(targetZip);
+    const output = fs.createWriteStream(localTargetZip);
     const zip = archiver('zip')
     const outputPromise = new Promise(function(resolve, reject) {
         zip.on('error', err => {
@@ -529,7 +533,7 @@ async function autozipBuilder(pairs: string[][], action: ActionSpec, incremental
     return outputPromise.then(() => {
         if (verboseZip)
             console.log('Zipping complete in', action.file )
-        return singleFileBuilder(action, ZIP_TARGET)
+        return singleFileBuilder(action, targetZip)
     })
 }
 
