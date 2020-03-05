@@ -57,6 +57,10 @@ export class ProjectDeploy extends NimBaseCommand {
     }
     // Otherwise ...
     const { target, env, apihost, auth, insecure, production, yarn, incremental, include, exclude } = flags
+    if (incremental && argv.some(project => isGithubRef(project))) {
+      const errmsg = `'--incremental' may not be used with github projects`
+      this.handleError(errmsg, new Error(errmsg))
+    }
     const cmdFlags: Flags = { verboseBuild: flags['verbose-build'], verboseZip: flags['verbose-zip'], production, incremental, env, yarn,
       webLocal: flags['web-local'], include, exclude }
     this.debug('cmdFlags', cmdFlags)

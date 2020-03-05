@@ -23,6 +23,7 @@ import { ProjectDeploy, processCredentials, doDeploy } from './deploy'
 import { Flags, Credentials, OWOptions } from '../../deployer/deploy-struct'
 import * as fs from 'fs'
 import * as path from 'path'
+import { isGithubRef } from '../../deployer';
 
 export default class ProjectWatch extends NimBaseCommand {
   static description = 'Watch Nimbella projects, deploying incrementally on change'
@@ -117,6 +118,9 @@ function excluded(filename: string): boolean {
 // Validate a project argument to ensure that it denotes an actual directory that "looks like a project".
 // Returns an error message when there is a problem, undefined otherwise
 function validateProject(project: string): string|undefined {
+    if (isGithubRef(project)) {
+        return `'${project}' is not in the local file system; we do not support watching github projects`
+    }
     if (!fs.existsSync(project)) {
         return `${project} does not exist`
     }
