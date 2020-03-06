@@ -30,6 +30,8 @@ import * as randomstring from 'randomstring'
 import * as crypto from 'crypto'
 import { promiseFiles } from 'node-dir'
 import * as yaml  from 'js-yaml'
+import * as makeDebug from 'debug'
+const debug = makeDebug('nimbella-cli/deployer-util')
 
 // List of files to skip as actions inside packages, or from auto-zipping
 export const FILES_TO_SKIP = [ '.gitignore', '.DS_Store' ]
@@ -617,7 +619,7 @@ export function substituteFromEnvAndFiles(input: string, envPath: string, projec
         }
         let subst: string
         const envar = after.substr(0, endVar).trim()
-        // console.log('envar', envar)
+        debug('substituting for envar: %s', envar)
         if (/\s/.test(envar)) {
             subst = getMultipleSubstitutions(envar, props)
         } else if (envar.startsWith('<')) {
@@ -630,7 +632,7 @@ export function substituteFromEnvAndFiles(input: string, envPath: string, projec
             badVars.push(envar)
             subst=""
         }
-        // console.log('subst', subst)
+        debug('substition is: %s', subst)
         result = result + before + subst
         input = after.substr(endVar + 1)
         nextBreak = input.indexOf("${")
@@ -645,9 +647,10 @@ export function substituteFromEnvAndFiles(input: string, envPath: string, projec
 // Get multiple substitutions as a stringified object, given whitespace separated tokens.  Each token is
 // looked up in the process environment or env file
 function getMultipleSubstitutions(tokens: string, props: object): string {
+    debug('multiple substitution with %s', tokens)
     const ans = {}
     for (const tok of tokens.split(/\s+/)) {
-        //console.log('tok', tok)
+        debug('token: %s', tok)
         ans[tok] = process.env[tok] || props[tok]
     }
     return JSON.stringify(ans)
