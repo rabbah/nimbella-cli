@@ -468,10 +468,10 @@ export function actionFileToParts(fileName: string): { name: string, binary: boo
     let runtime: string = undefined
     let binary: boolean = undefined
     let zipped: boolean = undefined
-    let name = fileName
-    let split = fileName.indexOf(".")
+    let name = path.basename(fileName)
+    let split = name.indexOf(".")
     if (split > 0) {
-        const parts = fileName.split('.')
+        const parts = name.split('.')
         const ext = parts[parts.length - 1]
         let mid: string = undefined
         if (parts.length == 2)  {
