@@ -324,7 +324,7 @@ function buildPkgArray(pkgsDir: string, displayPath: string, includer: Includer,
         for (const name of pkgNames) {
             if (includer.isPackageIncluded(name)) {
                 const pkgPath = path.join(pkgsDir, name)
-                rdrs.push(readPackage(pkgPath, displayPath, name, includer, reader))
+                rdrs.push(readPackage(pkgPath, path.join(displayPath, name), name, includer, reader))
             }
         }
         return Promise.all([Promise.resolve(strays), Promise.all(rdrs)])
