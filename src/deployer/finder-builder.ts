@@ -28,6 +28,7 @@ import * as archiver from 'archiver'
 import * as touch from 'touch'
 import * as makeDebug from 'debug'
 const debug = makeDebug('nim:deployer:finder-builder')
+import { isGithubRef } from './github';
 
 // Type to use with the ignore package.
 interface Ignore {
@@ -94,18 +95,19 @@ function buildAction(action: ActionSpec, buildTable: BuildTable, flags: Flags, r
         return Promise.resolve(action)
     }
     debug('building action %O', action)
+    const actionDir = makeLocal(reader, action.file)
     switch (action.build) {
         case 'build.sh':
-            return scriptBuilder('./build.sh', action.file, action.displayFile, flags).then(() => identifyActionFiles(action,
+            return scriptBuilder('./build.sh', actionDir, action.displayFile, flags).then(() => identifyActionFiles(action,
                 flags.incremental, flags.verboseZip, reader))
         case 'build.cmd':
-            return scriptBuilder('build.cmd', action.file, action.displayFile, flags).then(() => identifyActionFiles(action,
+            return scriptBuilder('build.cmd', actionDir, action.displayFile, flags).then(() => identifyActionFiles(action,
                 flags.incremental, flags.verboseZip, reader))
         case '.build':
-            return outOfLineBuilder(action.file, action.displayFile, buildTable, true, flags, reader).then(() => identifyActionFiles(action,
+            return outOfLineBuilder(actionDir, action.displayFile, buildTable, true, flags, reader).then(() => identifyActionFiles(action,
                 flags.incremental, flags.verboseZip, reader))
         case 'package.json':
-            return npmBuilder(action.file, action.displayFile, flags).then(() => identifyActionFiles(action,
+            return npmBuilder(actionDir, action.displayFile, flags).then(() => identifyActionFiles(action,
                 flags.incremental, flags.verboseZip, reader))
         case '.include':
         case 'identify':
@@ -146,7 +148,9 @@ async function processIncludeFileItems(items: string[], dirPath: string, reader:
             continue
         }
         debug('processing include item %s', item)
-        const oldPath = joinAndNormalize(dirPath, item)
+        const oldPath = path.isAbsolute(item) ? item : joinAndNormalize(dirPath, item)
+        // TODO note that if the path actually is absolute it won't work when deploying from github
+        // The little hack here keeps it working for the local case.
         debug("Calculated oldPath '%s'", oldPath)
         const lstat: PathKind = await reader.getPathKind(oldPath)
         if (!lstat) {
@@ -461,6 +465,7 @@ function findSpecialFile(items: PathKind[], filepath: string, isAction: boolean)
 
 // The 'builder' for use when the action is a single file after all other processing
 function singleFileBuilder(action: ActionSpec, singleItem: string): Promise<ActionSpec> {
+    debug("singleFileBuilder deploying '%s'", singleItem)
     let newMeta = actionFileToParts(singleItem)
     delete newMeta.name
     newMeta['web'] = true
@@ -566,7 +571,10 @@ function build(cmd: string, args: string[], realPath: string, displayPath: strin
         child.on('close', (code) => {
             if (code != 0) {
                 if (!verbose) {
-                    console.log('Output of failed build in', realPath, 'which caches', displayPath)
+                    console.log('Output of failed build in', realPath)
+                    if (isGithubRef(displayPath)) {
+                        console.log(realPath, 'is a cache location for', displayPath)
+                    }
                     console.log(result)
                 }
                 reject(`'${errorTag}' exited with code ${code}`)
