@@ -25,7 +25,7 @@ SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SELFDIR
 
 # For the initial deploy, use a project.yml that specifies a clean deploy and does not specify 'webby'
-echo "cleanNamespace: true" >> unweb/project.yml
+echo "cleanNamespace: true" > unweb/project.yml
 nim project deploy unweb
 
 # For the second deploy, don't specify clean and set web=false

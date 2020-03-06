@@ -49,6 +49,10 @@ fi
 for i in MultiSubstitute SplitParams SharedBuild Filtering WebInclude Ignoring EmptyReduce Incremental Environment Errors Unweb ValidateRuntime LoginAuth; do
    runTest $i
 done
+if [ "$1" == "--ongcp" ]; then
+	 echo "Running on 'nimgcp' so skipping actions and demos tests"
+	 exit 0
+fi
 runTest MainActions --postdeploy
 runTest Demos --postdeploy
 
