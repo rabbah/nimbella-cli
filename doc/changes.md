@@ -1,5 +1,9 @@
 # Nimbella CLI Change History
 
+## Changes since release 0.1.13
+
+- the document table of contents is now in a sidebar
+
 ## Changes in release 0.1.13
 
 - web content is now deployed with cache-control set to 'no-cache' for less surprising behavior during development
