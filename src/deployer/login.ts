@@ -136,6 +136,9 @@ export function doAdminLogin(apihost: string): Promise<Credentials> {
         });
         process.stdin.on('end', async () => {
             const nimInput: NimUserData = JSON.parse(input)
+            if (!nimInput.namespace || !nimInput.key || !nimInput.uuid) {
+                reject(new Error(`Improper administrative login.  Expected valid user info but got '${input}'`))
+            }
             const auth = nimInput.uuid + ':' + nimInput.key
             const creds = await addCredentialAndSave(apihost, auth, nimInput.storage, !!nimInput.redis, fileSystemPersister, nimInput.namespace)
             saveLegacyInfo(apihost, auth)

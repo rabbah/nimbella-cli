@@ -51,7 +51,7 @@ export default class AuthLogin extends NimBaseCommand {
       if (flags.auth || flags.namespace || !apihost) {
         logger.handleError("Internal error: incorrect use of administrative flags")
       }
-      await doAdminLogin(apihost)
+      await doAdminLogin(apihost).catch(err => this.handleError(err.message, err))
       return
     } else if (flags.auth) {
       credentials = await addCredentialAndSave(apihost, flags.auth, undefined, false, authPersister, flags.namespace)
