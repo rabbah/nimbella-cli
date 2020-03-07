@@ -123,7 +123,7 @@ export async function doLogin(token: string, persister: Persister, host: string 
 // Login using a JSON structure provided by `nim user set` (the same as the one returned by `nim user get`).
 // This is designed to be run as a subprocess of `nim user set`, which feeds most of the information via
 // stdin but passes the apihost on the command line.
-export function doAdminLogin(apihost: string): Promise<Credentials> {
+export function doAdminLogin(apihost: string): Promise<Credentials|void> {
    return new Promise(function (resolve, reject) {
         process.stdin.setEncoding('utf8');
         let input = ""
@@ -141,6 +141,7 @@ export function doAdminLogin(apihost: string): Promise<Credentials> {
             }
             const auth = nimInput.uuid + ':' + nimInput.key
             const creds = await addCredentialAndSave(apihost, auth, nimInput.storage, !!nimInput.redis, fileSystemPersister, nimInput.namespace)
+                .catch(err => { reject(err) })
             saveLegacyInfo(apihost, auth)
             resolve(creds)
         })
