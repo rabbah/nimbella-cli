@@ -48,10 +48,10 @@ export default class LRange extends NimBaseCommand {
         }
         await  queryKVStore(queryCommand, args, flags, authPersister)
             .then(res => {
-                res.payload.forEach(element => {
+                res.value.forEach(element => {
                     logger.log(element);
                 });
             })
-            .catch(err => logger.handleError(err.message,err));
+            .catch(err => logger.handleError(err.error,err));
     }
 }

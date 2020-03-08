@@ -42,7 +42,7 @@ export default class DeleteKey extends NimBaseCommand {
             return;
         }
         await queryKVStore(queryCommand, args, flags, authPersister)
-            .then(res => logger.log(res.payload))
-            .catch(err => logger.handleError(err.message,err));
+            .then(res => logger.log(res.value))
+            .catch(err => logger.handleError(err.error,err));
     }
 }

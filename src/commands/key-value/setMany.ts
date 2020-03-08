@@ -46,8 +46,8 @@ export default class SetMany extends NimBaseCommand {
         flags.start = flags.start || 1;
         flags.count = flags.count || 10;
         await queryKVStore(queryCommand, args, flags, authPersister)
-            .then(res => logger.log(res.payload))
-            .catch(err => logger.handleError(err.message, err));
+            .then(res => logger.log(res.value))
+            .catch(err => logger.handleError(err.error, err));
     }
 
 }

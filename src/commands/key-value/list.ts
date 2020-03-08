@@ -40,10 +40,10 @@ export default class KeysList extends NimBaseCommand {
     async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
         await queryKVStore(queryCommand, args, flags, authPersister)
         .then(res => {
-            res.payload.forEach(element => {
+            res.value.forEach(element => {
                 logger.log(element);
             });
         })
-        .catch(err => logger.handleError(err.message,err));
+        .catch(err => logger.handleError(err.error,err));
     }
 }
