@@ -114,7 +114,7 @@ export async function doLogin(token: string, persister: Persister, host: string 
     } else {
         debug('authorize response: %O', response)
         const auth = response.uuid + ':' + response.key
-        const credentials = await addCredentialAndSave(response.apihost, auth, response.storage, response.redis, persister, response.namespace)
+        const credentials = await addCredentialAndSave(response.apihost, auth, response.storage, response.redis, persister, response.namespace, true)
         persister.saveLegacyInfo(response.apihost, auth)
         return credentials
     }
@@ -140,7 +140,7 @@ export function doAdminLogin(apihost: string): Promise<Credentials|void> {
                 reject(new Error(`Improper administrative login.  Expected valid user info but got '${input}'`))
             }
             const auth = nimInput.uuid + ':' + nimInput.key
-            const creds = await addCredentialAndSave(apihost, auth, nimInput.storage, !!nimInput.redis, fileSystemPersister, nimInput.namespace)
+            const creds = await addCredentialAndSave(apihost, auth, nimInput.storage, !!nimInput.redis, fileSystemPersister, nimInput.namespace, true)
                 .catch(err => { reject(err) })
             saveLegacyInfo(apihost, auth)
             resolve(creds)
@@ -235,16 +235,19 @@ export async function getCredentials(persister: Persister): Promise<Credentials>
     return { namespace: store.currentNamespace, ow: { apihost: store.currentHost, api_key }, storageKey, redis }
 }
 
-// Convenience function to load, add, save a new credential
+// Convenience function to load, add, save a new credential.  Includes check for whether an entry would be replaced.
 export async function addCredentialAndSave(apihost: string, auth: string, storage: string, redis: boolean,
-        persister: Persister, namespace: string): Promise<Credentials> {
+        persister: Persister, namespace: string, allowReplacement: boolean): Promise<Credentials> {
     const credStore = await persister.loadCredentialStore()
     const nsPromise = namespace ? Promise.resolve(namespace) : getNamespace(apihost, auth)
     return nsPromise.then(namespace => {
+        if (!allowReplacement && wouldReplace(credStore, apihost, namespace, auth)) {
+            throw new Error(`Existing credentials for namespace '${namespace}' cannot be replaced using '--auth'.  To replace it, logout first, or login without '--auth'`)
+        }
         const credentials = addCredential(credStore, apihost, namespace, auth, storage, redis)
         persister.saveCredentialStore(credStore)
         console.log(`Stored a credential set for namespace '${namespace}' and API host '${apihost}'`)
-        return Promise.resolve(credentials)
+        return credentials
     })
 }
 
@@ -338,6 +341,23 @@ function initialCredentialStore(): CredentialStore {
         fs.mkdirSync(nimbellaDir())
     }
     return { currentHost: undefined, currentNamespace: undefined, credentials: {}}
+}
+
+// Determine if a new namespace/auth pair would replace an entry with the same pair.  This is allowed for
+// "high level" logins where the information is presumably coming via a token or oauth flow or via
+// `nimadmin user set`.   This checking function is not called in those cases.
+// However, "low level" logins by customers are given an informational message and the entry is not replaced.
+// This is to guard against surprising lossage of storage or redis information since a low level login with
+// --auth does not have that information.   A customer can still replace the entry for a namespace if he
+// provides a _different_ auth.  There's still a possibility of error, then, but the "error" would be
+// explainable and not surprising.  We allow this case because our own test projects routinely change the
+// key of 'nimbella' which is first set with a low-level login.
+function wouldReplace(store: CredentialStore, apihost: string, namespace: string, auth: string): boolean {
+    const existing = store.credentials[apihost] ? store.credentials[apihost][namespace] : undefined
+    if (!existing) {
+        return false
+    }
+    return auth == existing.api_key
 }
 
 // Write ~/.nimbella/wskprops.  Used when the default api host or api key change (TODO: this never saves the 'insecure' flag; that should

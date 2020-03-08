@@ -40,6 +40,9 @@ function runTest() {
 
 if [ "$1" == "--ongcp" ]; then
 	 nim auth switch wbtestni-grinjpsjnuh --apihost https://apigcp.nimbella.io
+	 set +e
+	 nim auth logout joshuaau-sp0k14rcwdy
+	 set -e
 else
    pushd $SELFDIR/../../../main
    bin/nimadmin user set demos test

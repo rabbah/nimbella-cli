@@ -54,7 +54,9 @@ export default class AuthLogin extends NimBaseCommand {
       await doAdminLogin(apihost).catch(err => this.handleError(err.message, err))
       return
     } else if (flags.auth) {
-      credentials = await addCredentialAndSave(apihost, flags.auth, undefined, false, authPersister, flags.namespace)
+      // Low level login: set 'allowReplace' to false to guard against an overwrite that loses storage or redis.  An exception to this
+      // is when the (hidden) namespace flag is provided.  This is to enable low level logins by nimadmin when doing a deploy.
+      credentials = await addCredentialAndSave(apihost, flags.auth, undefined, false, authPersister, flags.namespace, !!flags.namespace)
         .catch((err: Error) => logger.handleError(err.message, err))
       authPersister.saveLegacyInfo(apihost, flags.auth)
     } else {
