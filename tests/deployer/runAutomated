@@ -24,6 +24,7 @@
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SELFDIR
 
+nim auth logout joshuaau-sp0k14rcwdy
 set -e
 
 function runTest() {
@@ -40,9 +41,6 @@ function runTest() {
 
 if [ "$1" == "--ongcp" ]; then
 	 nim auth switch wbtestni-grinjpsjnuh --apihost https://apigcp.nimbella.io
-	 set +e
-	 nim auth logout joshuaau-sp0k14rcwdy
-	 set -e
 else
    pushd $SELFDIR/../../../main
    bin/nimadmin user set demos test
@@ -56,6 +54,6 @@ if [ "$1" == "--ongcp" ]; then
 	 echo "Running on 'nimgcp' so skipping actions and demos tests"
 	 exit 0
 fi
-runTest MainActions --postdeploy
 runTest Demos --postdeploy
+runTest MainActions --postdeploy
 
