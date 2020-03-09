@@ -24,8 +24,7 @@
     "AUTH0_TENANT": "nimbella",
     "CIPHER_KEY": "d5a45861cc682c5388202a4f1a7d0f61",
     "DB_PASSWORD": "lace4848x",
-    "DB_USERNAME": "nimbella",
-    "IEXCLOUD_API_TOKEN": "pk_93e9fcc302ed464dac481ed76a28d876"
+    "DB_USERNAME": "nimbella"
   },
   "publish": false
 }
