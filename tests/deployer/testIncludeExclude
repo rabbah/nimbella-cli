@@ -1,0 +1,38 @@
+#
+# Nimbella CONFIDENTIAL
+# ---------------------
+#
+#   2018 - present Nimbella Corp
+#   All Rights Reserved.
+#
+# NOTICE:
+#
+# All information contained herein is, and remains the property of
+# Nimbella Corp and its suppliers, if any.  The intellectual and technical
+# concepts contained herein are proprietary to Nimbella Corp and its
+# suppliers and may be covered by U.S. and Foreign Patents, patents
+# in process, and are protected by trade secret or copyright law.
+#
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Nimbella Corp.
+#
+
+# This tests the feature that supports selective deployment (--include and --exclude)
+
+SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+cd $SELFDIR
+REPOBASE=$SELFDIR/../../..
+
+set -e
+rm -fr printer
+cp -r $REPOBASE/demo-projects/printer .
+echo "FOO=bar" > printer/.slack-env
+
+# Deploy just the web content and no packages
+nim namespace clean --force
+RESULT=$(nim project deploy printer --include web)
+echo $RESULT
+
+echo "Test succeeded"
