@@ -41,6 +41,8 @@ export class ProjectDeploy extends NimBaseCommand {
     production: flags.boolean({ hidden: true }),
     yarn: flags.boolean({ description: 'Use yarn instead of npm for node builds' }),
     'web-local': flags.string({ description: 'a local directory to receive web deploy, instead of uploading'}),
+    include: flags.string({ description: 'project portions to include' }),
+    exclude: flags.string({ description: 'project portions to exclude' }),
     incremental: flags.boolean({ description: 'Deploy only changes since last deploy' }),
     ...NimBaseCommand.flags
   }
@@ -54,9 +56,9 @@ export class ProjectDeploy extends NimBaseCommand {
       this._help()
     }
     // Otherwise ...
-    const { target, env, apihost, auth, insecure, production, yarn, incremental } = flags
+    const { target, env, apihost, auth, insecure, production, yarn, incremental, include, exclude } = flags
     const cmdFlags: Flags = { verboseBuild: flags['verbose-build'], verboseZip: flags['verbose-zip'], production, incremental, env, yarn,
-      webLocal: flags['web-local'] }
+      webLocal: flags['web-local'], include, exclude }
     this.debug('cmdFlags', cmdFlags)
     const { creds, owOptions } = await processCredentials(insecure, apihost, auth, target, logger)
     this.debug('creds', creds)

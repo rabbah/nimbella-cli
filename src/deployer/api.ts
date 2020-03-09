@@ -29,6 +29,7 @@ import { buildAllActions, buildWeb } from './finder-builder'
 import * as openwhisk from 'openwhisk'
 import * as path from 'path'
 import { getCredentialsForNamespace, getCredentials, Persister } from './login';
+import { Includer, makeIncluder } from './includer';
 import * as makeDebug from 'debug'
 const debug = makeDebug('nimbella-cli/deployer-api')
 
@@ -53,7 +54,8 @@ export function readPrepareAndBuild(path: string, owOptions: OWOptions, credenti
 // Combines the read and prepare phases but does not build or deploy
 export function readAndPrepare(path: string, owOptions: OWOptions, credentials: Credentials, persister: Persister,
         flags: Flags, userAgent: string): Promise<DeployStructure> {
-    return readProject(path, flags.env, userAgent).then((spec) =>
+    const includer = makeIncluder(flags.include, flags.exclude)
+    return readProject(path, flags.env, userAgent, includer).then((spec) =>
         prepareToDeploy(spec, owOptions, credentials, persister, flags))
 }
 
@@ -72,9 +74,9 @@ export function deploy(todeploy: DeployStructure): Promise<DeployResponse> {
 }
 
 // Read the information contained in the project, initializing the DeployStructure
-export function readProject(projectPath: string, envPath: string, userAgent: string): Promise<DeployStructure> {
+export function readProject(projectPath: string, envPath: string, userAgent: string, includer: Includer): Promise<DeployStructure> {
     debug("Starting readProject, projectPath=%s, envPath=%s, userAgent=%s", projectPath, envPath, userAgent)
-    return readTopLevel(projectPath, envPath, userAgent).then(buildStructureParts).then(assembleInitialStructure)
+    return readTopLevel(projectPath, envPath, userAgent, includer).then(buildStructureParts).then(assembleInitialStructure)
         .catch((err) => { return Promise.reject(err) })
 }
 
