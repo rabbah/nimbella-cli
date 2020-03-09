@@ -23,16 +23,77 @@
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 cd $SELFDIR
-REPOBASE=$SELFDIR/../../..
 
 set -e
-rm -fr printer
-cp -r $REPOBASE/demo-projects/printer .
-echo "FOO=bar" > printer/.slack-env
 
 # Deploy just the web content and no packages
+echo "Deploying web only"
 nim namespace clean --force
-RESULT=$(nim project deploy printer --include web)
-echo $RESULT
+nim project deploy printer --include web
+OW=$(nim namespace get)
+WEB=$(nim web list)
+if [[ "$OW" == *"printer"* ]] || [[ "$OW" == *"admin"* ]]; then
+	 echo "Error: packages were deployed but only web content should have been was expected"
+	 exit 1
+fi
+if [[ "$WEB" != *"index.html"* ]]; then
+   echo "Error: web content was not deployed but should have been"
+   exit 1
+fi  
+
+# Deploy everything except the admin package
+echo "Deploying all but the admin package"
+nim namespace clean --force
+nim project deploy printer --exclude admin
+OW=$(nim namespace get)
+WEB=$(nim web list)
+if [[ "$OW" == *"admin"* ]]; then
+	 echo "Error: the admin package was deployed but should not have been"
+	 exit 1
+fi
+if [[ "$OW" != *"printer"* ]]; then
+	 echo "Error: the printer package was not deployed but should have been"
+	 exit 1
+fi
+if [[ "$WEB" != *"index.html"* ]]; then
+   echo "Error: web content was not deployed but should have been"
+   exit 1
+fi  
+
+
+# Deploy both packages, no web, and exclude printer/notify and printer/update
+echo "Deploying admin, some of printer, no web"
+nim namespace clean --force
+nim project deploy printer --include admin/,printer --exclude printer/notify,printer/update
+OW=$(nim namespace get)
+WEB=$(nim web list)
+if [[ "$OW" != *"admin"* ]]; then
+	 echo "Error: the admin package was not deployed but should have been"
+	 exit 1
+fi
+if [[ "$OW" == *"printer/notify"* ]]; then
+	 echo "Error: the printer/notify action was deployed but should not have been"
+	 exit 1
+fi
+if [[ "$OW" == *"printer/update"* ]]; then
+	 echo "Error: the printer/update action was deployed but should not have been"
+	 exit 1
+fi
+if [[ "$OW" != *"printer/get"* ]]; then
+	 echo "Error: the printer/get action was not deployed but should not have been"
+	 exit 1
+fi
+if [[ "$OW" != *"printer/create"* ]]; then
+	 echo "Error: the printer/create action was not deployed but should have been"
+	 exit 1
+fi
+if [[ "$OW" != *"printer/list"* ]]; then
+	 echo "Error: the printer/list action was not deployed but should not have been"
+	 exit 1
+fi
+if [[ "$WEB" == *"index.html"* ]]; then
+   echo "Error: web content was deployed but should not have been"
+   exit 1
+fi  
 
 echo "Test succeeded"
