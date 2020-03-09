@@ -54,6 +54,7 @@
             for (let token of includes) {
                 if (token == 'web') {
                     this.isWebIncluded = true
+                    continue
                 }
                 if (token.endsWith('/')) {
                     token = token.slice(0, -1)
@@ -70,6 +71,7 @@
             for (let token of excludes) {
                 if (token == 'web') {
                     this.isWebIncluded = false
+                    continue
                 }
                 if (token.endsWith('/')) {
                     token = token.slice(0, -1)
@@ -86,7 +88,9 @@
 
     // Implement isPackageIncluded
     isPackageIncluded = (pkg: string) => {
-        return (this.allIncluded || this.includedPackages.has(pkg)) && !this.excludedPackages.has(pkg)
+        const ans = (this.allIncluded || this.includedPackages.has(pkg)) && !this.excludedPackages.has(pkg)
+        debug('isPackageIncluded(%s)=%s', pkg, String(ans))
+        return ans
     }
 
     // Implement isActionIncluded

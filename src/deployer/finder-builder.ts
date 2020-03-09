@@ -519,7 +519,7 @@ function autozipBuilder(pairs: string[][], action: ActionSpec, incremental: bool
 // Subroutine for performing a "real" build requiring a spawn.
 function build(cmd: string, args: string[], realPath: string, displayPath: string, infoMsg: string,
         errorTag: string, verbose: boolean): Promise<any> {
-    debug('building with realPath=%s and displayPath=%s')
+    debug('building with realPath=%s and displayPath=%s', realPath, displayPath)
     return new Promise(function(resolve, reject) {
         console.log('Started running', infoMsg, 'in', displayPath)
         const shell = process.platform == 'win32' ? true : process.env['shell'] || "/bin/bash"
