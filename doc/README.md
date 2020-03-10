@@ -187,17 +187,21 @@ ARGUMENTS
   PROJECTS  one or more paths to projects
 
 OPTIONS
-  -v, --verbose      Verbose output
-  --apihost=apihost  API host to use
-  --auth=auth        OpenWhisk auth token to use
-  --env=env          path to environment file
-  --help             Show help
-  --incremental      Deploy only changes since last deploy
-  --insecure         Ignore SSL Certificates
-  --target=target    the target namespace
-  --verbose-build    Display build details
-  --verbose-zip      Display start/end of zipping phase for each action
-  --yarn             Use yarn instead of npm for node builds
+  -v, --verbose          Verbose output
+  --apihost=apihost      API host to use
+  --auth=auth            OpenWhisk auth token to use
+  --env=env              path to environment file
+  --exclude=exclude      project portions to exclude
+  --help                 Show help
+  --include=include      project portions to include
+  --incremental          Deploy only changes since last deploy
+  --insecure             Ignore SSL Certificates
+  --target=target        the target namespace
+  --verbose-build        Display build details
+  --verbose-zip          Display start/end of zipping phase for each action
+  --web-local=web-local  a local directory to receive web deploy, instead of uploading
+  --yarn                 Use yarn instead of npm for node builds
+
 ```
 
 See the [Example: Create and deploy a project with a single action](#example-create-and-deploy-a-project-with-a-single-action) for an example of using the project deploy command.
@@ -215,16 +219,19 @@ ARGUMENTS
   PROJECTS  one or more paths to projects
 
 OPTIONS
-  -v, --verbose      Verbose output
-  --apihost=apihost  path to environment file
-  --auth=auth        OpenWhisk auth token to use
-  --env=env          path to environment file
-  --help             Show help
-  --insecure         Ignore SSL Certificates
-  --target=target    the target namespace
-  --verbose-build    Display build details
-  --verbose-zip      Display start/end of zipping phase for each action
-  --yarn             Use yarn instead of npm for node builds
+  -v, --verbose          Verbose output
+  --apihost=apihost      API host to use
+  --auth=auth            OpenWhisk auth token to use
+  --env=env              path to environment file
+  --exclude=exclude      project portions to exclude
+  --help                 Show help
+  --include=include      project portions to include
+  --insecure             Ignore SSL Certificates
+  --target=target        the target namespace
+  --verbose-build        Display build details
+  --verbose-zip          Display start/end of zipping phase for each action
+  --web-local=web-local  a local directory to receive web deploy, instead of uploading
+  --yarn                 Use yarn instead of npm for node builds
 ```
 
 See [Project watching](#project-watching-for-incremental-deployment) for an example of how to use this command for incremental deployment which facilitates faster project development.
@@ -757,6 +764,33 @@ Deployment complete.  Resuming watch.
 
 The `project watch` command accepts a list of projects and most of the flags that project `deploy` accepts, as described in [Project-Level Deployment Commands](#project-level-deployment-commands). An exception is `--incremental`, which is assumed.
 
+#### Deploying Portions of Projects Selectively
+
+There may be occasions when you only want to deploy parts of a project.  If the change-based selection of incremental deployment does not fit your needs, you can control which actions are deployed (and whether web content is deployed) directly from the command line.
+
+```
+# Deploy just the web content and no packages
+nim project deploy printer --include web
+
+# Deploy everything except the admin package
+nim project deploy printer --exclude admin
+
+# You can use --include and --exclude together
+nim project deploy printer --include admin,printer --exclude printer/notify
+```
+
+The general rule for both `--include` and `--exclude` is a comma-separated list of tokens (no whitespace).  The tokens may be
+
+- the special word `web` referring to the web content of the project
+- the name of a package
+  - if the package is called `web`, you should remove ambiguity by using a trailing slash as in `web/` (a trailing slash is accepted on any package)
+  - the package name `default` is used for the actions that are not members of any package
+- a qualified action name in the form `package-name/action-name`
+  -  e.g. `printer/notify` or `default/hello`
+  -  the `default/` prefix is required for actions not in any package; otherwise, the name will be taken to be a package name
+- wildcards are _not_ supported
+
+If you specify only `--include`, then only the listed project portions are deployed.  If you specify only `--exclude`, then _all but_ the listed project portions are deployed.  If you specify both flags, the deployer first includes only what is listed in `--include` and then excludes from that list.  This allows you to include a package while excluding one or more of its actions.
 
 ### Deployer recordkeeping
 
@@ -1215,6 +1249,7 @@ The `clean` modifier requires some explanation. The deployer installs actions us
 
 *   See also the [`clean`](#clean-1) flag on packages and the [`cleanNamespace`](#cleannamespace) global flag.
 *   The `clean` flags on actions are ignored when the `--incremental` flag is specified.
+*   The `clean` flags on actions are also ignored when deployment of those actions is suppressed through the use of `--include` or `--exclude` flags on the command line.
 
 ##### limits
 
@@ -1261,7 +1296,7 @@ May be `true` or `false`, indicating whether you want any previous package with 
 
 *   `clean` at the package level is not the same as specifying clean on each action of the package. At package level, the `clean` flag removes all actions from the package before deploying, even ones that are not being deployed by the present project. It also removes package parameters and annotations. The `clean` flag at the package level is only appropriate when you want the project to “own” a particular package outright. See also the [`clean`](#cleanactions) flag on actions and the [`cleanNamespace`](#cleannamespace) global flag.
 *   The `clean` flag on packages is ignored when the `--incremental` flag is specified.
-
+*   The `clean` flag on packages is also ignored when deployment of those packages is suppressed through the use of `--include` or `--exclude` flags on the command line.
 
 #### Global modifiers allowed in project.yml
 
