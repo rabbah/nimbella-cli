@@ -110,7 +110,7 @@ export async function createOrUpdateProject(updating: boolean, args: any, flags:
 // TODO we don't have an internal representation of comments, so we punt on that for the moment.
 function configTemplate(): DeployStructure {
     const config: DeployStructure = { targetNamespace: '', cleanNamespace: false, bucket: {}, parameters: {}, packages: []  }
-    const defPkg: PackageSpec = { name: 'default', shared: false, clean: false, environment: [], parameters: [], annotations: [], actions: [] }
+    const defPkg: PackageSpec = { name: 'default', shared: false, clean: false, environment: {}, parameters: {}, annotations: {}, actions: [] }
     config.packages.push(defPkg)
     return config
 }

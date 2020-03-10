@@ -26,5 +26,6 @@ __deployer__.zip
 tests/deployer/after/
 tests/deployer/incremental/
 tests/deployer/unweb/project.yml
+tests/deployer/configTypes/project.yml
 /oclif.manifest.json
 /bin/nim

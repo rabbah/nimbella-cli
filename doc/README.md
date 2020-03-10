@@ -1421,7 +1421,15 @@ Deployed actions:
 
 ### Symbolic variables
 
-The configuration can contain symbolic variables of the form `${SYMBOL}` where `SYMBOL` is chosen by you. The substitutions for these variables are taken from the process environment or optionally from an environment file.
+The configuration can contain symbolic variables of the form `${SYMBOL}` where `SYMBOL` is chosen by you. The substitutions for these variables are taken from the process environment or optionally from an environment file.  Leading and trailing whitespace is ignored, so `${PASSWORD}` and `${ PASSWORD }` or even
+
+```
+${
+   PASSWORD
+}
+```
+
+have the same meaning.
 
 The environment file typically takes the form of a properties file that consists of key-value pairs, as in the following example.
 
@@ -1510,7 +1518,9 @@ The whitespace separation within the substitution is arbitrary and you could alt
   parameters: ${userid password}
 ```
 
-What is important is that the initial token `${` be placed somewhere where the YAML parser expects a subdictionary, the same rule as for file substitution.
+Leading and trailing whitespace is simply elided, so it takes at least two variables to indicate that you are doing multiple variable substitution and not simple symbol substition.  It is important is that the initial token `${` be placed somewhere where the YAML parser expects a subdictionary, the same rule as for file substitution.
+
+**Note:** As with file substitution, multiple variable substitution can only be used where the configuration expects a subdictionary, and you can't add to it.
 
 ---
 

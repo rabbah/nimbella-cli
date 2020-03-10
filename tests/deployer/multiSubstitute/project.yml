@@ -5,9 +5,9 @@ packages:
   - name: default
     shared: false
     clean: false
-    environment: []
-    parameters: []
-    annotations: []
+    environment: {}
+    parameters: {}
+    annotations: {}
     actions:
       - name: hello
         clean: false

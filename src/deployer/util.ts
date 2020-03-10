@@ -31,6 +31,7 @@ import * as crypto from 'crypto'
 import { promiseFiles } from 'node-dir'
 import * as yaml  from 'js-yaml'
 import * as makeDebug from 'debug'
+import { isArray } from 'util';
 const debug = makeDebug('nimbella-cli/deployer-util')
 
 // List of files to skip as actions inside packages, or from auto-zipping
@@ -179,8 +180,12 @@ export function validateDeployConfig(arg: any): string {
             }
             break
         }
-        case 'parameters': // no meaningful validation for this
+        case 'parameters': {
+            if (!isDictionary(arg[item])) {
+                return `parameters member must be a dictionary`
+            }
             break
+        }
         default:
             return `Invalid key '${item}' found in project.yml`
         }
@@ -189,6 +194,11 @@ export function validateDeployConfig(arg: any): string {
         return "At most one of actionWrapPackage and bucket may be specified (config specifies both)"
     }
     return undefined
+}
+
+// Test whether an item is a dictionary.  In practice this means its basic type is object and it isn't an array or null.
+function isDictionary(item: any) {
+    return typeof item === 'object' && !Array.isArray(item) && item != null
 }
 
 // Validator for BucketSpec
@@ -269,10 +279,15 @@ function validatePackageSpec(arg: {}): string {
             if (envErr) {
                 return envErr
             }
-        } else if (item != 'parameters' && item != 'annotations') { // Can't meaningfully validate parameters or annotations
+        } else if (item == 'parameters' || item == 'annotations') {
+            if (!isDictionary(arg[item])) {
+                return `${item} must be a dictionary`
+            }
+            if (isDefault && Object.keys(arg[item]).length > 0) {
+                return `'${item}' must be absent or empty for the default package`
+            }
+        } else {
             return `Invalid key '${item}' found in 'package' in project.yml`
-        } else if (isDefault && Object.keys(arg[item]).length > 0) {
-            return `'${item}' must be absent or empty for the default package`
         }
     }
     return undefined
@@ -316,7 +331,9 @@ function validateActionSpec(arg: {}): string {
                 }
             case 'annotations':
             case 'parameters':
-                // No meaningful validation for these
+                if (!isDictionary(arg[item])) {
+                    return `${item} must be a dictionary`
+                }
                 break
             case 'limits':
                 const limitsError = validateLimits(arg[item])
@@ -332,9 +349,12 @@ function validateActionSpec(arg: {}): string {
 }
 
 // Validator for the 'environment' clause of package or action.  Checks that all values are strings
-function validateEnvironment(entries: {}): string {
-    for (const entry in entries) {
-        const value = entries[entry]
+function validateEnvironment(item: any): string {
+    if (!isDictionary(item)) {
+        return `the environment clause must be a dictionary`
+    }
+    for (const entry in item) {
+        const value = item[entry]
         if (typeof value !== 'string') {
             return `All environment values must be strings but '${entry}' has type '${typeof value}'`
         }
