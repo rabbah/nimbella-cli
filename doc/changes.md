@@ -2,6 +2,7 @@
 
 ## Changes since release 0.1.13
 
+- the flags `--include` and `--exclude` are now accepted in `nim project deploy` and `nim project watch`.  Documentation added.
 - the document table of contents is now in a sidebar
 - use of `nim auth login --auth` is prohibited when the denoted namespace already exists (avoids a possibly destructive user error)
 
