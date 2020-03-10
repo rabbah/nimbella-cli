@@ -19,7 +19,7 @@
  */
 
 import * as fs from 'fs'
-import { DeployStructure, DeployResponse, ActionSpec, PackageSpec, WebResource, BucketSpec, DeployerAnnotation, VersionEntry } from './deploy-struct'
+import { DeployStructure, DeployResponse, ActionSpec, PackageSpec, WebResource, BucketSpec, DeployerAnnotation, VersionEntry, Flags } from './deploy-struct'
 import { combineResponses, wrapError, wrapSuccess, keyVal, emptyResponse,
     getDeployerAnnotation, straysToResponse, wipe, makeDict, generateSecret, digestPackage, digestAction, loadVersions } from './util'
 import * as openwhisk from 'openwhisk'
@@ -35,20 +35,22 @@ const rimraf = promisify(rimrafOrig)
 // Main deploy logic, excluding that assigned to more specialized files
 //
 
-// Clean resources as requested unless the 'incremental' flag is specified.  If incremental, cleaning is skipped but the versions
-// information is loaded (including hashes) to support incremental deploy.
+// Clean resources as requested unless the 'incremental', 'include' or 'exclude' is specified.
+// For 'incremental', cleaning is skipped entirely.  Otherwise, cleaning is skipped for portions of
+// the project not included in the deployment.  Note: there should always be an Includer by the time we reach here.
 export async function cleanOrLoadVersions(todeploy: DeployStructure): Promise<DeployStructure> {
     if (todeploy.flags.incremental) {
+        // Incremental deployment requires the versions up front to have access to the form hashes
         await (todeploy.versions = loadVersions(todeploy.filePath, todeploy.credentials.namespace, todeploy.credentials.ow.apihost))
     } else {
-        if (todeploy.cleanNamespace || todeploy.bucket && todeploy.bucket.clean) {
+        if (todeploy.includer.isWebIncluded && (todeploy.cleanNamespace || todeploy.bucket && todeploy.bucket.clean)) {
             if (todeploy.bucketClient) {
                 await cleanBucket(todeploy.bucketClient, todeploy.bucket)
             } else if (todeploy.flags.webLocal) {
                 await rimraf(todeploy.flags.webLocal)
             }
         }
-        if (todeploy.cleanNamespace) {
+        if (todeploy.cleanNamespace && todeploy.includer.isIncludingEverything()) {
             await wipe(todeploy.owClient)
         } else {
             await cleanActionsAndPackages(todeploy)
@@ -73,6 +75,8 @@ export function doDeploy(todeploy: DeployStructure): Promise<DeployResponse> {
             responses.push(strays)
             const response = combineResponses(responses)
             response.apihost = todeploy.credentials.ow.apihost
+            if (!response.namespace)
+                response.namespace = todeploy.credentials.namespace
             return response
         })
     })
@@ -86,13 +90,13 @@ function cleanActionsAndPackages(todeploy: DeployStructure): Promise<DeployStruc
     const promises: Promise<any>[] = []
     for (const pkg of todeploy.packages) {
         const defaultPkg = pkg.name == 'default'
-        if (pkg.clean && !defaultPkg) {
-            // We should have headed off 'clean' of the default package already, but just in case
+        if (pkg.clean && !defaultPkg && todeploy.includer.isPackageIncluded(pkg.name)) {
+            // We should have headed off 'clean' of the default package already.  The added test is just in case
             promises.push(cleanPackage(todeploy.owClient, pkg.name, todeploy.versions))
         } else if (pkg.actions) {
             const prefix = defaultPkg ? "" : pkg.name + '/'
             for (const action of pkg.actions) {
-                if (action.clean) {
+                if (action.clean && todeploy.includer.isActionIncluded(pkg.name, action.name)) {
                     delete todeploy.versions.actionVersions[action.name]
                     promises.push(todeploy.owClient.actions.delete(prefix + action.name).catch(() => undefined))
                 }

@@ -124,6 +124,7 @@ export  interface DeployStructure {
     githubPath?: string              // The original github path specified, if deploying from github
     owClient?: Client                // The openwhisk client for deploying actions and packages
     bucketClient?: Bucket            // The gcloud storage client for deploying to a bucket
+    includer?: Includer              // The 'includer' for deciding which packages, actions, web are included in the deploy
     versions?: VersionEntry          // The VersionEntry for credentials.namespace on the selected API host if available
 }
 
@@ -243,3 +244,13 @@ export interface CredentialRow {
     redis: boolean
     apihost: string
 }
+
+ // The Includer object is used during project reading and deployment to screen web, packages, and actions to be included
+ export interface Includer {
+    isWebIncluded: boolean
+    isPackageIncluded: (pkg: string) => boolean
+    isActionIncluded: (pkg: string, action: string) => boolean
+    isIncludingEverything: () => boolean
+ }
+
+

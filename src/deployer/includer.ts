@@ -18,18 +18,12 @@
  * from Nimbella Corp.
  */
 
- import * as makeDebug from 'debug'
- const debug = makeDebug('nimbella-cli/includer')
+import { Includer } from './deploy-struct';
+import * as makeDebug from 'debug'
+const debug = makeDebug('nimbella-cli/includer')
 
- // The Includer object is used during project reading to screen web, packages, and actions to be included
-
- export interface Includer {
-    isWebIncluded: boolean
-    isPackageIncluded: (pkg: string) => boolean
-    isActionIncluded: (pkg: string, action: string) => boolean
- }
-
- export function makeIncluder(include: string, exclude: string): Includer {
+// Make an includer
+export function makeIncluder(include: string, exclude: string): Includer {
     const includes = include ? include.split(',') : undefined
     const excludes = exclude ? exclude.split(',') : undefined
     const ans = new IncluderImpl(includes, excludes)
@@ -37,9 +31,10 @@
     return ans
  }
 
- class IncluderImpl implements Includer {
+ // The implementation behind the Includer interface
+class IncluderImpl implements Includer {
     isWebIncluded: boolean = false
-    allIncluded: boolean = false
+    startWithAllIncluded: boolean = false
     includedPackages: Set<string> = new Set()
     excludedPackages: Set<string> = new Set()
     includedActions: Map<string,Set<string>> = new Map()
@@ -49,7 +44,7 @@
     constructor(includes: string[], excludes: string[]) {
         if (!includes) {
             this.isWebIncluded = true
-            this.allIncluded = true
+            this.startWithAllIncluded = true
         } else {
             for (let token of includes) {
                 if (token == 'web') {
@@ -88,7 +83,7 @@
 
     // Implement isPackageIncluded
     isPackageIncluded = (pkg: string) => {
-        const ans = (this.allIncluded || this.includedPackages.has(pkg)) && !this.excludedPackages.has(pkg)
+        const ans = (this.startWithAllIncluded || this.includedPackages.has(pkg)) && !this.excludedPackages.has(pkg)
         debug('isPackageIncluded(%s)=%s', pkg, String(ans))
         return ans
     }
@@ -102,7 +97,12 @@
             return false // excluded, either explicitly or at package level
         }
         // So far, the action is not excluded but was not explicitly included either so the result depends on package inclusion
-        return this.allIncluded || this.includedPackages.has(pkg)
+        return this.startWithAllIncluded || this.includedPackages.has(pkg)
+    }
+
+    // Implement isIncludingEverything
+    isIncludingEverything = () => {
+        return this.startWithAllIncluded && this.includedActions.size == 0 && this.includedPackages.size == 0
     }
 
     // Utility to add an action to an action map
@@ -123,4 +123,4 @@
         }
         return set.has(action)
     }
- }
+}

@@ -66,7 +66,7 @@ async function makeClient(bucketName: string, options: {}): Promise<Bucket> {
 // Deploy a single resource to the bucket
 export function deployToBucket(resource: WebResource, client: Bucket, spec: BucketSpec, versions: VersionEntry): Promise<DeployResponse> {
     // Determine if something will be uploaded or if that will be avoided due to a digest match in incremental mode
-    // The 'versions' argument is only defined in incremental mode
+    // The 'versions' argument is always defined in incremental mode.
     const data = fs.readFileSync(resource.filePath)
     const hash = crypto.createHash("sha256")
     hash.update(data)

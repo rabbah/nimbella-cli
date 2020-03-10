@@ -20,14 +20,13 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import { DeployStructure, PackageSpec, ActionSpec, WebResource } from './deploy-struct'
+import { DeployStructure, PackageSpec, ActionSpec, WebResource, Includer } from './deploy-struct'
 import { emptyStructure, actionFileToParts, filterFiles, convertToResources, promiseFilesAndFilterFiles, loadProjectConfig } from './util'
 import { getBuildForAction, getBuildForWeb } from  './finder-builder'
 import { GithubDef, isGithubRef, parseGithubRef, fetchProject } from './github'
 import { promisify } from 'util'
 import { inBrowser } from '../NimBaseCommand'
 import * as makeDebug from 'debug'
-import { Includer } from './includer';
 const debug = makeDebug('nimbella-cli/project-reader')
 
 const CONFIG_FILE = 'project.yml'
@@ -380,15 +379,16 @@ function duplicateName(actionName: string, formerUse: string, newUse: string) {
 }
 
 // Read the config file if present.  For convenience, the extra information not provide elsewhere is tacked on here
-function readConfig(configFile: string, envPath: string, filePath: string, strays: string[], githubPath: string, includer: Includer): Promise<DeployStructure> {
+function readConfig(configFile: string, envPath: string, filePath: string, strays: string[], githubPath: string,
+        includer: Includer): Promise<DeployStructure> {
     if (!configFile) {
         // console.log("No config file found")
-        const ans = Object.assign({}, emptyStructure(), { strays, filePath, githubPath })
+        const ans = Object.assign({}, emptyStructure(), { strays, filePath, githubPath, includer })
         return Promise.resolve(ans)
     }
     // console.log("Reading config file")
     return loadProjectConfig(configFile, envPath, filePath).then(config => trimConfigWithIncluder(config, includer))
-        .then(config => Object.assign({strays, filePath, githubPath}, config))
+        .then(config => Object.assign({strays, filePath, githubPath, includer}, config))
 }
 
 // Given a DeployStructure with web and package sections, trim those sections according to the rules of an Includer

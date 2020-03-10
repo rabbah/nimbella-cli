@@ -21,7 +21,7 @@
 // Contains the main public (library) API of the deployer (some exports in 'util' may also be used externally but are incidental)
 
 import { cleanOrLoadVersions, doDeploy, actionWrap, cleanPackage } from './deploy'
-import { DeployStructure, DeployResponse, PackageSpec, OWOptions, WebResource, Credentials, Flags } from './deploy-struct'
+import { DeployStructure, DeployResponse, PackageSpec, OWOptions, WebResource, Credentials, Flags, Includer } from './deploy-struct'
 import { readTopLevel, buildStructureParts, assembleInitialStructure } from './project-reader'
 import { isTargetNamespaceValid, wrapError, wipe, saveUsFromOurselves, writeProjectStatus, getTargetNamespace } from './util'
 import { openBucketClient } from './deploy-to-bucket'
@@ -29,7 +29,7 @@ import { buildAllActions, buildWeb } from './finder-builder'
 import * as openwhisk from 'openwhisk'
 import * as path from 'path'
 import { getCredentialsForNamespace, getCredentials, Persister } from './login';
-import { Includer, makeIncluder } from './includer';
+import { makeIncluder } from './includer';
 import * as makeDebug from 'debug'
 const debug = makeDebug('nimbella-cli/deployer-api')
 
@@ -64,7 +64,7 @@ export function deploy(todeploy: DeployStructure): Promise<DeployResponse> {
     debug("Starting deploy")
     return cleanOrLoadVersions(todeploy).then(doDeploy).then(results => {
         if (!todeploy.githubPath) {
-            writeProjectStatus(todeploy.filePath, results)
+            writeProjectStatus(todeploy.filePath, results, todeploy.includer.isIncludingEverything())
         }
         if (!results.namespace && todeploy.credentials) {
             results.namespace = todeploy.credentials.namespace

@@ -19,7 +19,7 @@
  */
 
 import { DeployStructure, DeployResponse, DeploySuccess, DeployKind, ActionSpec, PackageSpec,
-    DeployerAnnotation, WebResource, VersionMap, VersionEntry, BucketSpec } from './deploy-struct'
+    DeployerAnnotation, WebResource, VersionMap, VersionEntry, BucketSpec, Includer } from './deploy-struct'
 import * as openwhisk from 'openwhisk'
 import * as fs from 'fs'
 import * as os from 'os'
@@ -881,9 +881,15 @@ export function digestAction(action: ActionSpec, code: string): string {
 
 // Called after a deploy step to record important information from the DeployResponse into the project.
 // Essentially a dual of loadVersions but not quite symmetrical since its argument is a DeployResponse
-export function writeProjectStatus(project: string, results: DeployResponse) {
+// The 'replace' argument causes the new VersionEntry calculated from the DeployResponse to replace
+// an existing one.  This was the behavior prior to the advent of include/exclude, and it is what is
+// requested when that feature is not used.  If 'replace' is false, then the new VersionEntry is merged
+// into an existing one if any, preserving information for things not deployed in the current round.
+export function writeProjectStatus(project: string, results: DeployResponse, replace: boolean) {
+    debug('writing project status with %O', results)
     const { apihost, namespace, packageVersions, actionVersions, webHashes } = results
-    if (Object.keys(actionVersions).length == 0 && Object.keys(packageVersions).length == 0) {
+    if (Object.keys(actionVersions).length == 0 && Object.keys(packageVersions).length == 0 && Object.keys(webHashes).length == 0) {
+        debug('there is no meaningful project status to write')
         return
     }
     const statusDir = path.join(project, ".nimbella")
@@ -894,24 +900,37 @@ export function writeProjectStatus(project: string, results: DeployResponse) {
     let versionList: VersionEntry[] = []
     const versionFile = path.join(statusDir, "versions.json")
     if (fs.existsSync(versionFile)) {
+        debug('version file alread exists')
         const old = JSON.parse(String(fs.readFileSync(versionFile)))
         if (Array.isArray(old)) {
             versionList = old
+            debug('version list using legacy format, not preserved')
         } // Otherwise (not array) it is the legacy format and cannot be added to so we just overwrite
     }
     const versionInfo: VersionEntry = { apihost, namespace, packageVersions, actionVersions, webHashes }
-    let newEntry = true
-    for (let i = 0; i < versionList.length; i++) {
-        if (versionList[i].apihost == apihost && versionList[i].namespace == namespace) {
-            versionList[i] = versionInfo
-            newEntry = false
-            break
-        }
-    }
-    if (newEntry) {
+    const oldEntry: VersionEntry = versionList.find(entry => entry.apihost == apihost && entry.namespace == namespace)
+    if (!oldEntry) {
+        debug('new entry pushed to version list')
         versionList.push(versionInfo)
+    } else {
+        debug('merging new entry into old')
+        mergeVersions(oldEntry, versionInfo, replace)
     }
     fs.writeFileSync(versionFile, JSON.stringify(versionList, null, 2))
+    debug('wrote version info to %s', versionFile)
+}
+
+// Merge new information into old information within the version store.
+// If replace is specified, each major element of the old entry (packageVersions, actionVersions, webHashes) is replaced
+// with the new.  Otherwise, the dictionaries are merged.
+function mergeVersions(oldEntry: VersionEntry, newEntry: VersionEntry, replace: boolean) {
+    if (replace) {
+        Object.assign(oldEntry, newEntry)
+    } else {
+        Object.assign(oldEntry.actionVersions, newEntry.actionVersions)
+        Object.assign(oldEntry.packageVersions, newEntry.packageVersions)
+        Object.assign(oldEntry.webHashes, newEntry.webHashes)
+    }
 }
 
 // Load the version information of a project for a namespace and apihost.  Return an appropriately empty structure if not found.
