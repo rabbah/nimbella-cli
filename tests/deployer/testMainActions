@@ -128,7 +128,7 @@ CALCACTIONS=(
 # Directories
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 MAINDIR=$SELFDIR/../../../main
-BEFOREDIR=$SELFDIR/before
+BEFOREDIR=$MAINDIR/tests/actions/before
 AFTERDIR=$SELFDIR/after
 
 # Function to set user credentials
@@ -280,22 +280,22 @@ popd
 pushd $SELFDIR
 set +e
 CODE=0
-for i in before/*.code; do
+for i in $BEFOREDIR/*.code; do
 		NAME=$(basename $i)
 		echo "Comparing $NAME"
 		FLAGS=-ub
 		if [ -d "$NAME" ]; then
 			 FLAGS=-rub
     fi
-		diff $FLAGS $i after/$NAME
+		diff $FLAGS $i $AFTERDIR/$NAME
 		if [ "$?" -ne 0 ]; then
 				CODE=1
 		fi
 done
-for i in before/*.meta; do
+for i in $BEFOREDIR/*.meta; do
 		NAME=$(basename $i)
 		echo "Comparing $NAME"
-		diff -ub $i after/$NAME
+		diff -ub $i $AFTERDIR/$NAME
 		if [ "$?" -ne 0 ]; then
 				CODE=1
 		fi
