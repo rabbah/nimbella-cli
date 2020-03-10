@@ -123,6 +123,8 @@ export interface Flags {
     yarn: boolean
     env: string|undefined
     webLocal: string|undefined
+    include: string|undefined
+    exclude: string|undefined
 }
 ```
 
@@ -271,11 +273,13 @@ Performs the first of the four steps (read, prepare, build, deploy) in deploying
 ```
 readProject(projectPath: string,
             envPath: string,
-            userAgent: string): Promise<DeployStructure>
+            userAgent: string,
+            includer: Includer): Promise<DeployStructure> {
 ```
 
 - **projectPath**: the project path as it would appear on the command line (github or local)
-- **envPath**:
+- **envPath**: what would appear in the `env` member of `Flags` of `deployProject`
 - **userAgent**: see `deployProject`
+- **includer**: a parsed form of what would appear in the `include` and `exclude` members of `Flags` of `deployProject`
 
 
