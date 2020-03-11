@@ -764,7 +764,7 @@ Deployment complete.  Resuming watch.
 
 The `project watch` command accepts a list of projects and most of the flags that project `deploy` accepts, as described in [Project-Level Deployment Commands](#project-level-deployment-commands). An exception is `--incremental`, which is assumed.
 
-#### Deploying Portions of Projects Selectively
+### Deploying Portions of Projects Selectively
 
 There may be occasions when you only want to deploy parts of a project.  If the change-based selection of incremental deployment does not fit your needs, you can control which actions are deployed (and whether web content is deployed) directly from the command line.
 
