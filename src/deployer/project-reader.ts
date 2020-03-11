@@ -386,7 +386,7 @@ function readConfig(configFile: string, envPath: string, filePath: string, stray
         includer: Includer, reader: ProjectReader): Promise<DeployStructure> {
     if (!configFile) {
         // console.log("No config file found")
-        const ans = Object.assign({}, emptyStructure(), { strays, filePath, githubPath, includer })
+        const ans = Object.assign({}, emptyStructure(), { strays, filePath, githubPath, includer, reader })
         return Promise.resolve(ans)
     }
     // console.log("Reading config file")
