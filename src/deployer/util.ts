@@ -129,6 +129,7 @@ function removeEmptyStringMembersFromPackages(packages: PackageSpec[]) {
 export function validateDeployConfig(arg: any): string {
     let haveActionWrap = false, haveBucket = false
     for (const item in arg) {
+        if (!arg[item]) continue
         switch (item) {
         case 'cleanNamespace':
             if (!(typeof(arg[item] == 'boolean'))) {
@@ -250,6 +251,7 @@ function validateWebResource(arg: {}): string {
 function validatePackageSpec(arg: {}): string {
     const isDefault = arg['name'] === 'default'
     for (const item in arg) {
+        if (!arg[item]) continue
         if (item == 'name') {
             if (!(typeof arg[item] == 'string')) {
                 return `'${item}' member of a 'package' must be a string`
@@ -296,6 +298,7 @@ function validatePackageSpec(arg: {}): string {
 // Validator for ActionSpec
 function validateActionSpec(arg: {}): string {
     for (const item in arg) {
+        if (!arg[item]) continue
         switch (item) {
             case 'name':
             case 'file':
