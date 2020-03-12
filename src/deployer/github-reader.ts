@@ -22,6 +22,8 @@ import { ProjectReader, PathKind } from './deploy-struct'
 import { GithubDef, makeClient, readContents, seemsToBeProject } from './github';
 import * as Octokit from '@octokit/rest'
 import { posix as Path } from 'path'
+import * as makeDebug from 'debug'
+const debug = makeDebug('nimbella-cli/github-reader')
 
 // Defines the github version of the ProjectReader
 // In general files passed to a ProjectReader are relative to the project path, which includes the path portion of
@@ -40,27 +42,30 @@ export function makeGithubReader(def: GithubDef, userAgent: string): ProjectRead
 class GithubProjectReader implements ProjectReader {
     client: Octokit
     def: GithubDef
+    cache: Map<string, Octokit.ReposGetContentsResponse>
 
     constructor(client: Octokit, def: GithubDef) {
+        debug('new github-reader for %O', def)
         this.client = client
         this.def = def
+        this.cache = new Map()
     }
 
-    // Implement getFSLocation for github (throws an error)
-    getFSLocation(): string {
-        throw new Error("Github project has no local file system location")
+    // Implement getFSLocation for github (always returns null)
+    getFSLocation(): string|null {
+        return null
     }
 
     // Implement readdir for github
     async readdir(path: string): Promise<PathKind[]> {
+        debug('reading directory %s', path)
         if (Path.isAbsolute(path)) {
             throw new Error(`Deploying from github does not support absolute paths`)
         }
-        const effectivePath = Path.normalize(Path.join(this.def.path, path))
-        const contents = await readContents(this.client, this.def, effectivePath)
+        const contents = await this.retrieve(path)
         if (!Array.isArray(contents)) {
             console.dir(contents, { depth: null })
-            throw new Error(`Path '${effectivePath} should be a directory but is not`)
+            throw new Error(`Path '${path} should be a directory but is not`)
         }
         if (path === this.def.path && !seemsToBeProject(contents))     {
             throw new Error(`Github location does not contain a 'nim' project`)
@@ -77,31 +82,10 @@ class GithubProjectReader implements ProjectReader {
         return { name: item.name, isDirectory: item.type === 'dir', isFile: item.type === 'file', mode }
     }
 
-    // Implement readAllFiles for github
-    async readAllFiles(dir: string): Promise<string[]> {
-        const effectiveDir = Path.normalize(Path.join(this.def.path, dir))
-        const ans: string[] = []
-        await this.readFilesRecursively(effectiveDir, ans)
-        return ans
-    }
-
-    // Working subroutine of readAllFiles
-    private async readFilesRecursively(dir: string, ans: string[]) {
-        const items = await this.readdir(dir)
-        items.forEach(async item => {
-            const itemPath = Path.join(dir, item.name)
-            if (item.isDirectory) {
-                await this.readFilesRecursively(itemPath, ans)
-            } else {
-                ans.push(itemPath)
-            }
-        })
-    }
-
     // Implement readFileContents for github
     async readFileContents(path: string): Promise<Buffer> {
-        const effectivePath = Path.normalize(Path.join(this.def.path, path))
-        const contents = await readContents(this.client, this.def, effectivePath)
+        debug('reading file %s', path)
+        const contents = await this.retrieve(path)
         // Careful with the following: we want to support empty files but the empty string is falsey.
         if (typeof contents['content'] !== 'string'  || !contents['encoding']) {
             console.dir(contents, { depth: null })
@@ -112,18 +96,19 @@ class GithubProjectReader implements ProjectReader {
 
     // Implement isExistingFile for github
     async isExistingFile(path: string): Promise<boolean> {
+        debug('checking file existence: %s', path)
         const kind = await this.getPathKind(path)
         return kind && kind.isFile
     }
 
     // Implement getPathKind for github
     async getPathKind(path: string): Promise<PathKind> {
+        debug('getting path type: %s', path)
         if (path === '' || path === '/' || path === undefined) {
             return { name: '', isFile: false, isDirectory: true, mode: 0x777}
         }
-        const effectivePath = Path.normalize(Path.join(this.def.path, path))
-        const name = Path.basename(effectivePath)
-        const parent = Path.dirname(effectivePath)
+        const name = Path.basename(path)
+        const parent = Path.dirname(path)
         const candidates = await this.readdir(parent)
         for (const item of candidates) {
             if (item.name === name) {
@@ -131,5 +116,19 @@ class GithubProjectReader implements ProjectReader {
             }
         }
         return Promise.resolve(undefined)
+    }
+
+    // Basic retrieval function with cache.  Cache is dead simple since we never modify anything
+    async retrieve(path: string): Promise<Octokit.ReposGetContentsResponse> {
+        const effectivePath = Path.normalize(Path.join(this.def.path, path))
+        let contents = this.cache.get(effectivePath)
+        if (!contents) {
+            debug("going to github for '%s'", path)
+            contents = await readContents(this.client, this.def, effectivePath)
+            this.cache.set(effectivePath, contents)
+        } else {
+            debug("'%s' found in cache", path)
+        }
+        return contents
     }
 }

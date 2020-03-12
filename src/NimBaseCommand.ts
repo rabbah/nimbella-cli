@@ -178,7 +178,7 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   handleError (msg: string, err?: any) {
     this.parse(this.constructor as typeof NimBaseCommand)
     msg = improveErrorMsg(msg, err)
-    debug(err)
+    this.debug(err)
     msg = msg + '\n specify --verbose flag for more information'
     return this.error(msg, { exit: 1 })
   }
@@ -187,7 +187,7 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   displayError (msg: string, err?: any) {
     this.parse(this.constructor as typeof NimBaseCommand)
     msg = improveErrorMsg(msg, err)
-    debug(err)
+    this.debug(err)
     return this.error(msg, { exit: false })
   }
 

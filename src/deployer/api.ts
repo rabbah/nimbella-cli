@@ -23,13 +23,15 @@
 import { cleanOrLoadVersions, doDeploy, actionWrap, cleanPackage } from './deploy'
 import { DeployStructure, DeployResponse, PackageSpec, OWOptions, WebResource, Credentials, Flags, Includer } from './deploy-struct'
 import { readTopLevel, buildStructureParts, assembleInitialStructure } from './project-reader'
-import { isTargetNamespaceValid, wrapError, wipe, saveUsFromOurselves, writeProjectStatus, getTargetNamespace } from './util'
+import { isTargetNamespaceValid, wrapError, wipe, saveUsFromOurselves, writeProjectStatus, getTargetNamespace,
+    needsBuilding } from './util'
 import { openBucketClient } from './deploy-to-bucket'
 import { buildAllActions, buildWeb } from './finder-builder'
 import * as openwhisk from 'openwhisk'
 import * as path from 'path'
 import { getCredentialsForNamespace, getCredentials, Persister } from './login';
 import { makeIncluder } from './includer';
+import { inBrowser } from '../NimBaseCommand'
 import * as makeDebug from 'debug'
 const debug = makeDebug('nim:deployer:api')
 
@@ -74,10 +76,21 @@ export function deploy(todeploy: DeployStructure): Promise<DeployResponse> {
 }
 
 // Read the information contained in the project, initializing the DeployStructure
-export function readProject(projectPath: string, envPath: string, userAgent: string, includer: Includer): Promise<DeployStructure> {
+export async function readProject(projectPath: string, envPath: string, userAgent: string, includer: Includer): Promise<DeployStructure> {
     debug("Starting readProject, projectPath=%s, envPath=%s, userAgent=%s", projectPath, envPath, userAgent)
-    return readTopLevel(projectPath, envPath, userAgent, includer).then(buildStructureParts).then(assembleInitialStructure)
+    const ans = await readTopLevel(projectPath, envPath, userAgent, includer, false).then(buildStructureParts).then(assembleInitialStructure)
         .catch((err) => { return Promise.reject(err) })
+    debug("evaluating the just-read project: %O", ans)
+    if (needsBuilding(ans) && ans.reader.getFSLocation() === null) {
+        debug("project '%s' will be re-read and cached because it's a github project that needs building", projectPath)
+        if (inBrowser) {
+            return Promise.reject(new Error(`Project '$(projectPath}' cannot be deployed from the cloud because it requires building`))
+        }
+        return readTopLevel(projectPath, envPath, userAgent, includer, true).then(buildStructureParts).then(assembleInitialStructure)
+            .catch((err) => { return Promise.reject(err) })
+    } else {
+        return ans
+    }
 }
 
 // 'Build' the project by running the "finder builder" steps in each action-as-directory and in the web directory

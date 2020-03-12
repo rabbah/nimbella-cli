@@ -20,7 +20,8 @@
 
 import { spawn } from 'child_process'
 import { ActionSpec, PackageSpec, WebResource, BuildTable, Flags, ProjectReader, PathKind } from './deploy-struct'
-import { FILES_TO_SKIP, actionFileToParts, filterFiles, mapPackages, mapActions, convertToResources, convertPairsToResources, promiseFilesAndFilterFiles } from './util'
+import { FILES_TO_SKIP, actionFileToParts, filterFiles, mapPackages, mapActions, convertToResources, convertPairsToResources,
+    promiseFilesAndFilterFiles } from './util'
 import * as path from 'path'
 import * as fs from 'fs'
 import ignore from 'ignore'
@@ -29,6 +30,8 @@ import * as touch from 'touch'
 import * as makeDebug from 'debug'
 const debug = makeDebug('nim:deployer:finder-builder')
 import { isGithubRef } from './github';
+import { Writable } from 'stream'
+import { WritableStreamBuffer } from 'stream-buffers'
 
 // Type to use with the ignore package.
 interface Ignore {
@@ -95,18 +98,22 @@ function buildAction(action: ActionSpec, buildTable: BuildTable, flags: Flags, r
         return Promise.resolve(action)
     }
     debug('building action %O', action)
-    const actionDir = makeLocal(reader, action.file)
+    let actionDir
     switch (action.build) {
         case 'build.sh':
+            actionDir = makeLocal(reader, action.file)
             return scriptBuilder('./build.sh', actionDir, action.displayFile, flags).then(() => identifyActionFiles(action,
                 flags.incremental, flags.verboseZip, reader))
         case 'build.cmd':
+            actionDir = makeLocal(reader, action.file)
             return scriptBuilder('build.cmd', actionDir, action.displayFile, flags).then(() => identifyActionFiles(action,
                 flags.incremental, flags.verboseZip, reader))
         case '.build':
+            actionDir = makeLocal(reader, action.file)
             return outOfLineBuilder(actionDir, action.displayFile, buildTable, true, flags, reader).then(() => identifyActionFiles(action,
                 flags.incremental, flags.verboseZip, reader))
         case 'package.json':
+            actionDir = makeLocal(reader, action.file)
             return npmBuilder(actionDir, action.displayFile, flags).then(() => identifyActionFiles(action,
                 flags.incremental, flags.verboseZip, reader))
         case '.include':
@@ -136,7 +143,12 @@ function joinAndNormalize(...paths: string[]): string {
 // Convert a path that is relative to the project root into a path usable with 'fs'.  This should be done only for things
 // that require real building since it will abort the deploy when the project root is a github location.
 function makeLocal(reader: ProjectReader, ...paths: string[]): string {
-    return path.resolve(reader.getFSLocation(), ...paths)
+    const project = reader.getFSLocation()
+    if (!project) {
+        console.trace('makeLocal error')
+        throw new Error('invalid call to makeLocal')
+    }
+    return path.resolve(project, ...paths)
 }
 
 // Subroutine of processInclude to run after items are read
@@ -341,17 +353,20 @@ export function getBuildForWeb(filepath: string, reader: ProjectReader): Promise
 // Build the web directory
 export function buildWeb(build: string, sharedBuilds: BuildTable, filepath: string, displayPath: string,
         flags: Flags, reader: ProjectReader): Promise<WebResource[]> {
-    const scriptPath = makeLocal(reader, filepath)
+    let scriptPath
     switch (build) {
         case 'build.sh':
+            scriptPath = makeLocal(reader, filepath)
             return scriptBuilder('./build.sh', scriptPath, displayPath, flags).then(() => identifyWebFiles(filepath, reader))
         case 'build.cmd':
             //console.log('cwd for windows build is', filepath)
+            scriptPath = makeLocal(reader, filepath)
             return scriptBuilder('build.cmd', scriptPath, displayPath, flags).then(() => identifyWebFiles(filepath, reader))
         case '.build':
             // Does its own localizing
             return outOfLineBuilder(filepath, displayPath, sharedBuilds, false, flags, reader).then(() => identifyWebFiles(filepath, reader))
         case 'package.json':
+            scriptPath = makeLocal(reader, filepath)
             return npmBuilder(scriptPath, displayPath, flags).then(() => identifyWebFiles(filepath, reader))
         case '.include':
         case 'identify':
@@ -489,24 +504,30 @@ function singleFileBuilder(action: ActionSpec, singleItem: string): Promise<Acti
 async function autozipBuilder(pairs: string[][], action: ActionSpec, incremental: boolean, verboseZip: boolean, reader: ProjectReader): Promise<ActionSpec> {
     if (verboseZip)
         console.log('Zipping action contents in', action.file )
-    let targetZip = path.join(action.file, ZIP_TARGET)
     if (!action.runtime) {
         action.runtime = agreeOnRuntime(pairs.map(pair => pair[0]))
     }
-    // TODO we want to be able to do zipping without a file system.  But, for the moment we require one so we
-    // fix up the paths accordingly.
-    const localTargetZip = makeLocal(reader, targetZip)
-    pairs = pairs.map(pair => [ makeLocal(reader, pair[0]), pair[1] ])
-    if (fs.existsSync(targetZip)) {
-        const metaFiles: string[] = [ makeLocal(reader, action.file, '.include'), makeLocal(reader, action.file, '.ignore') ].filter(fs.existsSync)
-        if (incremental && zipFileAppearsCurrent(localTargetZip, pairs.map(pair => pair[0]).concat(metaFiles))) {
-            return singleFileBuilder(action, targetZip)
+    // If there's real file system, observe and store the zip results there for incremental support
+    const targetZip = path.join(action.file, ZIP_TARGET)
+    const inMemory = reader.getFSLocation() === null
+    let output: Writable
+    if (!inMemory) {
+        debug("zipping to %s", targetZip)
+        const localTargetZip = makeLocal(reader, targetZip)
+        pairs = pairs.map(pair => [ makeLocal(reader, pair[0]), pair[1] ])
+        if (fs.existsSync(targetZip)) {
+            const metaFiles: string[] = [ makeLocal(reader, action.file, '.include'), makeLocal(reader, action.file, '.ignore') ].filter(fs.existsSync)
+            if (incremental && zipFileAppearsCurrent(localTargetZip, pairs.map(pair => pair[0]).concat(metaFiles))) {
+                return singleFileBuilder(action, targetZip)
+            }
+            debug("deleting old target zip")
+            fs.unlinkSync(localTargetZip)
         }
-        debug("deleting old target zip")
-        fs.unlinkSync(localTargetZip)
+        output = fs.createWriteStream(localTargetZip)
+    } else {
+        debug("zipping to memory buffer")
+        output = new WritableStreamBuffer()
     }
-    debug("zipping to %s", targetZip)
-    const output = fs.createWriteStream(localTargetZip);
     const zip = archiver('zip')
     const outputPromise = new Promise(function(resolve, reject) {
         zip.on('error', err => {
@@ -539,7 +560,16 @@ async function autozipBuilder(pairs: string[][], action: ActionSpec, incremental
     return outputPromise.then(() => {
         if (verboseZip)
             console.log('Zipping complete in', action.file )
-        return singleFileBuilder(action, targetZip)
+        if (inMemory) {
+            const code = (output as WritableStreamBuffer).getContentsAsString('base64')
+            if (!code) {
+                return Promise.reject('An error occurred in in-memory zipping')
+            }
+            action.code = code as string
+            return singleFileBuilder(action, action.file)
+        } else {
+            return singleFileBuilder(action, targetZip)
+        }
     })
 }
 

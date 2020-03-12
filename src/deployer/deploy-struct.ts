@@ -267,14 +267,12 @@ export type PathKind = { name: string, isDirectory: boolean, isFile: boolean, mo
 export interface ProjectReader {
     // Read the contents of a directory (non-recursively)
     readdir: (path: string) => Promise<PathKind[]>
-    // Find all the file path names under a directory (recursive)
-    readAllFiles: (dir: string) => Promise<string[]>
     // Read the contents of a file (e.g. config, code, .include ...)
     readFileContents: (path: string) => Promise<Buffer>
     // Test whether a file exists
     isExistingFile: (path: string) => Promise<boolean>
     // Get the PathKind of a path
     getPathKind: (path: string) => Promise<PathKind>
-    // Get the location of the project in a real file system (throws for github)
-    getFSLocation: () => string
+    // Get the location of the project in a real file system (returns null for github)
+    getFSLocation: () => string|null
 }

@@ -67,12 +67,6 @@ class FileProjectReader implements ProjectReader {
         }))
     }
 
-    // File system implementation of readAllFiles
-    readAllFiles(dir: string): Promise<string[]> {
-        dir = Path.resolve(this.basepath, dir)
-        return promiseFiles(dir)
-    }
-
     // File system implementation of readFileContents
     readFileContents(path: string): Promise<Buffer> {
         path = Path.resolve(this.basepath, path)

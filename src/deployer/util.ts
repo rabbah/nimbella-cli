@@ -72,6 +72,28 @@ export function loadProjectConfig(configFile: string, envPath: string, filePath:
     })
 }
 
+// Determine if a project requires building by examining its web and actions right after project reading
+export function needsBuilding(todeploy: DeployStructure) {
+    const isRealBuild = (buildField: string) => {
+        return buildField && buildField !== 'identify' && buildField !== '.include'
+    }
+    if (isRealBuild(todeploy.webBuild)) {
+        return true
+    }
+    if (todeploy.packages) {
+        for (const pkg of todeploy.packages) {
+            if (pkg.actions) {
+                for (const action of pkg.actions) {
+                    if (isRealBuild(action.build)) {
+                        return true
+                    }
+                }
+            }
+        }
+    }
+    return false
+}
+
 // In project config we permit many optional string-valued members to be set to '' to remind users that they are available
 // without actually setting a value.  Here we delete those members to simplify subsequent handling.
 function removeEmptyStringMembers(config: DeployStructure) {

@@ -26,6 +26,7 @@ import { isGithubRef, parseGithubRef, fetchProject } from './github'
 import * as makeDebug from 'debug'
 const debug = makeDebug('nim:deployer:project-reader')
 import { makeFileReader } from './file-reader';
+import { makeGithubReader } from './github-reader';
 
 const CONFIG_FILE = 'project.yml'
 const LEGACY_CONFIG_FILE = 'projectConfig.yml'
@@ -43,24 +44,29 @@ interface TopLevel {
     includer: Includer
     reader: ProjectReader
 }
-export function readTopLevel(filePath: string, env: string, userAgent: string, includer: Includer): Promise<TopLevel> {
-    // If the 'env' argument is defined it takes precedence over .env found in the project
+export function readTopLevel(filePath: string, env: string, userAgent: string, includer: Includer,
+        mustBeLocal: boolean): Promise<TopLevel> {
+    // If mustBeLocal is only important if the filePath denotes a github location.  In that case, a true value for
+    // mustBeLocal causes the github contents to be fetched to a local cache and a FileReader is used.  A false value
+    // causes a GithubReader to be used.
+    debug("readTopLevel with filePath:'%s' and mustBeLocal:'%s'", filePath, String(mustBeLocal))
     let githubPath: string = undefined
     let start = Promise.resolve(filePath)
+    let reader = makeFileReader(filePath)
     if (isGithubRef(filePath)) {
         const github = parseGithubRef(filePath)
         if (!github.auth) {
             console.log('Warning: access to github will be un-authenticated; rate will be severely limited')
         }
         githubPath = filePath
-        start = fetchProject(github, userAgent)
+        if (mustBeLocal) {
+            start = fetchProject(github, userAgent)
+        } else {
+            reader = makeGithubReader(github, userAgent)
+        }
     }
-    // As a first step toward abstracting the difference between local and github we use the FileProjectReader to read
-    // everything.   We retain (for now) the initial step of always fetching the project into a cache for github and we
-    // are not yet using the GithubProjectReader
     const webDir = 'web', pkgDir = 'packages'
     return start.then(filePath => {
-        const reader = makeFileReader(filePath)
         return reader.readdir('').then(items => {
             items = filterFiles(items)
             let web: string
