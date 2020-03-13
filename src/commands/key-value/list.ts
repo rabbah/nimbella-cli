@@ -22,7 +22,7 @@ import { flags } from '@oclif/command'
 import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
 import { queryKVStore } from '../../storage/key-value'
 
-const queryCommand = 'redis/allKeys'
+const queryCommand = 'redis/keys'
 
 export default class KeysList extends NimBaseCommand {
     static description = 'Lists Keys from Key Value Store'

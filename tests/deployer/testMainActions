@@ -41,7 +41,7 @@ NIMACTIONS=(
 		hellos/python2
 		hellos/python3
 		hellos/swift4
-		redis/allKeys
+		redis/keys
 		redis/get
 		redis/getMany
 		redis/llen
