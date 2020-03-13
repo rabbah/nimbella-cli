@@ -27,7 +27,7 @@ import ignore from 'ignore'
 import * as archiver from 'archiver'
 import * as touch from 'touch'
 import * as makeDebug from 'debug'
-const debug = makeDebug('nimbella-cli/finder-builder')
+const debug = makeDebug('nim:deployer:finder-builder')
 
 // Type to use with the ignore package.
 interface Ignore {

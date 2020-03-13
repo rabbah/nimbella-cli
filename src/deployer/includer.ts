@@ -20,7 +20,7 @@
 
 import { Includer } from './deploy-struct';
 import * as makeDebug from 'debug'
-const debug = makeDebug('nimbella-cli/includer')
+const debug = makeDebug('nim:deployer:includer')
 
 // Make an includer
 export function makeIncluder(include: string, exclude: string): Includer {

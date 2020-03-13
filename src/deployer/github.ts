@@ -36,7 +36,7 @@ import * as makeDebug from 'debug'
 import { authPersister } from '../NimBaseCommand'
 
 const rimraf = promisify(rimrafOrig)
-const debug = makeDebug('nimbella-cli/github')
+const debug = makeDebug('nim:deployer:github')
 
 const TEMP = process.platform == 'win32' ? process.env['TEMP'] : '/tmp'
 const CACHE_DIR = "deployer-git-cache"

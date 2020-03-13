@@ -32,7 +32,7 @@ import { promiseFiles } from 'node-dir'
 import * as yaml  from 'js-yaml'
 import * as makeDebug from 'debug'
 import { isArray } from 'util';
-const debug = makeDebug('nimbella-cli/deployer-util')
+const debug = makeDebug('nim:deployer:util')
 
 // List of files to skip as actions inside packages, or from auto-zipping
 export const FILES_TO_SKIP = [ '.gitignore', '.DS_Store' ]

@@ -31,7 +31,7 @@ import * as path from 'path'
 import { getCredentialsForNamespace, getCredentials, Persister } from './login';
 import { makeIncluder } from './includer';
 import * as makeDebug from 'debug'
-const debug = makeDebug('nimbella-cli/deployer-api')
+const debug = makeDebug('nim:deployer:api')
 
 // Deploy a disk-resident project given its path and options to pass to openwhisk.  The options are merged
 // with those in the config; the result must include api or apihost, and must include api_key.
@@ -220,6 +220,7 @@ export async function wipeNamespace(host: string, auth: string) {
 
 // Completely remove a package including its contained actions
 export async function wipePackage(name: string, host: string, auth: string): Promise<openwhisk.Package> {
+    debug("wipePackage invoked with name='%s', host='%s', auth='%s", name, host, auth)
     const init: OWOptions = { apihost: host, api_key: auth}
     const client = openwhisk(init)
     return cleanPackage(client, name, undefined)

@@ -41,7 +41,7 @@ import * as createDebug  from 'debug'
 import { format } from 'util'
 import { fileSystemPersister, browserPersister } from './deployer/login';
 
-const debug = createDebug('nimbella-cli/base')
+const debug = createDebug('nim:base')
 
 // Flag indicating running in browser
 export const inBrowser = (typeof process === 'undefined') || (!process.release) || (process.release.name !== 'node')
