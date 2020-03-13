@@ -44,15 +44,14 @@ interface TopLevel {
     includer: Includer
     reader: ProjectReader
 }
-export function readTopLevel(filePath: string, env: string, userAgent: string, includer: Includer,
+export async function readTopLevel(filePath: string, env: string, userAgent: string, includer: Includer,
         mustBeLocal: boolean): Promise<TopLevel> {
     // If mustBeLocal is only important if the filePath denotes a github location.  In that case, a true value for
     // mustBeLocal causes the github contents to be fetched to a local cache and a FileReader is used.  A false value
     // causes a GithubReader to be used.
     debug("readTopLevel with filePath:'%s' and mustBeLocal:'%s'", filePath, String(mustBeLocal))
     let githubPath: string = undefined
-    let start = Promise.resolve(filePath)
-    let reader = makeFileReader(filePath)
+    let reader = makeFileReader(filePath) // Only useful iff it turns out filePath != github
     if (isGithubRef(filePath)) {
         const github = parseGithubRef(filePath)
         if (!github.auth) {
@@ -60,64 +59,63 @@ export function readTopLevel(filePath: string, env: string, userAgent: string, i
         }
         githubPath = filePath
         if (mustBeLocal) {
-            start = fetchProject(github, userAgent)
+            filePath = await fetchProject(github, userAgent)
+            reader = makeFileReader(filePath)
         } else {
             reader = makeGithubReader(github, userAgent)
         }
     }
     const webDir = 'web', pkgDir = 'packages'
-    return start.then(filePath => {
-        return reader.readdir('').then(items => {
-            items = filterFiles(items)
-            let web: string
-            let config: string
-            let notconfig: string
-            let legacyConfig: string
-            let packages: string
-            const strays: string[] = []
-            for (const item of items) {
-                if (item.isDirectory) {
-                    switch(item.name) {
-                        case webDir:
-                            if (includer.isWebIncluded)
-                                web = webDir
-                            break
-                        case pkgDir:
-                            packages = pkgDir
-                            break
-                        case '.nimbella':
-                            break
-                        default:
-                            strays.push(item.name)
-                    }
-                } else if (!item.isDirectory && item.name == CONFIG_FILE) {
-                    config = item.name
-                } else if (!item.isDirectory && item.name == LEGACY_CONFIG_FILE) {
-                    legacyConfig = item.name
-                } else if (!item.isDirectory && (item.name.endsWith(".yml") || item.name.endsWith(".yaml"))) {
-                    notconfig = item.name
-                } else if (!env && !item.isDirectory && item.name == ENV_FILE) {
-                    // Env file reading will not go through the reader so use a path that includes a path to the project
-                    env = path.join(filePath, item.name)
-                } else {
-                    strays.push(item.name)
+    return reader.readdir('').then(items => {
+        items = filterFiles(items)
+        let web: string
+        let config: string
+        let notconfig: string
+        let legacyConfig: string
+        let packages: string
+        const strays: string[] = []
+        for (const item of items) {
+            if (item.isDirectory) {
+                switch(item.name) {
+                    case webDir:
+                        if (includer.isWebIncluded)
+                            web = webDir
+                        break
+                    case pkgDir:
+                        packages = pkgDir
+                        break
+                    case '.nimbella':
+                        break
+                    default:
+                        strays.push(item.name)
                 }
+            } else if (!item.isDirectory && item.name == CONFIG_FILE) {
+                config = item.name
+            } else if (!item.isDirectory && item.name == LEGACY_CONFIG_FILE) {
+                legacyConfig = item.name
+            } else if (!item.isDirectory && (item.name.endsWith(".yml") || item.name.endsWith(".yaml"))) {
+                notconfig = item.name
+            } else if (!env && !item.isDirectory && item.name == ENV_FILE) {
+                // Env file reading will not go through the reader so use a path that includes a path to the project
+                env = path.join(filePath, item.name)
+            } else {
+                strays.push(item.name)
             }
-            if (legacyConfig && !config) {
-                config = legacyConfig
-                console.log(`Warning: the name '${LEGACY_CONFIG_FILE}' is deprecated; please rename to '${CONFIG_FILE}' soon`)
-            }
-            if (notconfig && !config) {
-                console.log("Warning: found", notconfig, "but no", CONFIG_FILE)
-            }
-            if (githubPath) {
-                debug('githhub path was %s', githubPath)
-                debug('filePath is %s', filePath)
-            }
-            const ans = { web, packages, config, strays, filePath, env, githubPath, includer, reader }
-            debug('readTopLevel returning %O', ans)
-            return ans
-        })
+        }
+        if (legacyConfig && !config) {
+            config = legacyConfig
+            console.log(`Warning: the name '${LEGACY_CONFIG_FILE}' is deprecated; please rename to '${CONFIG_FILE}' soon`)
+        }
+        if (notconfig && !config) {
+            console.log("Warning: found", notconfig, "but no", CONFIG_FILE)
+        }
+        if (githubPath) {
+            debug('githhub path was %s', githubPath)
+            debug('filePath is %s', filePath)
+        }
+        const ans = { web, packages, config, strays, filePath, env, githubPath, includer, reader }
+        debug('readTopLevel returning %O', ans)
+        return ans
     })
 }
 
