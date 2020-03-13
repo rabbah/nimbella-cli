@@ -28,9 +28,11 @@ export default class PackageDelete extends NimBaseCommand {
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
     // Don't delegate the recursive case.  We handle it specially here
     if (flags.recursive) {
+      this.debug('invoking recursive delete')
       await this.recursiveDelete(args, flags, logger)
     } else {
       // Usual delegation
+      this.debug('usual delegation to aio')
       await this.runAio(rawArgv, argv, args, flags, logger, AioCommand)
     }
   }
@@ -40,8 +42,8 @@ export default class PackageDelete extends NimBaseCommand {
   static flags = {
     recursive: flags.boolean({ description: 'delete the contained actions', char: 'r' }),
     // For some reason, aio's 'project delete' does not incorporate host and auth as is the usual practice with other commands
-    apihost: { description: 'whisk API host' },
-    auth: { char: 'u', description: 'whisk auth' },
+    apihost: flags.string({ description: 'whisk API host' }),
+    auth: flags.string({ char: 'u', description: 'whisk auth' }),
    ...AioCommand.flags
   }
 
