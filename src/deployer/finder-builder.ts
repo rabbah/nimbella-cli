@@ -28,10 +28,12 @@ import ignore from 'ignore'
 import * as archiver from 'archiver'
 import * as touch from 'touch'
 import * as makeDebug from 'debug'
-const debug = makeDebug('nim:deployer:finder-builder')
 import { isGithubRef } from './github';
 import { Writable } from 'stream'
-import { WritableStreamBuffer } from 'stream-buffers'
+import * as memoryStreams from 'memory-streams'
+
+const debug = makeDebug('nim:deployer:finder-builder')
+const zipDebug = makeDebug('nim:deployer:zip')
 
 // Type to use with the ignore package.
 interface Ignore {
@@ -504,6 +506,8 @@ function singleFileBuilder(action: ActionSpec, singleItem: string): Promise<Acti
 async function autozipBuilder(pairs: string[][], action: ActionSpec, incremental: boolean, verboseZip: boolean, reader: ProjectReader): Promise<ActionSpec> {
     if (verboseZip)
         console.log('Zipping action contents in', action.file )
+    else
+        zipDebug('Zipping action contents in %s', action.file)
     if (!action.runtime) {
         action.runtime = agreeOnRuntime(pairs.map(pair => pair[0]))
     }
@@ -512,7 +516,7 @@ async function autozipBuilder(pairs: string[][], action: ActionSpec, incremental
     const inMemory = reader.getFSLocation() === null
     let output: Writable
     if (!inMemory) {
-        debug("zipping to %s", targetZip)
+        zipDebug("zipping to %s for", targetZip)
         const localTargetZip = makeLocal(reader, targetZip)
         pairs = pairs.map(pair => [ makeLocal(reader, pair[0]), pair[1] ])
         if (fs.existsSync(targetZip)) {
@@ -520,51 +524,62 @@ async function autozipBuilder(pairs: string[][], action: ActionSpec, incremental
             if (incremental && zipFileAppearsCurrent(localTargetZip, pairs.map(pair => pair[0]).concat(metaFiles))) {
                 return singleFileBuilder(action, targetZip)
             }
-            debug("deleting old target zip")
+            zipDebug("deleting old target zip")
             fs.unlinkSync(localTargetZip)
         }
         output = fs.createWriteStream(localTargetZip)
     } else {
-        debug("zipping to memory buffer")
-        output = new WritableStreamBuffer()
+        zipDebug("zipping to memory buffer for action %s", action.name)
+        output = new memoryStreams.WritableStream()
     }
     const zip = archiver('zip')
     const outputPromise = new Promise(function(resolve, reject) {
         zip.on('error', err => {
-            debug("zip error occurred: %O", err)
+            zipDebug("zip error occurred: %O", err)
             reject(err)
         })
         output.on('close', () => {
-            debug('zipfile successfully closed')
+            zipDebug('zipfile successfully closed')
+            resolve(undefined)
+        })
+        output.on('finish', () => {
+            zipDebug('zipfile successfully finished')
             resolve(undefined)
         })
         output.on('end', () => {
-            debug('zipfile data has been drained');
+            zipDebug('zipfile data has been drained');
         })
         zip.on('warning', err => {
-            debug('warning issued from archiver %O', err)
+            zipDebug('warning issued from archiver %O', err)
             if (err.code !== 'ENOENT') {
                 reject(err)
             }
         })
      })
     zip.pipe(output)
-    debug('zipping %d files', pairs.length)
+    zipDebug('zipping %d files', pairs.length)
     for (const pair of pairs) {
         const [oldPath, newPath ] = pair
         const mode = (await reader.getPathKind(oldPath)).mode
-        //debug("Zipping file with old path '%s', new path '%s', and mode %d", oldPath, newPath, mode)
-        zip.file(oldPath, { name: newPath, mode: mode })
+        const data = await reader.readFileContents(oldPath)
+        zipDebug("Zipping file with old path '%s', buffer length '%d', new path '%s', and mode %d", oldPath, data.length, newPath, mode)
+        zip.append(data, { name: newPath, mode: mode })
+        zipDebug("Zipped '%s' for action '%s', emitted %d", newPath, action.name, zip.pointer())
     }
+    zipDebug('finalizing zip for action %s', action.name)
     zip.finalize()
+    zipDebug('zip finalized for action %s', action.name)
     return outputPromise.then(() => {
         if (verboseZip)
             console.log('Zipping complete in', action.file )
+        else
+            zipDebug('zipping complete for %s', action.name)
         if (inMemory) {
-            const code = (output as WritableStreamBuffer).getContentsAsString('base64')
+            const code = output['toBuffer']().toString('base64')
             if (!code) {
                 return Promise.reject('An error occurred in in-memory zipping')
             }
+            zipDebug('in memory zipping complete with code of length %d', code.length)
             action.code = code as string
             return singleFileBuilder(action, action.file)
         } else {
