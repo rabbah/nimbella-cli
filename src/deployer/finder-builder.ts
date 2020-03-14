@@ -507,7 +507,7 @@ async function autozipBuilder(pairs: string[][], action: ActionSpec, incremental
     if (verboseZip)
         console.log('Zipping action contents in', action.file )
     else
-        zipDebug('Zipping action contents in %s', action.file)
+        debug('Zipping action contents in %s', action.file)
     if (!action.runtime) {
         action.runtime = agreeOnRuntime(pairs.map(pair => pair[0]))
     }
@@ -516,13 +516,17 @@ async function autozipBuilder(pairs: string[][], action: ActionSpec, incremental
     const inMemory = reader.getFSLocation() === null
     let output: Writable
     if (!inMemory) {
-        zipDebug("zipping to %s for", targetZip)
+        zipDebug("zipping to %s for action %s", targetZip, action.name)
         const localTargetZip = makeLocal(reader, targetZip)
         pairs = pairs.map(pair => [ makeLocal(reader, pair[0]), pair[1] ])
-        if (fs.existsSync(targetZip)) {
-            const metaFiles: string[] = [ makeLocal(reader, action.file, '.include'), makeLocal(reader, action.file, '.ignore') ].filter(fs.existsSync)
-            if (incremental && zipFileAppearsCurrent(localTargetZip, pairs.map(pair => pair[0]).concat(metaFiles))) {
-                return singleFileBuilder(action, targetZip)
+        if (fs.existsSync(localTargetZip)) {
+            zipDebug('the file exists and will be either reused or deleted')
+            if (incremental) {
+                const metaFiles: string[] = [ makeLocal(reader, action.file, '.include'), makeLocal(reader, action.file, '.ignore') ].filter(fs.existsSync)
+                debug('checking whether to build a new zip for %s with metaFiles %o', action.name, metaFiles)
+                if (zipFileAppearsCurrent(localTargetZip, pairs.map(pair => pair[0]).concat(metaFiles))) {
+                    return singleFileBuilder(action, targetZip)
+                }
             }
             zipDebug("deleting old target zip")
             fs.unlinkSync(localTargetZip)
@@ -573,7 +577,7 @@ async function autozipBuilder(pairs: string[][], action: ActionSpec, incremental
         if (verboseZip)
             console.log('Zipping complete in', action.file )
         else
-            zipDebug('zipping complete for %s', action.name)
+            debug('zipping complete for %s', action.name)
         if (inMemory) {
             const code = output['toBuffer']().toString('base64')
             if (!code) {
@@ -654,18 +658,20 @@ function scriptAppearsBuilt(filepath: string): boolean {
 }
 
 // Determine if a new zip should be generated.  The existing zip is considered current if it is newer than its dependencies.
-// TODO Should be assume this step is skipped when zipping occurs in memory?
+// This won't happen when zipping is in memory because that only happens in the 'from github' case which does not support incremental.
 function zipFileAppearsCurrent(zipfile: string, dependencies: string[]): boolean {
     const ziptime = fs.statSync(zipfile).mtimeMs
     for (const dep of dependencies) {
         if (fs.existsSync(dep)) {
             if (fs.statSync(dep).mtimeMs > ziptime) {
+                debug('%s not considered current because %s is newer', zipfile, dep)
                 return false
             }
         } else {
             console.warn('dependency', dep, "doesn't exist")
         }
     }
+    debug('%s seems up to date so no re-zip', zipfile)
     return true
 }
 
