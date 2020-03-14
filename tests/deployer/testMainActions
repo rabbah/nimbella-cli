@@ -152,7 +152,7 @@ function getAction {
 				NAME=${PKG}_$(basename "$1")
 		fi
 		nim action get "$1" | tail -n +2 > $NAME.meta
-		../canonical.js $NAME.meta
+		$SELFDIR/canonical.js $NAME.meta
 		BINARY=$(jq -r .exec.binary $NAME.meta)
 		if [ "$BINARY" != "true" ]; then
 				nim action get "$1" --save-as $NAME.code
