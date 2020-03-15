@@ -19,7 +19,7 @@
  */
 
 // Some behavior of this class was initially populated from RuntimeBaseCommand.js in
-// aio-cli-plugin-runtime (translated to TypeScript), govened by the following license:
+// aio-cli-plugin-runtime (translated to TypeScript), governed by the following license:
 
 /*
 Copyright 2019 Adobe Inc. All rights reserved.
