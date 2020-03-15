@@ -31,6 +31,8 @@ export async function run() {
     const ui = preParse()
     // Remove __OW stuff from environment
     cleanEnvironment()
+    // Add user agent
+    process.env['__OW_USER_AGENT'] = 'nimbella-cli/' + require('../package.json').version
     // Apply simple "plurals" fix
     const cmd = process.argv[2]
     if (pluralCommands.includes(cmd)) {

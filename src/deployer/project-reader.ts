@@ -55,6 +55,7 @@ export async function readTopLevel(filePath: string, env: string, userAgent: str
     if (isGithubRef(filePath)) {
         const github = parseGithubRef(filePath)
         if (!github.auth) {
+            // TODO should not be using console.log here
             console.log('Warning: access to github will be un-authenticated; rate will be severely limited')
         }
         githubPath = filePath

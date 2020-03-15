@@ -30,6 +30,7 @@ import * as randomstring from 'randomstring'
 import * as crypto from 'crypto'
 import * as yaml  from 'js-yaml'
 import * as makeDebug from 'debug'
+import { parseGithubRef } from './github'
 const debug = makeDebug('nim:deployer:util')
 
 // List of files to skip as actions inside packages, or from auto-zipping
@@ -797,7 +798,10 @@ export function mapActions(actions: ActionSpec[]): ActionMap {
 
 // Calculate the 'deployer' annotation for inclusion in package and action annotations.  This won't change
 // in the course of a deploy run so can be calculated once for inclusion in everything that is deployed.
-export async function getDeployerAnnotation(project: string): Promise<DeployerAnnotation> {
+export async function getDeployerAnnotation(project: string, githubPath: string): Promise<DeployerAnnotation> {
+    if (githubPath) {
+        return Promise.resolve(deployerAnnotationFromGithub(githubPath))
+    }
     const digest = undefined
     try {
         const git = simplegit().silent(true)
@@ -817,6 +821,12 @@ export async function getDeployerAnnotation(project: string): Promise<DeployerAn
         const projectPath = path.resolve(project)
         return { user, projectPath, digest }
     }
+}
+
+function deployerAnnotationFromGithub(githubPath: string): DeployerAnnotation {
+    const def = parseGithubRef(githubPath)
+    const repository = `githhub:${def.owner}/${def.repo}`
+    return { digest: undefined, user: 'cloud', repository, projectPath: def.path, commit: def.ref || 'master' }
 }
 
 // Wipe all the entities from the namespace referred to by an OW client handle

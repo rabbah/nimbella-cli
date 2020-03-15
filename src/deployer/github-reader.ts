@@ -21,7 +21,7 @@
 import { ProjectReader, PathKind } from './deploy-struct'
 import { GithubDef, makeClient, readContents, seemsToBeProject } from './github';
 import * as Octokit from '@octokit/rest'
-import { posix as Path } from 'path'
+import * as Path from 'path' // Do not use 'posix' here because, in a browser, path is posix only and has no 'posix' member
 import * as makeDebug from 'debug'
 const debug = makeDebug('nimbella-cli/github-reader')
 

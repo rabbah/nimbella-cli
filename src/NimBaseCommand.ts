@@ -65,7 +65,10 @@ export class CaptureLogger implements NimLogger {
     captured: string[] = [] // Captured line by line output (flowing via Logger.log)
     entity: object     // An output entity if that kind of output was produced
     log(msg = '', ...args: any[]) {
-      this.captured.push(format(msg, ...args))
+      const msgs = msg.split('\n')
+      for (const msg of msgs) {
+        this.captured.push(format(msg, ...args))
+      }
     }
     handleError(msg: string, err?: Error): never {
       if (err) throw err
@@ -74,7 +77,7 @@ export class CaptureLogger implements NimLogger {
     }
     displayError(msg: string, err?: Error) {
       msg = improveErrorMsg(msg, err)
-      Errors.error(msg, { exit: false })
+      this.log('Error: %s', msg)
     }
     exit(code: number) {
       // a no-op here

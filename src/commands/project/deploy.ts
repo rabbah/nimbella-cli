@@ -19,13 +19,13 @@
  */
 
 import { flags } from '@oclif/command'
-import { NimBaseCommand, NimLogger, authPersister, parseAPIHost } from '../../NimBaseCommand'
+import { NimBaseCommand, NimLogger, authPersister, parseAPIHost, inBrowser } from '../../NimBaseCommand'
 import { readAndPrepare, buildProject, deploy } from '../../deployer/api'
 import { Flags, OWOptions, DeployResponse, Credentials } from '../../deployer/deploy-struct'
 import { getCredentialList, getCredentialsForNamespace } from '../../deployer/login'
 import { computeBucketDomainName } from '../../deployer/deploy-to-bucket'
+import { isGithubRef } from '../../deployer/github';
 import * as path from 'path'
-import { isGithubRef } from '../../deployer';
 
 export class ProjectDeploy extends NimBaseCommand {
   static description = 'Deploy Nimbella projects'
@@ -69,8 +69,9 @@ export class ProjectDeploy extends NimBaseCommand {
 
     // Deploy each project
     let success = true
+    const userAgent = process.env['__OW_USER_AGENT'] || (inBrowser ? 'nimbella-workbench' : 'nimbella-cli')
     for (const project of argv) {
-      success = success && await doDeploy(project, cmdFlags, creds, owOptions, false, logger, this.config.userAgent)
+      success = success && await doDeploy(project, cmdFlags, creds, owOptions, false, logger, userAgent)
     }
     if (!success) {
       logger.exit(1)
@@ -107,6 +108,11 @@ export async function processCredentials(ignore_certs: boolean, apihost: string|
 // Deploy one project
 export async function doDeploy(project: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions, watching: boolean,
     logger: NimLogger, userAgent: string): Promise<boolean> {
+  if (inBrowser && !isGithubRef(project)) {
+    const err = new Error(`Cannot deploy project '${project}'; only github-resident projects are deployable from the cloud`)
+    logger.displayError(err.message, err)
+    return false
+  }
   const todeploy = await readAndPrepare(project, owOptions, creds, authPersister, cmdFlags, userAgent)
     .catch(err => logger.handleError(err.message, err))
   if (!watching) {

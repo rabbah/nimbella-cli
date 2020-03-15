@@ -67,7 +67,7 @@ export function doDeploy(todeploy: DeployStructure): Promise<DeployResponse> {
     }
     const webPromises = todeploy.web.map(res => deployWebResource(res, todeploy.actionWrapPackage, todeploy.bucket, todeploy.bucketClient,
             todeploy.flags.incremental ? todeploy.versions : undefined, webLocal, todeploy.reader))
-    return getDeployerAnnotation(todeploy.filePath).then(deployerAnnot => {
+    return getDeployerAnnotation(todeploy.filePath, todeploy.githubPath).then(deployerAnnot => {
         const actionPromises = todeploy.packages.map(pkg => deployPackage(pkg, todeploy.owClient, deployerAnnot, todeploy.parameters,
             todeploy.cleanNamespace, todeploy.flags.incremental ? todeploy.versions : undefined, todeploy.reader))
         const strays = straysToResponse(todeploy.strays)
