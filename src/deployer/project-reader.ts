@@ -46,7 +46,7 @@ interface TopLevel {
 }
 export async function readTopLevel(filePath: string, env: string, userAgent: string, includer: Includer,
         mustBeLocal: boolean): Promise<TopLevel> {
-    // If mustBeLocal is only important if the filePath denotes a github location.  In that case, a true value for
+    // The mustBeLocal arg is only important if the filePath denotes a github location.  In that case, a true value for
     // mustBeLocal causes the github contents to be fetched to a local cache and a FileReader is used.  A false value
     // causes a GithubReader to be used.
     debug("readTopLevel with filePath:'%s' and mustBeLocal:'%s'", filePath, String(mustBeLocal))
