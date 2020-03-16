@@ -25,6 +25,8 @@ import { wrapSuccess, wrapError } from './util';
 import * as path from 'path'
 import * as crypto from 'crypto'
 import * as URL from 'url-parse'
+import * as makeDebug from 'debug'
+const debug = makeDebug('nim:deployer:deploy-to-bucket')
 
 // Open a "bucket client" (object of type Bucket) to use in deploying web resources to the bucket associated with the
 // InitOptions.  The InitOptions should have been checked for sufficient information already.
@@ -95,14 +97,18 @@ export async function deployToBucket(resource: WebResource, client: Bucket, spec
     // Upload
     const metadata = { cacheControl: 'no-cache', contentType: resource.mimeType }
     const remoteFile = client.file(destination)
-    return remoteFile.save(data, { metadata }).then(() => {
-    // return client.upload(filePath, { destination, metadata }).then(() => {
+    debug(`bucket save operation for %s with data of length %d and metadata %O`, resource.simpleName, data.length, metadata)
+    // Specify resumable explicitly to avoid spurious fs call to retrieve config when running in the cloud
+    return remoteFile.save(data, { metadata, resumable: false }).then(() => {
+        debug('save operation for %s was successful', resource.simpleName)
         const item = `https://${client.name}/${destination}`
         const response = wrapSuccess(item, "web", false, undefined, {}, undefined)
         response.webHashes = {}
         response.webHashes[resource.filePath] = digest
+        debug('returning response %O', response)
         return response
     }).catch(err => {
+        debug('error during bucket save operation: %O', err)
         return wrapError(err, `web resource '${resource.simpleName}'`)
     })
 }
