@@ -145,6 +145,7 @@ function specialExclusions {
 
 # Function to retrieve an action
 function getAction {
+		echo "retrieving action '$1'"
 		PKG=$(dirname "$1")
 		if [ "$PKG" == "." ]; then
 				NAME="$1"
