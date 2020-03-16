@@ -22,6 +22,7 @@
 # Currently a single cmdline argument is passed to testMainActions only.  This is undoubtedly temporary
 
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+MAINDIR=$SELFDIR/../../../main
 cd $SELFDIR
 
 nim auth logout joshuaau-sp0k14rcwdy
@@ -42,7 +43,7 @@ function runTest() {
 if [ "$1" == "--ongcp" ]; then
 	 nim auth switch wbtestni-grinjpsjnuh --apihost https://apigcp.nimbella.io
 else
-   pushd $SELFDIR/../../../main
+   pushd $MAINDIR
    bin/nimadmin user set demos test
 	 popd
 fi
@@ -55,5 +56,7 @@ if [ "$1" == "--ongcp" ]; then
 	 exit 0
 fi
 runTest Demos --postdeploy
-runTest MainActions --postdeploy
-
+echo "------------------------"
+echo "Starting testMainActions"
+$MAINDIR/tests/actions/testMainActions --postdeploy
+echo "testMainActions succeeded"
