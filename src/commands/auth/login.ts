@@ -20,7 +20,8 @@
 
 import { flags } from '@oclif/command'
 import { NimBaseCommand, NimLogger, parseAPIHost, authPersister } from '../../NimBaseCommand'
-import { doLogin, doAdminLogin, addCredentialAndSave } from '../../deployer/login'
+import { doLogin, doAdminLogin, doInteractiveLogin, addCredentialAndSave } from '../../deployer/login'
+import { doOAuthFlow, isFullCredentials } from '../../oauth'
 import { Credentials } from '../../deployer/deploy-struct'
 
 export default class AuthLogin extends NimBaseCommand {
@@ -59,8 +60,15 @@ export default class AuthLogin extends NimBaseCommand {
       credentials = await addCredentialAndSave(apihost, flags.auth, undefined, false, authPersister, flags.namespace, !!flags.namespace)
         .catch((err: Error) => logger.handleError(err.message, err))
       authPersister.saveLegacyInfo(apihost, flags.auth)
+    } else if (flags.apihost) {
+      logger.handleError("The --apihost flag can only be used in conjunction with --auth or a login token")
     } else {
-      logger.handleError("A login token is required unless --auth is specified")
+      const response = await doOAuthFlow(logger, false).catch(err => logger.handleError(err.message, err))
+      if (isFullCredentials(response)) {
+        credentials = await doInteractiveLogin(response, authPersister).catch(err => logger.handleError(err.message, err))
+      } else {
+        logger.handleError(`Login failed.  Response was '${response}'`)
+      }
     }
     logger.log(`Successful login to namespace '${credentials.namespace}' on host '${apihost}'`)
   }

@@ -20,7 +20,7 @@
 
 import { flags } from '@oclif/command'
 import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
-import * as Octokit from '@octokit/rest'
+import { isGithubProvider, doOAuthFlow } from '../../oauth'
 
 let cli
 
@@ -28,35 +28,37 @@ export default class AuthGithub extends NimBaseCommand {
   static description = 'manage github accounts'
 
   static flags = {
-    add: flags.string({ description: 'the user name of a github account to be added' }),
-    replace: flags.boolean({ description: 'allow replacement when adding an account that was added previously' }),
-    keep: flags.boolean({ description: 'suppress fetching new credentials when adding an account that was added previously' }),
-    token: flags.string({ description: 'the github token to use when adding an account (no prompting or fetching occurs)' }),
-    list: flags.boolean({ description: 'list previously added github accounts'}),
-    switch: flags.string({ description: 'switch to using a particular previously added github account' }),
-    delete: flags.string({ description: 'forget a previously added github account' }),
+    add: flags.boolean({ char: 'a', description: 'add another github account with a different user name' }),
+    delete: flags.string({ char: 'd', description: 'forget a previously added github account' }),
+    initial: flags.boolean({ char: 'i', description: "add your github account if you didn't specify it earlier" }),
+    list: flags.boolean({ char: 'l', description: 'list previously added github accounts'}),
     show: flags.string({ description: 'show the access token currently associated with a username' }),
+    switch: flags.string({ char: 's', description: 'switch to using a particular previously added github account' }),
+    token: flags.string({ description: 'the github token for adding an account', hidden: true }),
+    username: flags.string({ description: 'the github username for adding an account', hidden: true }),
     ...NimBaseCommand.flags
   }
 
   static args = []
+  static strict = false
 
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
-    const flagCount = [ flags.add, flags.switch, flags.list, flags.delete, flags.show ].filter(Boolean).length
+    const flagCount = [ flags.add, flags.initial, flags.switch, flags.list, flags.delete, flags.show ].filter(Boolean).length
     if (flagCount > 1) {
-        logger.handleError(`only one of '--add', '--list', '--switch', '--delete', or '--show' may be specified`)
-    }
-    if (!flags.add && (flags.keep || flags.replace || flags.token)) {
-        logger.handleError(`'--replace', '--keep', and/or '--token' may only be specified with '--add'`)
-    } else if (flags.keep && flags.replace) {
-      logger.handleError(`only one of '--keep' and '--replace' may be specified`)
+      logger.handleError(`only one of '--add', '--initial', '--list', '--switch', '--delete', or '--show' may be specified`)
+    } else if (flagCount == 1 && flags.token || flags.username) {
+      logger.handleError(`--token and --username may not be combined with other flags`)
+    } else if (flags.token && ! flags.username || flags.username && !flags.token) {
+      logger.handleError(`--token and --username must both be specified if either one is specified`)
     }
     if (flags.switch) {
-        await this.doSwitch(flags.switch, logger)
+      await this.doSwitch(flags.switch, logger)
     } else if (flags.list) {
-        await this.doList(logger)
-    } else if (flags.add) {
-        await this.doAdd(flags.add, flags.token, flags.keep, flags.replace, logger)
+      await this.doList(logger)
+    } else if (flags.add || flags.initial) {
+      await this.doAdd(logger, flags.initial, undefined, undefined)
+    } else if (flags.token && flags.username) {
+      await this.doAdd(logger, false, flags.username, flags.token)
     } else if (flags.delete) {
         await this.doDelete(flags.delete, logger)
     } else if (flags.show) {
@@ -66,26 +68,34 @@ export default class AuthGithub extends NimBaseCommand {
     }
   }
 
-  async doAdd(name: string, token: string, keep: boolean, replace: boolean, logger: NimLogger) {
+  // Add a github credential.  Called for --add, --initial, and the combination --username + --token
+  async doAdd(logger: NimLogger, isInitial: boolean, name: string, token: string) {
     const store = await authPersister.loadCredentialStore()
     if (!store.github) {
         store.github = {}
     }
-    if (store.github[name]) {
-      if (keep) {
+    if (name && token) {
+      store.github[name] = token
+      store.currentGithub = name
+    } else if (isInitial && Object.keys(store.github).length > 0) {
+      const list = Object.keys(store.github).join(', ')
+      logger.log(`you already have github credentials: ${list}`)
+      logger.log("Doing nothing.  Use '--add' if you really want to add more accounts")
+      return
+    } else {
+      const authResponse = await doOAuthFlow(logger, true)
+      if (isGithubProvider(authResponse)) {
+        const warn = !isInitial && !!store.github[authResponse.name]
+        name = authResponse.name
+        store.github[name] = authResponse.key
         store.currentGithub = name
-        authPersister.saveCredentialStore(store)
-        logger.log(`the github account of user name '${name}' was added previously and is now current`)
-        return
-      } else if (!replace) {
-        logger.handleError(`the github account of user name '${name}' was added previously and neither '--keep' nor '--replace' was specified`)
+        if (warn) {
+          logger.log(`You already had an entry for username '${authResponse.name}'.  It was replaced`)
+        }
+      } else {
+        logger.handleError(`github authentication failed, response was '${authResponse}'`)
       }
     }
-    if (!token) {
-      token = await getGitHubToken(name, this.config.userAgent, logger)
-    }
-    store.github[name] = token
-    store.currentGithub = name
     authPersister.saveCredentialStore(store)
     logger.log(`the github account of user name '${name}' was added and is now current`)
   }
@@ -137,55 +147,3 @@ export default class AuthGithub extends NimBaseCommand {
     }
   }
 }
-
-async function getGitHubToken(username: string, userAgent: string, logger: NimLogger) {
-  const opts = {
-      userAgent,
-      note: 'nimbella-cli-gh-auth',
-      scopes: [ 'repo' ]
-  }
-
-  async function promptForOTP() {
-    return await cli.prompt(`Enter the GitHub OTP/2FA Code for username '${username}'`, { type: 'hide' })
-  }
-
-  if (!cli) {
-      cli = require('cli-ux').cli
-  }
-
-  const password = await cli.prompt(`Enter the GitHub password for username '${username}'`, { type: 'hide'})
-
-  const octokit = new Octokit({
-    auth: {
-      username,
-      password,
-      async on2fa() {
-        return promptForOTP()
-      }
-    },
-    log: {
-        debug: () => {},
-        info: () => {},
-        warn: () => {},
-        error: logger.handleError
-    }
-  })
-
-  let response = await octokit.oauthAuthorizations.createAuthorization({
-    note: opts.note + ' (' + new Date().toJSON() + ')',
-    note_url: 'https://nimbella.io',
-    scopes: opts.scopes,
-    headers: {
-      'User-Agent': opts.userAgent
-    }
-  })
-
-  if (response.data.token) {
-    return response.data.token
-  } else {
-    const error = new Error('Github authentication failed')
-    error['response'] = response
-    logger.handleError(error.message, error)
-  }
-}
-

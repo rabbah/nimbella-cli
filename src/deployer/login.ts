@@ -24,7 +24,9 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { XMLHttpRequest } from 'xmlhttprequest'
 import { CredentialStore, CredentialStorageEntry, CredentialEntry, CredentialHostMap, Credentials,
-    CredentialRow } from './deploy-struct'
+    CredentialRow,
+    OWOptions} from './deploy-struct'
+import { FullCredentials } from '../oauth'
 import * as createDebug from 'debug'
 const debug = createDebug('nimbella.cli')
 
@@ -147,6 +149,21 @@ export function doAdminLogin(apihost: string): Promise<Credentials|void> {
         })
         process.stdin.on('error', reject)
     })
+}
+
+// Login using the result of a oauth flow (full interactive login using Auth0, either gmail or github)
+// This function is called with the _result_ of the flow after testing for success.
+export async function doInteractiveLogin(newCreds: FullCredentials, persister: Persister): Promise<Credentials> {
+    const { apihost, namespace, uuid, key, redis, storage, id } = newCreds
+    const auth = uuid + ':' + key
+    const credStore = await persister.loadCredentialStore()
+    const credentials = addCredential(credStore, apihost, namespace, auth, storage, redis)
+    if (id && id.name && id.key) {
+        credStore.github[id.name] = id.key
+        credStore.currentGithub = id.name
+    }
+    persister.saveCredentialStore(credStore)
+    return credentials
 }
 
 // Add credential to credential store and make it the default.  Does not persist the result

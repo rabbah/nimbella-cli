@@ -35,6 +35,7 @@
     "debug": "^4.1.1",
     "dotenv": "7.0.0",
     "expand-home-dir": "0.0.3",
+    "get-port": "^5.1.1",
     "gtoken": "4.1.0",
     "ignore": "5.0.6",
     "js-yaml": "^3.13.1",
@@ -101,7 +102,7 @@
     },
     "topics": {
       "auth": {
-        "description": "manage Nimbella namespace credentials"
+        "description": "manage Nimbella and Github credentials"
       },
       "autocomplete": {
         "hidden": true
