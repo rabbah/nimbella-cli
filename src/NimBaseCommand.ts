@@ -137,6 +137,7 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   // Replacement for table function in RuntimeBaseCommand when running in browser
   // TODO this will not work for namespace get, which produces multiple tables.  Should generalize to a list.
   saveTable = (logger: CaptureLogger) => (data: object[], columns: object, options: object = {}) => {
+    debug("Call to saveTable with %O", data)
     logger.table = data
   }
 
