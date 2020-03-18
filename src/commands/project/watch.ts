@@ -49,7 +49,7 @@ export default class ProjectWatch extends NimBaseCommand {
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
      // If no projects specified, display help
     if (argv.length == 0) {
-      this._help()
+      this.doHelp()
     }
     // Otherwise ...
     const { target, env, apihost, auth, insecure, yarn, include, exclude } = flags

@@ -35,18 +35,25 @@ governing permissions and limitations under the License.
 
 import { Command, flags } from '@oclif/command'
 import { IArg } from '@oclif/parser/lib/args'
-import * as Errors from '@oclif/errors'
 import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
-import * as createDebug  from 'debug'
 import { format } from 'util'
 import { fileSystemPersister, browserPersister } from './deployer/login';
 
+import * as createDebug  from 'debug'
 const debug = createDebug('nim:base')
 
 // Flag indicating running in browser
 export const inBrowser = (typeof process === 'undefined') || (!process.release) || (process.release.name !== 'node')
 // The persister to use for all auth code
 export const authPersister = inBrowser ? browserPersister : fileSystemPersister
+
+// A place where workbench can store its help helper
+let helpHelper: (usage: {}) => never
+
+// Called from workbench init
+export function setHelpHelper(helper: (usage: {}) => never) {
+  helpHelper = helper
+}
 
 // Common behavior expected by runCommand implementations ... abstracts some features of
 // oclif.Command.  The NimBaseCommand class implements this interface using its own
@@ -99,8 +106,17 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   // Saved command for the case when under a browser and various utilities need the information
   command: string[]
 
-  // Help helper for when running with kui
-  helpHelper: (command: string[]) => never
+  // Usage model for when running with kui
+  usage: {}
+
+  // A general way of running help from a cammand.  Use _help in oclif and helpHelper in kui
+  doHelp() {
+    if (helpHelper && this.usage) {
+      helpHelper(this.usage)
+    } else {
+      this._help()
+    }
+  }
 
   // Generic oclif run() implementation.   Parses and then invokes the abstract runCommand method
   async run() {
@@ -154,7 +170,6 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
     // Duplicate oclif's args parsing conventions.  Some parsing has already been done by kui
     const rawArgv = argv.slice(skip)
     this.command = argv.slice(0, skip)
-    this._help = () => this.helpHelper(this.command)
     argv = parsedOptions._.slice(skip)
     if (!argTemplates) {
       argTemplates = []

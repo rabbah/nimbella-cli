@@ -64,7 +64,7 @@ export default class AuthGithub extends NimBaseCommand {
     } else if (flags.show) {
         await this.doShow(flags.show, logger)
     } else {
-        this._help()
+        this.doHelp()
     }
   }
 
