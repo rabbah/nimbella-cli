@@ -18,9 +18,9 @@
  * from Nimbella Corp.
  */
 
-import { NimBaseCommand, NimLogger } from '../NimBaseCommand'
-
-let open
+import { NimBaseCommand, NimLogger, inBrowser } from '../NimBaseCommand'
+import { open } from '../ui'
+const PUBLIC_DOC = 'https://nimbella.io/downloads/nim/nim.html'
 
 export default class Doc extends NimBaseCommand {
   static description = "display the full documentation of this CLI"
@@ -33,11 +33,15 @@ export default class Doc extends NimBaseCommand {
 
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
     try {
-      const html = require.resolve('../../doc/nim.html')
-      if (!open) {
-        open = require('open')
+      if (inBrowser) {
+        logger.log('This displays the Nimbella CLI documentation')
+        logger.log('Much of the Nimbella CLI command set also works in the workbench')
+        logger.log('Type "menu" for some more orientation to the workbench')
+        await open(PUBLIC_DOC)
+      } else {
+        const html = require.resolve('../../doc/nim.html')
+        await open(html)
       }
-      await open(html)
     } catch (err) {
       logger.displayError(err.message, err)
       logger.log("Packaging error: cannot locate documentation")

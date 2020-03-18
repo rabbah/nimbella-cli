@@ -25,8 +25,7 @@ import { wipeNamespace } from '../../deployer/api'
 import { computeBucketStorageName, cleanBucket } from '../../deployer/deploy-to-bucket'
 import { Credentials } from '../../deployer/deploy-struct'
 import { Storage } from '@google-cloud/storage'
-
-let cli
+import { prompt } from '../../ui'
 
 export default class NamespaceClean extends NimBaseCommand {
      static description = 'Remove content from a namespace'
@@ -50,10 +49,7 @@ export default class NamespaceClean extends NimBaseCommand {
         }
         if (!flags.force) {
             const ow = flags.justwhisk ? " openwhisk" : ""
-            if (!cli) {
-                cli = require('cli-ux').cli
-            }
-            const ans = await cli.prompt(`Type '${namespace}' to remove all${ow} content from namespace '${namespace}'`)
+            const ans = await prompt(`Type '${namespace}' to remove all${ow} content from namespace '${namespace}'`)
             if (ans !== namespace) {
                 logger.log('Doing nothing')
                 return

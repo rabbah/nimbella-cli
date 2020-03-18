@@ -21,9 +21,9 @@
 import { flags } from '@oclif/command'
 import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
 import { queryKVStore } from '../../storage/key-value'
+import { prompt } from '../../ui'
 
 const queryCommand = 'redis/flush'
-let cli
 export default class Flush extends NimBaseCommand {
   static description = 'Clears the Key Value Store, be cautious!'
 
@@ -41,10 +41,7 @@ export default class Flush extends NimBaseCommand {
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
 
     if (!flags.force) {
-      if (!cli) {
-        cli = require('cli-ux').cli
-      }
-      const ans = await cli.prompt(`Type yes to remove all content from Key-Value Store`)
+      const ans = await prompt(`Type yes to remove all content from Key-Value Store`)
       if (ans !== 'yes') {
         logger.log('Doing nothing')
         return

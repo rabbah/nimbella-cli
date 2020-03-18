@@ -96,8 +96,11 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   // Our own classes ignore rawArgv.  The aio shims call runAio which needs the rawArgv, since aio classes will re-parse
   abstract runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger): Promise<any>
 
-  // Saved command for the case of aio under a browser
+  // Saved command for the case when under a browser and various utilities need the information
   command: string[]
+
+  // Help helper for when running with kui
+  helpHelper: (command: string[]) => never
 
   // Generic oclif run() implementation.   Parses and then invokes the abstract runCommand method
   async run() {
@@ -151,6 +154,7 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
     // Duplicate oclif's args parsing conventions.  Some parsing has already been done by kui
     const rawArgv = argv.slice(skip)
     this.command = argv.slice(0, skip)
+    this._help = () => this.helpHelper(this.command)
     argv = parsedOptions._.slice(skip)
     if (!argTemplates) {
       argTemplates = []

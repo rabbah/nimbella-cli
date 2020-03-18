@@ -20,6 +20,7 @@
 
 import  * as querystring from 'querystring'
 import { NimLogger, inBrowser } from './NimBaseCommand'
+import { open } from './ui'
 
 // These types duplicate declarations in main/deployable/login, except that Credentials is renamed to FullCredentials
 // to avoid confusing it with the Credentials type used throught nim.
@@ -62,16 +63,24 @@ function providerFromResponse(response: OAuthResponse): string {
 
 // Do an interactive token flow, either to establish an Nimella account or to add a github account
 export async function doOAuthFlow(logger: NimLogger, githubOnly: boolean): Promise<OAuthResponse> {
+  // Common setup
+  let deferredResolve: (response: OAuthResponse) => void
+  let deferredReject
+  const deferredPromise = new Promise<OAuthResponse>(function(resolve, reject) {
+    deferredResolve = resolve
+    deferredReject = reject
+  })
+  const query = {
+      provider: githubOnly ? 'github' : undefined
+  }
+
+  // Non-browser setup
   if (!inBrowser) {
     const createServer = require('http').createServer
     const getPort = require('get-port')
     const port = await getPort({ port: 3000 })
-    let deferredResolve: (response: OAuthResponse) => void
-    let deferredReject
-    const deferredPromise = new Promise<OAuthResponse>(function(resolve, reject) {
-      deferredResolve = resolve
-      deferredReject = reject
-    })
+    query['redirect'] = true
+    query['port'] = port
 
     const server = createServer(function(req, res) {
       const parameters = querystring.parse(req.url.slice(req.url.indexOf('?') + 1))
@@ -103,26 +112,23 @@ export async function doOAuthFlow(logger: NimLogger, githubOnly: boolean): Promi
       server.on('error', reject)
       server.listen(port, resolve)
     })
+  } // else browser setup?
 
-    const webUI = 'https://preview-apigcp.nimbella.io/api'
+  // Common code
+  const webUI = 'https://preview-apigcp.nimbella.io/api'
 
-    const url =
-      webUI +
-      '/user/login?' +
-      querystring.stringify({
-        redirect: true,
-        port: port,
-        provider: githubOnly ? 'github' : undefined
-      })
+  const url =
+    webUI +
+    '/user/login?' +
+    querystring.stringify(query)
 
-    try {
-      await require('open')(url)
-    } catch (err) {
-      logger.handleError('Nimbella CLI could not open the browser for you.' +
-        ' Please visit this URL in a browser on this device: ' + url,
-        err)
-    }
-
-    return await deferredPromise
+  try {
+    await open(url)
+  } catch (err) {
+    logger.handleError('Nimbella CLI could not open the browser for you.' +
+      ' Please visit this URL in a browser on this device: ' + url,
+      err)
   }
+
+  return await deferredPromise // TODO how does the promise get resolved in a browser?  Probably the logic needs to deviate more
 }
