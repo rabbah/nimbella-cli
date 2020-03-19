@@ -31,6 +31,8 @@ elif [ "$1" == "--preview" ]; then
 elif [ "$1" == "--stable" ]; then
 		STABLE=true
 		PKG=true
+elif [ "$1" == "--link" ]; then
+		USE_LINK=true
 elif [ "$1" == "--no-install" ]; then
 		NOINSTALL=true
 elif [ "$1" == "--check-stable" ]; then
@@ -142,6 +144,10 @@ npm install
 
 # Build and pack
 npx tsc
+if [ -n "USE_LINK" ]; then
+		npm link
+		exit 0
+fi
 npm pack
 mv nimbella-cli-*.tgz nimbella-cli.tgz
 
