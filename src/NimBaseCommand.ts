@@ -135,11 +135,13 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   // kui in a browser, it takes steps to avoid a second real parse and also captures all output.  The
   // logger argument is a CaptureLogger in fact.
   async runAio(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger, aioClass: typeof RuntimeBaseCommand) {
-    debug('runAio')
+    debug('runAio with rawArgv: %o, argv: %o, args: %o, flags: %o', rawArgv, argv, args, flags)
     fixAioCredentials()
     const cmd = new aioClass(rawArgv, {})
     cmd.handleError = this.handleError.bind(cmd)
+    debug('handleError intercepted')
     if (flags.verbose) {
+      debug('verbose flag intercepted')
       flags.verbose = false
       verboseError.enabled = true
     }
@@ -150,6 +152,7 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
       cmd.logJSON = this.logJSON(capture)
       cmd.table = this.saveTable(capture)
       capture.command = this.command
+      debug('browser intercepts installed')
       await cmd.run()
     } else
       await cmd.run(rawArgv)
