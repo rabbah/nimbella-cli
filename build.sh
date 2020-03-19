@@ -144,7 +144,7 @@ npm install
 
 # Build and pack
 npx tsc
-if [ -n "USE_LINK" ]; then
+if [ -n "$USE_LINK" ]; then
 		npm link
 		exit 0
 fi
