@@ -37,10 +37,12 @@ import { Command, flags } from '@oclif/command'
 import { IArg } from '@oclif/parser/lib/args'
 import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
 import { format } from 'util'
+import { STATUS_CODES } from 'http'
 import { fileSystemPersister, browserPersister } from './deployer/login';
 
 import * as createDebug  from 'debug'
 const debug = createDebug('nim:base')
+const verboseError = createDebug('nim:error')
 
 // Flag indicating running in browser
 export const inBrowser = (typeof process === 'undefined') || (!process.release) || (process.release.name !== 'node')
@@ -136,6 +138,11 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
     debug('runAio')
     fixAioCredentials()
     const cmd = new aioClass(rawArgv, {})
+    cmd.handleError = this.handleError.bind(cmd)
+    if (flags.verbose) {
+      flags.verbose = false
+      verboseError.enabled = true
+    }
     if (inBrowser) {
       cmd.logger = logger
       cmd.parsed = { argv, args, flags }
@@ -190,19 +197,19 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
 
     // See https://www.npmjs.com/package/debug for usage in commands
     if (flags.verbose) {
-      // verbose just sets the debug filter to everything (*)
-      createDebug.enable('*')
+      // verbose just sets the debug filter to nim:error
+      verboseError.enabled = true
     } else if (flags.debug) {
       createDebug.enable(flags.debug)
     }
   }
 
   // Error handling.  This is for oclif; the CaptureLogger has a more generic implementation suitable for kui inclusion
+  // Includes logic copied from Adobe I/O runtime plugin.
   handleError (msg: string, err?: any) {
     this.parse(this.constructor as typeof NimBaseCommand)
     msg = improveErrorMsg(msg, err)
-    this.debug(err)
-    msg = msg + '\n specify --verbose flag for more information'
+    verboseError(err)
     return this.error(msg, { exit: 1 })
   }
 
@@ -210,22 +217,37 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   displayError (msg: string, err?: any) {
     this.parse(this.constructor as typeof NimBaseCommand)
     msg = improveErrorMsg(msg, err)
-    this.debug(err)
+    verboseError(err)
     return this.error(msg, { exit: false })
   }
 
   static args = []
   static flags = {
     debug: flags.string({ description: 'Debug level output', hidden: true }),
-    verbose: flags.boolean({ char: 'v', description: 'Verbose output' }),
+    verbose: flags.boolean({ char: 'v', description: 'Greater detail in error messages' }),
     help: flags.boolean({ description: 'Show help' })
   }
 }
 
 // Improves an error message based on analyzing the accompanying Error object (based on similar code in RuntimeBaseCommand)
 function improveErrorMsg(msg: string, err?: any): string {
-    if (err && err.name === 'OpenWhiskError' && err.error && err.error.error) {
-        msg = "[OpenWhisk] " + err.error.error
+    const getStatusCode = (code) => `${code} ${STATUS_CODES[code] || ''}`.trim()
+
+    if (err) {
+      let pretty = err.message || ''
+      if (err.name === 'OpenWhiskError') {
+        if (err.error && err.error.error) {
+          pretty = err.error.error.toLowerCase()
+          if (err.statusCode) pretty = `${pretty} (${getStatusCode(err.statusCode)})`
+          else if (err.error.code) pretty = `${pretty} (${err.error.code})`
+        } else if (err.statusCode) {
+          pretty = getStatusCode(err.statusCode)
+        }
+      }
+
+      if ((pretty || '').toString().trim()) {
+        msg = `${msg}: ${pretty}`
+      }
     }
     return msg
 }
