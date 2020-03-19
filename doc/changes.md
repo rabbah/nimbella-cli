@@ -3,8 +3,16 @@
 ## Changes since release 0.1.13
 
 - the flags `--include` and `--exclude` are now accepted in `nim project deploy` and `nim project watch`.  Documentation added.
-- the document table of contents is now in a sidebar
+- the table of contents in the "how to" document is now in a sidebar
 - use of `nim auth login --auth` is prohibited when the denoted namespace already exists (avoids a possibly destructive user error)
+- `nim` now checks values in `project.yml` that should be dictionaries to be sure that they are
+- deploying a project from github no longer uses local storage if the project does not require building
+    - deploy from github is still considered experimental and not yet documented
+    - it _almost_ works in the workbench, getting there
+- the `nim auth login` and `nim auth github` commands now use oauth flows and assistance from the Auth0 service when logging or attaching github accounts
+  - this is not in full production and may or may not be documented when release 0.1.14 is declared
+- the `--verbose` flag has improved behavior and just increases verbosity regarding errors rather than opening a flood of information
+  - the intent is to use `--debug` or `DEBUG=` to enable other forms of verbosity
 
 ## Changes in release 0.1.13
 

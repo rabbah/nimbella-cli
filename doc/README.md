@@ -163,7 +163,7 @@ ARGUMENTS
   PROJECT  project path in the file system
 
 OPTIONS
-  -v, --verbose        Verbose output
+  -v, --verbose        Greater detail in error messages
   --[no-]clean         clean the namespace before every deploy
   --config             generate template config file
   --help               Show help
@@ -187,7 +187,7 @@ ARGUMENTS
   PROJECTS  one or more paths to projects
 
 OPTIONS
-  -v, --verbose          Verbose output
+  -v, --verbose          Greater detail in error messages
   --apihost=apihost      API host to use
   --auth=auth            OpenWhisk auth token to use
   --env=env              path to environment file
@@ -219,7 +219,7 @@ ARGUMENTS
   PROJECTS  one or more paths to projects
 
 OPTIONS
-  -v, --verbose          Verbose output
+  -v, --verbose          Greater detail in error messages
   --apihost=apihost      API host to use
   --auth=auth            OpenWhisk auth token to use
   --env=env              path to environment file
