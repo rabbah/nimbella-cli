@@ -74,7 +74,7 @@ export class CaptureLogger implements NimLogger {
     captured: string[] = [] // Captured line by line output (flowing via Logger.log)
     entity: object     // An output entity if that kind of output was produced
     log(msg = '', ...args: any[]) {
-      const msgs = msg.split('\n')
+      const msgs = String(msg).split('\n')
       for (const msg of msgs) {
         this.captured.push(format(msg, ...args))
       }
