@@ -104,5 +104,5 @@ function colonize() {
 
 // Test whether a command line token is a help verb or flag
 function isHelpToken(arg: string): boolean {
-    return arg === 'help' || arg === '--help' || arg === '-h'
+    return arg === '--help' || arg === '-h'
 }
