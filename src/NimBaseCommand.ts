@@ -146,7 +146,8 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
       verboseError.enabled = true
     }
     if (inBrowser) {
-      cmd.logger = logger
+      cmd.log = logger.log.bind(logger)
+      cmd.exit = logger.exit.bind(logger)
       cmd.parsed = { argv, args, flags }
       const capture = logger as CaptureLogger
       cmd.logJSON = this.logJSON(capture)
