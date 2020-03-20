@@ -21,8 +21,13 @@
 import { ProjectReader, PathKind } from './deploy-struct'
 import { GithubDef, makeClient, readContents, seemsToBeProject } from './github';
 import * as Octokit from '@octokit/rest'
-import * as Path from 'path' // Do not use 'posix' here because, in a browser, path is posix only and has no 'posix' member
+import { inBrowser } from '../NimBaseCommand'
+import * as PathPkg from 'path'
 import * as makeDebug from 'debug'
+
+// The 'path' package should be forced to Posix behavior for this module.  In a browser, there is no posix member but you
+// get posix behavior by default.  When not in a browser, though, 'posix' is needed for correct behavior on a windows system.
+const Path = inBrowser ? PathPkg : PathPkg.posix
 const debug = makeDebug('nimbella-cli/github-reader')
 
 // Defines the github version of the ProjectReader
