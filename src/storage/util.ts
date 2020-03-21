@@ -38,7 +38,7 @@ export async function fileMetaShort(files: any, client: Bucket, logger: NimLogge
 export async function fileMetaLong(files: any, client: Bucket, logger: NimLogger) {
     logger.log(LIST_LONG_HEADER);
     for (const file of files) {
-        client.file(file.name).getMetadata().then(function (data) {
+        await client.file(file.name).getMetadata().then(function (data) {
             const meta = data[0];
             let fileName = meta.name;
             let sizePad = '';
