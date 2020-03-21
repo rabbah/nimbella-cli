@@ -18,14 +18,13 @@
  * from Nimbella Corp.
  */
 
-import { promiseFiles } from 'node-dir'
 import * as fs from 'fs'
 import * as Path from 'path'
 import { promisify } from 'util'
 import { inBrowser } from '../NimBaseCommand'
 import { ProjectReader, PathKind } from './deploy-struct'
 import * as makeDebug from 'debug'
-const debug = makeDebug('nimbella-cli/file-reader')
+const debug = makeDebug('nim:deployer:file-reader')
 
 // Guard with inBrowser in order to safely declare as module constants.  If used correctly
 // the functions will never be called in a browser.
