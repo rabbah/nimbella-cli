@@ -24,11 +24,7 @@ import * as Octokit from '@octokit/rest'
 import { inBrowser } from '../NimBaseCommand'
 import * as PathPkg from 'path'
 import * as makeDebug from 'debug'
-
-// The 'path' package should be forced to Posix behavior for this module.  In a browser, there is no posix member but you
-// get posix behavior by default.  When not in a browser, though, 'posix' is needed for correct behavior on a windows system.
-const Path = inBrowser ? PathPkg : PathPkg.posix
-const debug = makeDebug('nimbella-cli/github-reader')
+const debug = makeDebug('nim:deployer:github-reader')
 
 // Defines the github version of the ProjectReader
 // In general files passed to a ProjectReader are relative to the project path, which includes the path portion of
@@ -36,6 +32,13 @@ const debug = makeDebug('nimbella-cli/github-reader')
 // def.path with the argument and normalizing the result.  We don't want to use path.resolve because this isn't
 // a real file system and the current working directory is irrelevant.  After normalizing, the result must fall
 // within the repo
+
+// The 'path' package should be forced to Posix behavior for this module.  In a browser, there is no posix member but you
+// get posix behavior by default.  When not in a browser, though, 'posix' is needed for correct behavior on a windows system.
+// Note that path.posix has known limitations: if you ask for a 'resolve' (or anything else that required the current
+// directory, it will use the OS call even though you specified posix.   But, we don't ever do a resolve here because
+// we are just doing path manipulation.
+const Path = inBrowser ? PathPkg : PathPkg.posix
 
 // Make
 export function makeGithubReader(def: GithubDef, userAgent: string): ProjectReader {
@@ -63,6 +66,7 @@ class GithubProjectReader implements ProjectReader {
 
     // Implement readdir for github
     async readdir(path: string): Promise<PathKind[]> {
+        path = this.fixPathArgument(path)
         debug('reading directory %s', path)
         if (Path.isAbsolute(path)) {
             throw new Error(`Deploying from github does not support absolute paths`)
@@ -89,6 +93,7 @@ class GithubProjectReader implements ProjectReader {
 
     // Implement readFileContents for github
     async readFileContents(path: string): Promise<Buffer> {
+        path = this.fixPathArgument(path)
         debug('reading file %s', path)
         const contents = await this.retrieve(path)
         // Careful with the following: we want to support empty files but the empty string is falsey.
@@ -108,6 +113,7 @@ class GithubProjectReader implements ProjectReader {
 
     // Implement getPathKind for github
     async getPathKind(path: string): Promise<PathKind> {
+        path = this.fixPathArgument(path)
         debug('getting path type: %s', path)
         if (path === '' || path === '/' || path === undefined) {
             return { name: '', isFile: false, isDirectory: true, mode: 0x777}
@@ -135,5 +141,15 @@ class GithubProjectReader implements ProjectReader {
             debug("'%s' found in cache", path)
         }
         return contents
+    }
+
+    // Fixup function for path arguments.   On windows, the OS-specific path resolution is used
+    // elsewhere in the deployer so path arguments may arrive in "windows" form.  They should not,
+    // however be absolute, so a simple substitution of / for \ will suffice.
+    fixPathArgument(path: string): string {
+        if (!path) {
+            return path
+        }
+        return path.split('\\').join('/')
     }
 }
