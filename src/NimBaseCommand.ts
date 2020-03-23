@@ -135,7 +135,7 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   // kui in a browser, it takes steps to avoid a second real parse and also captures all output.  The
   // logger argument is a CaptureLogger in fact.
   async runAio(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger, aioClass: typeof RuntimeBaseCommand) {
-    debug('runAio with rawArgv: %o, argv: %o, args: %o, flags: %o', rawArgv, argv, args, flags)
+    debug('runAio with rawArgv: %O, argv: %O, args: %O, flags: %O', rawArgv, argv, args, flags)
     fixAioCredentials()
     const cmd = new aioClass(rawArgv, {})
     cmd.handleError = this.handleError.bind(cmd)
@@ -179,6 +179,7 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   // be computed here but would require more introspective code; easier for the caller to do it.
   async dispatch(argv: string[], skip: number, argTemplates: IArg<string>[], parsedOptions: any): Promise<CaptureLogger> {
     // Duplicate oclif's args parsing conventions.  Some parsing has already been done by kui
+    debug('dispatch with argv: %O, skip: %d, argTemplates: %O, parsedOptions: %O', argv, skip, argTemplates, parsedOptions)
     const rawArgv = argv.slice(skip)
     this.command = argv.slice(0, skip)
     argv = parsedOptions._.slice(skip)
@@ -191,6 +192,7 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
     }
     // Make a capture logger and run the command
     const logger = new CaptureLogger()
+    debug('dispatching to runCommand with rawArgv %O, argv: %O, args: %O, flags: %O', rawArgv, argv, args, parsedOptions)
     await this.runCommand(rawArgv, argv, args, parsedOptions, logger)
     return logger
   }
