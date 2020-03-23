@@ -58,8 +58,10 @@ export class ProjectDeploy extends NimBaseCommand {
     // Otherwise ...
     const { target, env, apihost, auth, insecure, production, yarn, incremental, include, exclude } = flags
     if (incremental && argv.some(project => isGithubRef(project))) {
-      const errmsg = `'--incremental' may not be used with github projects`
-      this.handleError(errmsg, new Error(errmsg))
+      this.handleError(`'--incremental' may not be used with github projects`)
+    }
+    if (inBrowser && argv.some(project => !isGithubRef(project))) {
+      logger.handleError(`only github projects are deployable from the cloud`)
     }
     const cmdFlags: Flags = { verboseBuild: flags['verbose-build'], verboseZip: flags['verbose-zip'], production, incremental, env, yarn,
       webLocal: flags['web-local'], include, exclude }
@@ -108,11 +110,6 @@ export async function processCredentials(ignore_certs: boolean, apihost: string|
 // Deploy one project
 export async function doDeploy(project: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions, watching: boolean,
     logger: NimLogger, userAgent: string): Promise<boolean> {
-  if (inBrowser && !isGithubRef(project)) {
-    const err = new Error(`Cannot deploy project '${project}'; only github-resident projects are deployable from the cloud`)
-    logger.displayError(err.message, err)
-    return false
-  }
   const todeploy = await readAndPrepare(project, owOptions, creds, authPersister, cmdFlags, userAgent)
     .catch(err => logger.handleError(err.message, err))
   if (!watching) {

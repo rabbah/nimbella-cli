@@ -19,7 +19,7 @@
  */
 
 import { flags } from '@oclif/command'
-import { NimBaseCommand, NimLogger } from '../../NimBaseCommand'
+import { NimBaseCommand, NimLogger, inBrowser } from '../../NimBaseCommand'
 import * as fs from 'fs'
 import * as path from 'path'
 import { extFromRuntime } from '../../deployer/util'
@@ -53,6 +53,10 @@ export async function createOrUpdateProject(updating: boolean, args: any, flags:
     const { target, clean, sample, config } = flags
     if (updating) {
         logger.handleError(`Current restriction: 'project update' is not yet working (it should have been hidden)`)
+    }
+    if (inBrowser) {
+        // TODO tweak this text once we have 'project update'
+        logger.handleError(`'project create' needs local file access. Use the 'nim' CLI on your local machine`)
     }
     const { kind, sampleText } = sample && !flags.language ? defaultSample : languageToKindAndSample(flags.language, logger)
     let projectConfig: DeployStructure = config ? configTemplate() : (target || clean) ? {} : undefined

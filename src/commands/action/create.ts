@@ -18,12 +18,13 @@
  * from Nimbella Corp.
  */
 
-import { NimBaseCommand, NimLogger } from '../../NimBaseCommand'
+import { NimBaseCommand, NimLogger, inBrowser } from '../../NimBaseCommand'
 import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
 const AioCommand: typeof RuntimeBaseCommand = require('@adobe/aio-cli-plugin-runtime/src/commands/runtime/action/create')
 
 export default class ActionCreate extends NimBaseCommand {
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
+    screenLegal(!!args.actionPath, flags, logger)
     await this.runAio(rawArgv, argv, args, flags, logger, AioCommand)
   }
 
@@ -32,4 +33,11 @@ export default class ActionCreate extends NimBaseCommand {
   static flags = AioCommand.flags
 
   static description = AioCommand.description
+}
+
+// Screen legality when running in the cloud
+export function screenLegal(hasActionPath: boolean, flags: any, logger: NimLogger) {
+  if (inBrowser && (hasActionPath || flags['annotation-file'] || flags['env-file'] || flags['param-file'])) {
+    logger.handleError('command contains file system references and cannot run in the cloud')
+  }
 }

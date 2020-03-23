@@ -20,10 +20,12 @@
 
 import { NimBaseCommand, NimLogger } from '../../NimBaseCommand'
 import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
+import { screenLegal } from './create'
 const AioCommand: typeof RuntimeBaseCommand = require('@adobe/aio-cli-plugin-runtime/src/commands/runtime/action/update')
 
 export default class ActionUpdate extends NimBaseCommand {
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
+    screenLegal(!!args.actionPath, flags, logger)
     await this.runAio(rawArgv, argv, args, flags, logger, AioCommand)
   }
 

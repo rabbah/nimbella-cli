@@ -18,7 +18,7 @@
  * from Nimbella Corp.
  */
 
-import { NimBaseCommand, NimLogger } from '../../NimBaseCommand'
+import { NimBaseCommand, NimLogger, inBrowser } from '../../NimBaseCommand'
 import { ProjectDeploy, processCredentials, doDeploy } from './deploy'
 import { Flags, Credentials, OWOptions } from '../../deployer/deploy-struct'
 import * as fs from 'fs'
@@ -50,6 +50,10 @@ export default class ProjectWatch extends NimBaseCommand {
      // If no projects specified, display help
     if (argv.length == 0) {
       this.doHelp()
+    }
+    // In the cloud, disallow the command entirely (it can't possibly work and it's easiest to head it off here)
+    if (inBrowser) {
+        logger.handleError(`'project watch' is designed for local development and will not work in the cloud`)
     }
     // Otherwise ...
     const { target, env, apihost, auth, insecure, yarn, include, exclude } = flags
