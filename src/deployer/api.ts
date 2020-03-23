@@ -84,7 +84,7 @@ export async function readProject(projectPath: string, envPath: string, userAgen
     if (needsBuilding(ans) && ans.reader.getFSLocation() === null) {
         debug("project '%s' will be re-read and cached because it's a github project that needs building", projectPath)
         if (inBrowser) {
-            return Promise.reject(new Error(`Project '$(projectPath}' cannot be deployed from the cloud because it requires building`))
+            return Promise.reject(new Error(`Project '${projectPath}' cannot be deployed from the cloud because it requires building`))
         }
         return readTopLevel(projectPath, envPath, userAgent, includer, true).then(buildStructureParts).then(assembleInitialStructure)
             .catch((err) => { return Promise.reject(err) })
