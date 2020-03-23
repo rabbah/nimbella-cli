@@ -1,6 +1,6 @@
 # Nimbella CLI Change History
 
-## Changes since release 0.1.13
+## Changes in release 0.1.14
 
 - the flags `--include` and `--exclude` are now accepted in `nim project deploy` and `nim project watch`.  Documentation added.
 - the table of contents in the "how to" document is now in a sidebar
@@ -13,6 +13,8 @@
   - this is not in full production and may or may not be documented when release 0.1.14 is declared
 - the `--verbose` flag has improved behavior and just increases verbosity regarding errors rather than opening a flood of information
   - the intent is to use `--debug` or `DEBUG=` to enable other forms of verbosity
+- the identifier `help` when not in the "command" position will no longer be interpreted as if you typed `--help`
+- a correction to the output of `activation result`
 
 ## Changes in release 0.1.13
 
