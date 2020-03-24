@@ -46,7 +46,7 @@ export default class AuthGithub extends NimBaseCommand {
     const flagCount = [ flags.add, flags.initial, flags.switch, flags.list, flags.delete, flags.show ].filter(Boolean).length
     if (flagCount > 1) {
       logger.handleError(`only one of '--add', '--initial', '--list', '--switch', '--delete', or '--show' may be specified`)
-    } else if (flagCount == 1 && flags.token || flags.username) {
+    } else if (flagCount == 1 && (flags.token || flags.username)) {
       logger.handleError(`--token and --username may not be combined with other flags`)
     } else if (flags.token && ! flags.username || flags.username && !flags.token) {
       logger.handleError(`--token and --username must both be specified if either one is specified`)
