@@ -1034,7 +1034,7 @@ There are four possible outcomes when using “out-of-line” building with the 
 Most script languages allow a script to determine the directory in which it is running from this pathname. The deployer always executes scripts via their full pathname, so the script will have both its own directory and the web or action directory to work with.
 *   If _.build_ contains a single line giving the pathname of a directory, that directory is made current and building is performed there, assuming a _build.sh_, _build.cmd_, or _package.json_ build file can be found, with the file priority described in [Incorporating build steps for actions and web content](#incorporating-build-steps-for-actions-and-web-content).
 Recursive use of _.build_ is not supported.
-*   If _.build_ contains a single line giving the pathname of a directory and this directory contains a file called .shared, the deployer ensures that the build in that directory is only run once. This behavior doesn’t depend on the contents of _.share_.
+*   If _.build_ contains a single line giving the pathname of a directory and this directory contains a file called .shared, the deployer ensures that the build in that directory is only run once. This behavior doesn’t depend on the contents of _.shared_.
     *   This can allow multiple actions to share the same build even if there are many such actions and the build is time-consuming to run.
     *   This can be useful in scenarios in which actions share a lot of common content.
 *   The deployer indicates an error if any of the following conditions exist:
