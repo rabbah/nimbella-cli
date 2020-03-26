@@ -156,6 +156,16 @@ A well-known instance of `Persister` for saving the credential store in the loca
 
 ## Functions
 
+### addGithubAccount
+
+Adds information about a github account for later use by the deployer when deploying from github.
+
+```
+addGithubAccount(name: string, token: string): Promise<any>
+```
+
+The name must denote a valid `github` username and the `token` must be an access token that is valid for that account (preferably one that will not expire).
+
 ### buildProject
 
 Performs the third of four steps (read, prepare, build, deploy) needed to deploy a project.

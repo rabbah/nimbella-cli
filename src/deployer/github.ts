@@ -19,6 +19,7 @@
  */
 
 // Adjunct to the project-reader when a project is defined as a set of github coordinates.
+// Also contains the API for manipulating the github credentials of the credential store
 
 import * as Path from 'path'
 import * as fs from 'fs'
@@ -189,4 +190,54 @@ async function fetchFile(client: Octokit, def: GithubDef, path: string, location
         mode = 0o777
     }
     fs.writeFileSync(location, toWrite, { mode })
+}
+
+// Github credentials section
+
+// Retrieve a list of locally known github accounts
+export async function getGithubAccounts(): Promise<{[key: string]: string}> {
+    const store = await authPersister.loadCredentialStore()
+    debug('Github accounts requested, returning %O', store.github)
+    return store.github || {}
+}
+
+// Delete a github account
+type DeleteResult = "DeletedOk" | "DeletedDangling" | "NotExists"
+export async function deleteGithubAccount(name: string): Promise<DeleteResult> {
+    const store = await authPersister.loadCredentialStore()
+    if (store.github && store.github[name]) {
+        delete store.github[name]
+        if (name == store.currentGithub) {
+            store.currentGithub = undefined
+        }
+        debug('Github deletion of account %s succeeded, with currentGithub=%s', name, store.currentGithub)
+        authPersister.saveCredentialStore(store)
+        return store.currentGithub ? "DeletedOk" : "DeletedDangling"
+    } else {
+        return "NotExists"
+    }
+}
+
+// Switch the active github account
+export async function switchGithubAccount(name: string): Promise<boolean> {
+    const store = await authPersister.loadCredentialStore()
+    if (store.github && store.github[name]) {
+        store.currentGithub = name
+        authPersister.saveCredentialStore(store)
+        return true
+    } else {
+        return false
+    }
+}
+
+// Add a github account
+export async function addGithubAccount(name: string, token: string) {
+    const store = await authPersister.loadCredentialStore()
+    if (!store.github) {
+        store.github = {}
+    }
+    debug('adding github account with name %s and token %s', name, token)
+    store.github[name] = token
+    store.currentGithub = name
+    authPersister.saveCredentialStore(store)
 }

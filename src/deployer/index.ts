@@ -28,4 +28,4 @@ export { doLogin, doAdminLogin, addCredentialAndSave, getCredentials, getCredent
     Persister, fileSystemPersister, browserPersister } from './login'
 export { computeBucketStorageName, computeBucketDomainName, cleanBucket } from './deploy-to-bucket'
 export { extFromRuntime } from './util'
-export { GithubDef, isGithubRef, parseGithubRef, fetchProject } from './github'
+export { GithubDef, isGithubRef, parseGithubRef, fetchProject, addGithubAccount } from './github'
