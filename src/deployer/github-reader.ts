@@ -73,7 +73,7 @@ class GithubProjectReader implements ProjectReader {
         }
         const contents = await this.retrieve(path)
         if (!Array.isArray(contents)) {
-            console.dir(contents, { depth: null })
+            debug('improper contents: %O', contents)
             throw new Error(`Path '${path} should be a directory but is not`)
         }
         if (path === this.def.path && !seemsToBeProject(contents))     {
@@ -98,7 +98,7 @@ class GithubProjectReader implements ProjectReader {
         const contents = await this.retrieve(path)
         // Careful with the following: we want to support empty files but the empty string is falsey.
         if (typeof contents['content'] !== 'string'  || !contents['encoding']) {
-            console.dir(contents, { depth: null })
+            debug('improper contents: %O', contents)
             throw new Error(`Contents of file at '${path}' was not interpretable`)
         }
         return Buffer.from(contents['content'], contents['encoding'])

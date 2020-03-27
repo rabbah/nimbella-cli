@@ -459,14 +459,12 @@ export function wrapSuccess(name: string, kind: DeployKind, skipped: boolean, wr
 
 // Wrap a single error as a DeployResponse
 export function wrapError(err: Error, context: string): DeployResponse {
-    //console.log("wrapping an error")
-    //console.dir(err, { depth: null })
+    debug("wrapping an error: %O", err)
     if (typeof err == 'object') {
         err['context'] = context
     }
     const result = { successes: [], failures: [ err ] , ignored: [], packageVersions: {}, actionVersions: {}, namespace: undefined }
-    //console.log("wrapped error")
-    //console.dir(result, { depth: null })
+    debug("wrapped error: %O", result)
     return result
 }
 
@@ -509,8 +507,8 @@ export function actionFileToParts(fileName: string): { name: string, binary: boo
         binary = binaryFromExt(ext)
         zipped = ext == 'zip'
     }
-    // const z = zipped ? "" : "not "
-    // console.log(`action ${name} is ${z}zipped`)
+    const z = zipped ? "" : "not "
+    debug(`action ${name} is ${z}zipped`)
     return { name, binary, zipped, runtime }
 }
 
@@ -556,13 +554,6 @@ function initRuntimes() {
                 }
             }
         }
-        // TEMP debugging:
-        // console.log("Extension table")
-        // console.dir(extTable, { depth: null })
-        // console.log("Extension binary table")
-        // console.dir(extBinaryTable, { depth: null })
-        // console.log("Valid runtimes table")
-        // console.dir(validRuntimes, { depth: null })
     }
 }
 
@@ -675,8 +666,8 @@ export function substituteFromEnvAndFiles(input: string, envPath: string, projec
     let result = ""  // Will accumulate the result
     const badVars: string[] = [] // Will accumulate failures to resolve
     const props = envPath ? getPropsFromFile(envPath) : {}
-    // console.log('envPath', envPath)
-    // console.log('props', props)
+    debug('envPath: %s', envPath)
+    debug('props %O', props)
     let nextBreak = input.indexOf("${")
     while (nextBreak >= 0) {
         const before = input.substr(0, nextBreak)
@@ -832,13 +823,13 @@ function deployerAnnotationFromGithub(githubPath: string): DeployerAnnotation {
 // Wipe all the entities from the namespace referred to by an OW client handle
 export async function wipe(client: openwhisk.Client) {
     await wipeAll(client.actions, "Action")
-    //console.log("Actions wiped")
+    debug("Actions wiped")
     await wipeAll(client.rules, "Rule")
-    //console.log("Rules wiped")
+    debug("Rules wiped")
     await wipeAll(client.triggers, "Trigger")
-    //console.log("Triggers wiped")
+    debug("Triggers wiped")
     await wipeAll(client.packages, "Package")
-    //console.log("Packages wiped")
+    debug("Packages wiped")
 }
 
 // Repeatedly wipe an entity (action, rule, trigger, or package) from the namespace denoted by the OW client until none are left
@@ -856,7 +847,7 @@ async function wipeAll(handle: any, kind: string) {
                 name = nsparts[1] + '/' + name
             }
             await handle.delete(name)
-            //console.log(kind, name, "deleted")
+            debug("%s %s deleted", kind, name)
         }
     }
 }
@@ -963,17 +954,19 @@ export function digestAction(action: ActionSpec, code: string): string {
 // an existing one.  This was the behavior prior to the advent of include/exclude, and it is what is
 // requested when that feature is not used.  If 'replace' is false, then the new VersionEntry is merged
 // into an existing one if any, preserving information for things not deployed in the current round.
-export function writeProjectStatus(project: string, results: DeployResponse, replace: boolean) {
+// Returns the path name of the status directory if newly created, empty string otherwise
+export function writeProjectStatus(project: string, results: DeployResponse, replace: boolean): string {
     debug('writing project status with %O', results)
     const { apihost, namespace, packageVersions, actionVersions, webHashes } = results
     if (Object.keys(actionVersions).length == 0 && Object.keys(packageVersions).length == 0 && Object.keys(webHashes).length == 0) {
         debug('there is no meaningful project status to write')
-        return
+        return ''
     }
     const statusDir = path.join(project, ".nimbella")
+    let created = false
     if (!fs.existsSync(statusDir)) {
         fs.mkdirSync(statusDir)
-        console.log(`Deployment status recorded in '${statusDir}'`)
+        created = true
     }
     let versionList: VersionEntry[] = []
     const versionFile = path.join(statusDir, "versions.json")
@@ -996,6 +989,7 @@ export function writeProjectStatus(project: string, results: DeployResponse, rep
     }
     fs.writeFileSync(versionFile, JSON.stringify(versionList, null, 2))
     debug('wrote version info to %s', versionFile)
+    return created ? statusDir : ''
 }
 
 // Merge new information into old information within the version store.

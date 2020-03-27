@@ -19,7 +19,7 @@
  */
 
 import { spawn } from 'child_process'
-import { ActionSpec, PackageSpec, WebResource, BuildTable, Flags, ProjectReader, PathKind } from './deploy-struct'
+import { ActionSpec, PackageSpec, WebResource, BuildTable, Flags, ProjectReader, PathKind, Feedback } from './deploy-struct'
 import { FILES_TO_SKIP, actionFileToParts, filterFiles, mapPackages, mapActions, convertToResources, convertPairsToResources,
     promiseFilesAndFilterFiles } from './util'
 import * as path from 'path'
@@ -50,7 +50,8 @@ export function getBuildForAction(filepath: string, reader: ProjectReader): Prom
 // Build all the actions in an array of PackageSpecs, returning a new array of PackageSpecs.  We try to return
 // undefined for the case where no building occurred at all, since we are obligated to return a full array if
 // any building occured, even if most things weren't subject to building.
-export function buildAllActions(pkgs: PackageSpec[], buildTable: BuildTable, flags: Flags, reader: ProjectReader): Promise<PackageSpec[]> {
+export function buildAllActions(pkgs: PackageSpec[], buildTable: BuildTable, flags: Flags, reader: ProjectReader,
+        feedback: Feedback): Promise<PackageSpec[]> {
     if (!pkgs || pkgs.length == 0) {
         return undefined
     }
@@ -59,7 +60,7 @@ export function buildAllActions(pkgs: PackageSpec[], buildTable: BuildTable, fla
     const promises: Promise<PackageSpec>[] = []
     for (const pkg of pkgs) {
         if (pkg.actions && pkg.actions.length > 0) {
-            const builtPackage = buildActionsOfPackage(pkg, buildTable, flags, reader)
+            const builtPackage = buildActionsOfPackage(pkg, buildTable, flags, reader, feedback)
             promises.push(builtPackage)
         }
     }
@@ -77,13 +78,14 @@ export function buildAllActions(pkgs: PackageSpec[], buildTable: BuildTable, fla
 }
 
 // Build the actions of a package, returning an updated PackageSpec or undefined if nothing got built
-async function buildActionsOfPackage(pkg: PackageSpec, buildTable: BuildTable, flags: Flags, reader: ProjectReader): Promise<PackageSpec> {
+async function buildActionsOfPackage(pkg: PackageSpec, buildTable: BuildTable, flags: Flags, reader: ProjectReader,
+        feedback: Feedback): Promise<PackageSpec> {
     const actionMap = mapActions(pkg.actions)
     let nobuilds = true
     for (const action of pkg.actions) {
         if (action.build) {
             nobuilds = false
-            const builtAction = await buildAction(action, buildTable, flags, reader)
+            const builtAction = await buildAction(action, buildTable, flags, reader, feedback)
             actionMap[action.name] = builtAction
         }
     }
@@ -95,7 +97,7 @@ async function buildActionsOfPackage(pkg: PackageSpec, buildTable: BuildTable, f
 }
 
 // Perform the build defined for an action or just return the action if there is no build step
-function buildAction(action: ActionSpec, buildTable: BuildTable, flags: Flags, reader: ProjectReader): Promise<ActionSpec> {
+function buildAction(action: ActionSpec, buildTable: BuildTable, flags: Flags, reader: ProjectReader, feedback: Feedback): Promise<ActionSpec> {
     if (!action.build) {
         return Promise.resolve(action)
     }
@@ -104,24 +106,24 @@ function buildAction(action: ActionSpec, buildTable: BuildTable, flags: Flags, r
     switch (action.build) {
         case 'build.sh':
             actionDir = makeLocal(reader, action.file)
-            return scriptBuilder('./build.sh', actionDir, action.displayFile, flags).then(() => identifyActionFiles(action,
-                flags.incremental, flags.verboseZip, reader))
+            return scriptBuilder('./build.sh', actionDir, action.displayFile, flags, feedback).then(() => identifyActionFiles(action,
+                flags.incremental, flags.verboseZip, reader, feedback))
         case 'build.cmd':
             actionDir = makeLocal(reader, action.file)
-            return scriptBuilder('build.cmd', actionDir, action.displayFile, flags).then(() => identifyActionFiles(action,
-                flags.incremental, flags.verboseZip, reader))
+            return scriptBuilder('build.cmd', actionDir, action.displayFile, flags, feedback).then(() => identifyActionFiles(action,
+                flags.incremental, flags.verboseZip, reader, feedback))
         case '.build':
             actionDir = makeLocal(reader, action.file)
-            return outOfLineBuilder(actionDir, action.displayFile, buildTable, true, flags, reader).then(() => identifyActionFiles(action,
-                flags.incremental, flags.verboseZip, reader))
+            return outOfLineBuilder(actionDir, action.displayFile, buildTable, true, flags, reader, feedback).then(() => identifyActionFiles(action,
+                flags.incremental, flags.verboseZip, reader, feedback))
         case 'package.json':
             actionDir = makeLocal(reader, action.file)
-            return npmBuilder(actionDir, action.displayFile, flags).then(() => identifyActionFiles(action,
-                flags.incremental, flags.verboseZip, reader))
+            return npmBuilder(actionDir, action.displayFile, flags, feedback).then(() => identifyActionFiles(action,
+                flags.incremental, flags.verboseZip, reader, feedback))
         case '.include':
         case 'identify':
             return identifyActionFiles(action,
-                 flags.incremental, flags.verboseZip, reader)
+                 flags.incremental, flags.verboseZip, reader, feedback)
         default:
             throw new Error("Unknown build type in ActionSpec: " + action.build)
     }
@@ -147,7 +149,6 @@ function joinAndNormalize(...paths: string[]): string {
 function makeLocal(reader: ProjectReader, ...paths: string[]): string {
     const project = reader.getFSLocation()
     if (!project) {
-        console.trace('makeLocal error')
         throw new Error('invalid call to makeLocal')
     }
     return path.resolve(project, ...paths)
@@ -194,7 +195,8 @@ async function processIncludeFileItems(items: string[], dirPath: string, reader:
 
 // Identify the files that make up an action directory, based on the files in the directory and .include. .source, or .ignore if present.
 // If there is more than one file, perform autozipping.
-async function identifyActionFiles(action: ActionSpec, incremental: boolean, verboseZip: boolean, reader: ProjectReader): Promise<ActionSpec> {
+async function identifyActionFiles(action: ActionSpec, incremental: boolean, verboseZip: boolean, reader: ProjectReader,
+        feedback: Feedback): Promise<ActionSpec> {
     let includesPath = path.join(action.file, '.include')
     if (!await reader.isExistingFile(includesPath)) {
         // Backward compatibility: try .source also
@@ -206,7 +208,7 @@ async function identifyActionFiles(action: ActionSpec, incremental: boolean, ver
             if (pairs.length == 0) {
                 return Promise.reject(includesPath + " is empty")
             } else if (pairs.length > 1) {
-                return autozipBuilder(pairs, action, incremental, verboseZip, reader)
+                return autozipBuilder(pairs, action, incremental, verboseZip, reader, feedback)
             } else {
                 return singleFileBuilder(action, pairs[0][0])
             }
@@ -229,7 +231,7 @@ async function identifyActionFiles(action: ActionSpec, incremental: boolean, ver
                     const shortName = item.substring(action.file.length + 1)
                     return [ item, shortName ]
                 })
-                return autozipBuilder(pairs, action, incremental, verboseZip, reader)
+                return autozipBuilder(pairs, action, incremental, verboseZip, reader, feedback)
             }
         })
     })
@@ -245,7 +247,7 @@ function readFileAsList(file: string, reader: ProjectReader): Promise<string[]> 
 // Perform a build using either a script or a directory pointed to by a .build directive
 // The .build directive is known to exist but has not been read yet.
 function outOfLineBuilder(filepath: string, displayPath: string, sharedBuilds: BuildTable,
-        isAction: boolean, flags: Flags, reader: ProjectReader): Promise<any> {
+        isAction: boolean, flags: Flags, reader: ProjectReader, feedback: Feedback): Promise<any> {
     const buildPath = path.join(filepath, ".build")
     return readFileAsList(buildPath, reader).then(async contents => {
         if (contents.length == 0 || contents.length > 1) {
@@ -255,7 +257,7 @@ function outOfLineBuilder(filepath: string, displayPath: string, sharedBuilds: B
         const stat: PathKind = await reader.getPathKind(redirected)
         if (stat.isFile) {
             // Simply run linked-to script in the current directory
-            return scriptBuilder(redirected, filepath, displayPath, flags)
+            return scriptBuilder(redirected, filepath, displayPath, flags, feedback)
         } else if (stat.isDirectory) {
             // Look in the directory to find build to run
             return readDirectory(redirected, reader).then(items => {
@@ -267,10 +269,10 @@ function outOfLineBuilder(filepath: string, displayPath: string, sharedBuilds: B
                     case 'build.cmd':
                         const script = makeLocal(reader,  redirected, special)
                         // Like the direct link case, just a different way of doing it
-                        build = () => scriptBuilder(script, cwd, displayPath, flags)
+                        build = () => scriptBuilder(script, cwd, displayPath, flags, feedback)
                         break
                     case 'package.json':
-                        build = () => npmBuilder(cwd, displayPath, flags)
+                        build = () => npmBuilder(cwd, displayPath, flags, feedback)
                         break
                     default:
                         return Promise.reject(new Error(redirected + ' is a directory but contains no build information'))
@@ -282,7 +284,7 @@ function outOfLineBuilder(filepath: string, displayPath: string, sharedBuilds: B
                     let buildStatus = sharedBuilds[buildKey]
                     if (buildStatus) {
                         // It's already been claimed and is either complete or in progress
-                        console.log(`Skipping shared build for '${filepath}' ... already run in this deployment`)
+                        feedback.progress(`Skipping shared build for '${filepath}' ... already run in this deployment`)
                         debug(`buildStatus is %O`, buildStatus)
                         if (buildStatus.built) {
                             debug(`Found completed build`)
@@ -305,7 +307,7 @@ function outOfLineBuilder(filepath: string, displayPath: string, sharedBuilds: B
                         }
                     } else {
                         // It has not been run, so we take responsibility for running it
-                        console.log(`Running shared build for '${filepath}', results may be reused`)
+                        feedback.progress(`Running shared build for '${filepath}', results may be reused`)
                         buildStatus = { pending: [], built: false, error: undefined }
                         sharedBuilds[buildKey] = buildStatus
                         return build().then(resultPromise => {
@@ -325,7 +327,7 @@ function outOfLineBuilder(filepath: string, displayPath: string, sharedBuilds: B
                     }
                 } else {
                     // Not shared, so we run it and return the promise of its completion
-                    console.log("Build is not shared")
+                    feedback.progress("Build is not shared")
                     return build()
                 }
             })
@@ -354,22 +356,22 @@ export function getBuildForWeb(filepath: string, reader: ProjectReader): Promise
 
 // Build the web directory
 export function buildWeb(build: string, sharedBuilds: BuildTable, filepath: string, displayPath: string,
-        flags: Flags, reader: ProjectReader): Promise<WebResource[]> {
+        flags: Flags, reader: ProjectReader, feedback: Feedback): Promise<WebResource[]> {
     let scriptPath
     switch (build) {
         case 'build.sh':
             scriptPath = makeLocal(reader, filepath)
-            return scriptBuilder('./build.sh', scriptPath, displayPath, flags).then(() => identifyWebFiles(filepath, reader))
+            return scriptBuilder('./build.sh', scriptPath, displayPath, flags, feedback).then(() => identifyWebFiles(filepath, reader))
         case 'build.cmd':
-            //console.log('cwd for windows build is', filepath)
+            debug('cwd for windows build is %s', filepath)
             scriptPath = makeLocal(reader, filepath)
-            return scriptBuilder('build.cmd', scriptPath, displayPath, flags).then(() => identifyWebFiles(filepath, reader))
+            return scriptBuilder('build.cmd', scriptPath, displayPath, flags, feedback).then(() => identifyWebFiles(filepath, reader))
         case '.build':
             // Does its own localizing
-            return outOfLineBuilder(filepath, displayPath, sharedBuilds, false, flags, reader).then(() => identifyWebFiles(filepath, reader))
+            return outOfLineBuilder(filepath, displayPath, sharedBuilds, false, flags, reader, feedback).then(() => identifyWebFiles(filepath, reader))
         case 'package.json':
             scriptPath = makeLocal(reader, filepath)
-            return npmBuilder(scriptPath, displayPath, flags).then(() => identifyWebFiles(filepath, reader))
+            return npmBuilder(scriptPath, displayPath, flags, feedback).then(() => identifyWebFiles(filepath, reader))
         case '.include':
         case 'identify':
             return identifyWebFiles(filepath, reader)
@@ -380,14 +382,14 @@ export function buildWeb(build: string, sharedBuilds: BuildTable, filepath: stri
 
 // Identify the files constituting web content.  Similar to its action counterpart but not identical (e.g. there is no zipping)
 async function identifyWebFiles(filepath: string, reader: ProjectReader): Promise<WebResource[]> {
-    //console.log('Identifying web files')
+    debug('Identifying web files')
     const includesPath = path.join(filepath, '.include')
     if (await reader.isExistingFile(includesPath)) {
         // If there is .include, it defines what to include and we need not look elsewhere
         debug('processing .include')
         return processInclude(includesPath, filepath, reader).then(pairs => convertPairsToResources(pairs))
     }
-    //console.log('Processing web files using .ignore')
+    debug('Processing web files using .ignore')
     // Otherwise, we take the contents modulo the ignores
     return getIgnores(filepath, reader).then(ignore => {
         debug('processing .ignore and/or ignore rules')
@@ -400,7 +402,7 @@ async function identifyWebFiles(filepath: string, reader: ProjectReader): Promis
             if (absolute) {
                 items = items.map(item => path.join(filepath, item))
             }
-            //console.log(`Converting ${items.length} items to resources`)
+            debug(`Converting ${items.length} items to resources`)
             return convertToResources(items, filepath.length + 1)
         })
     })
@@ -503,9 +505,10 @@ function singleFileBuilder(action: ActionSpec, singleItem: string): Promise<Acti
 //     - an item is zipped as is otherwise
 //     - directories are zipped recursively
 // 4.  Return an ActionSpec promise describing the result.
-async function autozipBuilder(pairs: string[][], action: ActionSpec, incremental: boolean, verboseZip: boolean, reader: ProjectReader): Promise<ActionSpec> {
+async function autozipBuilder(pairs: string[][], action: ActionSpec, incremental: boolean, verboseZip: boolean, reader: ProjectReader,
+        feedback: Feedback): Promise<ActionSpec> {
     if (verboseZip)
-        console.log('Zipping action contents in', action.file )
+        feedback.progress('Zipping action contents in', action.file )
     else
         debug('Zipping action contents in %s', action.file)
     if (!action.runtime) {
@@ -575,7 +578,7 @@ async function autozipBuilder(pairs: string[][], action: ActionSpec, incremental
     zipDebug('zip finalized for action %s', action.name)
     return outputPromise.then(() => {
         if (verboseZip)
-            console.log('Zipping complete in', action.file )
+            feedback.progress('Zipping complete in', action.file )
         else
             debug('zipping complete for %s', action.name)
         if (inMemory) {
@@ -594,23 +597,23 @@ async function autozipBuilder(pairs: string[][], action: ActionSpec, incremental
 
 // Subroutine for performing a "real" build requiring a spawn.
 function build(cmd: string, args: string[], realPath: string, displayPath: string, infoMsg: string,
-        errorTag: string, verbose: boolean): Promise<any> {
+        errorTag: string, verbose: boolean, feedback: Feedback): Promise<any> {
     debug('building with realPath=%s and displayPath=%s', realPath, displayPath)
     return new Promise(function(resolve, reject) {
-        console.log('Started running', infoMsg, 'in', displayPath)
+        feedback.progress('Started running', infoMsg, 'in', displayPath)
         const shell = process.platform == 'win32' ? true : process.env['shell'] || "/bin/bash"
         const child = spawn(cmd, args, { cwd: realPath, shell })
         let result = ''
         if (verbose) {
-            child.stdout.on('data', (data) => console.log(String(data)))
-            child.stderr.on('data', (data) => console.error(String(data)))
+            child.stdout.on('data', (data) => feedback.progress(String(data)))
+            child.stderr.on('data', (data) => feedback.warn(String(data)))
         } else {
             let time = Date.now()
             function statusUpdate(data: { toString: () => string; }) {
                 result += data.toString()
                 const newTime = Date.now()
                 if ((newTime - time) > 5000) {
-                    console.log('Still running', infoMsg, 'in', displayPath)
+                    feedback.progress('Still running', infoMsg, 'in', displayPath)
                     time = newTime
                 }
             }
@@ -620,15 +623,15 @@ function build(cmd: string, args: string[], realPath: string, displayPath: strin
         child.on('close', (code) => {
             if (code != 0) {
                 if (!verbose) {
-                    console.log('Output of failed build in', realPath)
+                    feedback.warn('Output of failed build in', realPath)
                     if (isGithubRef(displayPath)) {
-                        console.log(realPath, 'is a cache location for', displayPath)
+                        feedback.warn(realPath, 'is a cache location for', displayPath)
                     }
-                    console.log(result)
+                    feedback.warn(result)
                 }
                 reject(`'${errorTag}' exited with code ${code}`)
             } else  {
-                console.log('Finished running', infoMsg, 'in', displayPath)
+                feedback.progress('Finished running', infoMsg, 'in', displayPath)
                 resolve(undefined)
             }
         })
@@ -639,14 +642,14 @@ function build(cmd: string, args: string[], realPath: string, displayPath: strin
 }
 
 // The builder for a shell script
-function scriptBuilder(script: string, realPath: string, displayPath: string, flags: Flags): Promise<any> {
+function scriptBuilder(script: string, realPath: string, displayPath: string, flags: Flags, feedback: Feedback): Promise<any> {
     if (flags.incremental && scriptAppearsBuilt(realPath)) {
         if (flags.verboseBuild) {
-            console.log(`Skipping build in ${displayPath} because the action was previously built`)
+            feedback.progress(`Skipping build in ${displayPath} because the action was previously built`)
         }
         return Promise.resolve(true)
     }
-    return build(script, [ ], realPath, displayPath, script, script, flags.verboseBuild)
+    return build(script, [ ], realPath, displayPath, script, script, flags.verboseBuild, feedback)
 }
 
 // Determine if a shell-script style build appears to have been run.  For this we just check for the presence of a `.built` file since
@@ -668,7 +671,8 @@ function zipFileAppearsCurrent(zipfile: string, dependencies: string[]): boolean
                 return false
             }
         } else {
-            console.warn('dependency', dep, "doesn't exist")
+            debug("dependency %s doesn't exist", dep)
+            return false // play it safe
         }
     }
     debug('%s seems up to date so no re-zip', zipfile)
@@ -702,18 +706,18 @@ function makeNpmPackageAppearBuilt(filepath: string) {
 }
 
 // The builder for npm|yarn install --production
-function npmBuilder(filepath: string, displayPath: string, flags: Flags): Promise<any> {
+function npmBuilder(filepath: string, displayPath: string, flags: Flags, feedback: Feedback): Promise<any> {
     const cmd = flags.yarn ? 'yarn' : 'npm'
     if (flags.incremental && npmPackageAppearsBuilt(filepath)) {
         if (flags.verboseBuild) {
-            console.log(`Skipping '${cmd} install' in ${filepath} because one was run previously`)
+            feedback.progress(`Skipping '${cmd} install' in ${filepath} because one was run previously`)
         }
         return Promise.resolve(true)
     }
     // A package.json must be present since this builder wouldn't have been invoked otherwise.
     // This doesn't mean that npm|yarn install will succeed, just that, if it fails it is for some other reason
     return build(cmd, [ 'install', '--production' ], filepath, displayPath, `'${cmd} install --production'`, `${cmd} install`,
-        flags.verboseBuild).then(() => makeNpmPackageAppearBuilt(filepath))
+        flags.verboseBuild, feedback).then(() => makeNpmPackageAppearBuilt(filepath))
 }
 
 // Get the Ignore object for screening files.  This always has the fixed entries for .ignore itself, .build, build.sh, and .build.cmd

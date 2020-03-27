@@ -38,7 +38,8 @@ import { IArg } from '@oclif/parser/lib/args'
 import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
 import { format } from 'util'
 import { STATUS_CODES } from 'http'
-import { fileSystemPersister, browserPersister } from './deployer/login';
+import { fileSystemPersister, browserPersister } from './deployer/login'
+import { Feedback } from './deployer/deploy-struct'
 
 import * as createDebug  from 'debug'
 const debug = createDebug('nim:base')
@@ -65,6 +66,20 @@ export interface NimLogger {
   handleError: (msg: string, err?: Error) => never
   exit: (code: number) => void  // don't use 'never' here because 'exit' doesn't always exit
   displayError: (msg: string, err?: Error) => void
+}
+
+// Wrap the logger in a Feedback for using the deployer API
+export class NimFeedback implements Feedback {
+  logger: NimLogger
+  constructor(logger: NimLogger) {
+    this.logger = logger
+  }
+  warn(msg?: any, ...args: any[]) {
+    this.logger.log(String(msg), args)
+  }
+  progress(msg?: any, ...args: any[]) {
+    this.logger.log(String(msg), args)
+  }
 }
 
 // An alternative NimLogger when not using the oclif stack

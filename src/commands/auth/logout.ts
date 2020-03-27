@@ -19,7 +19,7 @@
  */
 
 import { flags } from '@oclif/command'
-import { NimBaseCommand, NimLogger, parseAPIHost, authPersister } from '../../NimBaseCommand'
+import { NimBaseCommand, NimLogger, NimFeedback, parseAPIHost, authPersister } from '../../NimBaseCommand'
 import { forgetNamespace } from '../../deployer/login'
 import { disambiguateNamespace } from '../project/deploy'
 
@@ -36,7 +36,8 @@ export default class AuthLogout extends NimBaseCommand {
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
     const host = parseAPIHost(flags.apihost)
     const namespace = await disambiguateNamespace(args.namespace, host).catch(err => logger.handleError(err.message, err))
-    const creds = await forgetNamespace(namespace, host, authPersister).catch(err => logger.handleError(err.message, err))
+    const creds = await forgetNamespace(namespace, host, authPersister, new NimFeedback(logger)).catch(err => logger.handleError(err.message, err))
+    logger.log(`Ok.  Removed the namespace '${namespace}' on host '${host}' from the credential store`)
     logger.log(`Successful logout from namespace '${namespace}' on API host '${creds.ow.apihost}'`)
   }
 }

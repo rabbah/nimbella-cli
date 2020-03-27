@@ -28,7 +28,9 @@ import { deployToBucket, cleanBucket } from './deploy-to-bucket'
 import { ensureWebLocal, deployToWebLocal } from './web-local'
 import * as rimrafOrig from 'rimraf'
 import { promisify } from 'util'
+import * as makeDebug from 'debug'
 
+const debug = makeDebug('nim:deployer:deploy')
 const rimraf = promisify(rimrafOrig)
 
 //
@@ -41,11 +43,14 @@ const rimraf = promisify(rimrafOrig)
 export async function cleanOrLoadVersions(todeploy: DeployStructure): Promise<DeployStructure> {
     if (todeploy.flags.incremental) {
         // Incremental deployment requires the versions up front to have access to the form hashes
-        await (todeploy.versions = loadVersions(todeploy.filePath, todeploy.credentials.namespace, todeploy.credentials.ow.apihost))
+        todeploy.versions = loadVersions(todeploy.filePath, todeploy.credentials.namespace, todeploy.credentials.ow.apihost)
     } else {
         if (todeploy.includer.isWebIncluded && (todeploy.cleanNamespace || todeploy.bucket && todeploy.bucket.clean)) {
             if (todeploy.bucketClient) {
-                await cleanBucket(todeploy.bucketClient, todeploy.bucket)
+                const warn = await cleanBucket(todeploy.bucketClient, todeploy.bucket)
+                if (warn) {
+                    todeploy.feedback.warn(warn)
+                }
             } else if (todeploy.flags.webLocal) {
                 await rimraf(todeploy.flags.webLocal)
             }
@@ -109,17 +114,17 @@ function cleanActionsAndPackages(todeploy: DeployStructure): Promise<DeployStruc
 // Clean a package by first deleting its contents then deleting the package itself
 // The 'versions' argument can be undefined, allowing this to be used to delete packages without a project context
 export async function cleanPackage(client: openwhisk.Client, name: string, versions: VersionEntry): Promise<openwhisk.Package> {
-    // console.log("Cleaning package", name)
+    debug("Cleaning package %s", name)
     while (true) {
         const pkg = await client.packages.get({ name })
         if (!pkg.actions || pkg.actions.length == 0) {
-            // console.log("No more actions, removing package")
+            debug("No more actions, removing package")
             if (versions && versions.packageVersions)
                 delete versions.packageVersions[name]
             return client.packages.delete({ name })
         }
         for (const action of pkg.actions) {
-            // console.log("deleting action", action.name)
+            debug("deleting action %s", action.name)
             if (versions && versions.actionVersions)
                 delete versions.actionVersions[action.name]
             await client.actions.delete({ name: name + '/' + action.name })

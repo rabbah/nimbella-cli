@@ -31,9 +31,9 @@ const debug = makeDebug('nim:deployer:deploy-to-bucket')
 // Open a "bucket client" (object of type Bucket) to use in deploying web resources to the bucket associated with the
 // InitOptions.  The InitOptions should have been checked for sufficient information already.
 export async function openBucketClient(credentials: Credentials, bucketSpec: BucketSpec): Promise<Bucket> {
-    //console.log("bucket client open")
+    debug("bucket client open")
     let bucketName = computeBucketStorageName(credentials.ow.apihost, credentials.namespace)
-    //console.log("computed bucket name")
+    debug("computed bucket name %s", bucketName)
     let bucket = await makeClient(bucketName, credentials.storageKey)
     await addWebMeta(bucket, bucketSpec)
     return bucket
@@ -51,16 +51,16 @@ function addWebMeta(bucket: Bucket, bucketSpec: BucketSpec): Promise<Bucket> {
             notFoundPage = bucketSpec.notFoundPage
         }
     }
-    //console.log("Setting mainPageSuffix to", mainPageSuffix, "and notFoundPage to", notFoundPage)
+    debug("Setting mainPageSuffix to %s and notFoundPage to %s", mainPageSuffix, notFoundPage)
     const website = { mainPageSuffix, notFoundPage }
     return bucket.setMetadata({ website }).then(() => bucket)
 }
 
 // Make a Bucket (client to access a bucket)
 async function makeClient(bucketName: string, options: {}): Promise<Bucket> {
-    // console.log("entered makeClient")
+    debug("entered makeClient")
     const storage = new Storage(options)
-    // console.log("made Storage handle")
+    debug("made Storage handle")
     return storage.bucket(bucketName)
 }
 
@@ -91,9 +91,9 @@ export async function deployToBucket(resource: WebResource, client: Bucket, spec
     }
     // Do prefixing
     destination = (spec && spec.prefixPath) ? path.join(spec.prefixPath, destination) : destination
-    //console.log('original destination', destination)
+    debug('original destination: %s', destination)
     destination = destination.replace(/\\/g, '/') // windows conventions don't work on the bucket
-    //console.log('fixed up destination', destination)
+    debug('fixed up destination: %s', destination)
     // Upload
     const metadata = { cacheControl: 'no-cache', contentType: resource.mimeType }
     const remoteFile = client.file(destination)
@@ -131,27 +131,29 @@ export function computeBucketDomainName(apiHost: string, namespace: string): str
 // Clean the resources from a bucket starting at the root or at the prefixPath.
 // Note: we use 'force' to make sure deletion is attempted for every file
 // Note: we don't throw errors since cleaning the bucket is a "best effort" feature.
-export async function cleanBucket(client: Bucket, spec: BucketSpec) {
+// Return (promise of) empty string on success, warning message if problems.
+export async function cleanBucket(client: Bucket, spec: BucketSpec): Promise<string> {
    let prefix = spec ? spec.prefixPath : undefined
    if (prefix && !prefix.endsWith('/')) {
        prefix += '/'
    }
-   //console.log("Cleaning up old web content")
+   debug("Cleaning up old web content")
    const options = prefix ? { force: true, prefix } : { force: true }
    await client.deleteFiles(options).catch(() => {
-       console.log("Note: one or more old web resources could not be deleted")
-       return Promise.resolve(undefined)
+       return Promise.resolve("Note: one or more old web resources could not be deleted")
    })
    if (!prefix) {
        return restore404Page(client)
+   } else {
+       return ''
    }
 }
 
 // Restore the 404.html page after wiping the bucket
-async function restore404Page(client: Bucket) {
+async function restore404Page(client: Bucket): Promise<string> {
     const our404 = require.resolve('../../404.html')
     await client.upload(our404, { destination: '404.html'}).catch(() => {
-        console.log("Standard 404.html page could not be restored")
-        return Promise.resolve(undefined)
+        return Promise.resolve("Standard 404.html page could not be restored")
     })
+    return ''
 }

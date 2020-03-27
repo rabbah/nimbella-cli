@@ -156,7 +156,7 @@ export function seemsToBeProject(data: Octokit.ReposGetContentsResponse): boolea
 async function fetchDir(client: Octokit, def: GithubDef, path: string, location: string, validate: boolean) {
     const contents = await readContents(client, def, path)
     if (!Array.isArray(contents)) {
-        console.dir(contents, { depth: null })
+        debug('unexpected contents: %O', contents)
         throw new Error(`Path '${path} should be a directory but is not`)
     }
     if (validate && !seemsToBeProject(contents)) {
@@ -181,7 +181,7 @@ async function fetchFile(client: Octokit, def: GithubDef, path: string, location
     const data = await readContents(client, def, path)
     // Careful with the following: we want to support empty files but the empty string is falsey.
     if (typeof data['content'] !== 'string'  || !data['encoding']) {
-        console.dir(data, { depth: null })
+        debug('unexpected contents: %O', data)
         throw new Error(`Response from 'fetchFile' was not interpretable`)
     }
     const toWrite = Buffer.from(data['content'], data['encoding'])

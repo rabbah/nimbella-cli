@@ -24,8 +24,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { XMLHttpRequest } from 'xmlhttprequest'
 import { CredentialStore, CredentialStorageEntry, CredentialEntry, CredentialHostMap, Credentials,
-    CredentialRow,
-    OWOptions} from './deploy-struct'
+    CredentialRow, Feedback } from './deploy-struct'
 import { FullCredentials } from '../oauth'
 import * as createDebug from 'debug'
 import { inBrowser } from '../NimBaseCommand'
@@ -126,7 +125,7 @@ export async function doLogin(token: string, persister: Persister, host: string 
 // Login using a JSON structure provided by `nim user set` (the same as the one returned by `nim user get`).
 // This is designed to be run as a subprocess of `nim user set`, which feeds most of the information via
 // stdin but passes the apihost on the command line.
-export function doAdminLogin(apihost: string): Promise<Credentials|void> {
+export function doAdminLogin(apihost: string): Promise<Credentials> {
    return new Promise(function (resolve, reject) {
         process.stdin.setEncoding('utf8');
         let input = ""
@@ -144,7 +143,6 @@ export function doAdminLogin(apihost: string): Promise<Credentials|void> {
             }
             const auth = nimInput.uuid + ':' + nimInput.key
             const creds = await addCredentialAndSave(apihost, auth, nimInput.storage, !!nimInput.redis, fileSystemPersister, nimInput.namespace, true)
-                .catch(err => { reject(err) })
             saveLegacyInfo(apihost, auth)
             resolve(creds)
         })
@@ -170,7 +168,7 @@ export async function doInteractiveLogin(newCreds: FullCredentials, persister: P
 // Add credential to credential store and make it the default.  Does not persist the result
 export function addCredential(store: CredentialStore, apihost: string, namespace: string, api_key: string, storage: string,
         redis: boolean): Credentials {
-    //console.log("Adding credential to credential store")
+    debug("Adding credential to credential store")
     let nsMap = store.credentials[apihost]
     if (!nsMap) {
         nsMap = {}
@@ -184,7 +182,7 @@ export function addCredential(store: CredentialStore, apihost: string, namespace
 }
 
 // Remove a namespace from the credential store
-export async function forgetNamespace(namespace: string, apihost: string|undefined, persister: Persister): Promise<Credentials> {
+export async function forgetNamespace(namespace: string, apihost: string|undefined, persister: Persister, feedback: Feedback): Promise<Credentials> {
     const store = await persister.loadCredentialStore()
     const creds = getUniqueCredentials(namespace, apihost, store)
     const host = apihost || creds.ow.apihost
@@ -199,14 +197,13 @@ export async function forgetNamespace(namespace: string, apihost: string|undefin
                 fs.unlinkSync(wskProps())
             } catch {}
         }
-        await persister.saveCredentialStore(store)
-        console.log(`Ok.  Removed the namespace '${namespace}' on host '${host}' from the credential store`)
+        persister.saveCredentialStore(store)
         if (undefinedWarning) {
-            console.log(`'${namespace}' was the current namespace`)
-            console.log('A new namespace target must be specified on or before the next project deployment')
+            feedback.warn(`'${namespace}' was the current namespace`)
+            feedback.warn('A new namespace target must be specified on or before the next project deployment')
         }
     } else {
-        console.error(`There is no credential entry for namespace '${namespace}' on API host '${host}'`)
+        feedback.warn(`There is no credential entry for namespace '${namespace}' on API host '${host}'`)
     }
     return creds
 }
@@ -223,14 +220,14 @@ export async function switchNamespace(namespace: string, apihost: string|undefin
     const answer = getUniqueCredentials(namespace, apihost, store)
     const newHost = answer.ow.apihost
     if (store.currentHost == newHost && store.currentNamespace == namespace) {
-        // console.log('not an actual change')
+        debug('not an actual change')
         return answer
     }
     store.currentHost = newHost
     store.currentNamespace = namespace
     persister.saveCredentialStore(store)
     persister.saveLegacyInfo(newHost, answer.ow.api_key)
-    //console.log(`Switched target namespace to '${namespace}' on API host '${newHost}'`)
+    debug(`Switched target namespace to '${namespace}' on API host '${newHost}'`)
     return answer
 }
 
@@ -264,7 +261,6 @@ export async function addCredentialAndSave(apihost: string, auth: string, storag
         }
         const credentials = addCredential(credStore, apihost, namespace, auth, storage, redis)
         persister.saveCredentialStore(credStore)
-        console.log(`Stored a credential set for namespace '${namespace}' and API host '${apihost}'`)
         return credentials
     })
 }
@@ -287,7 +283,7 @@ export async function getCredentialList(persister: Persister): Promise<Credentia
 
 // Get the namespace associated with an auth on a specific host
 export function getNamespace(host: string, auth: string): Promise<string> {
-    //console.log("getting current namespace")
+    debug("getting current namespace")
     const url = host + NAMESPACE_URL_PATH
     return wskRequest(url, auth).then(list => list[0])
 }
@@ -296,13 +292,13 @@ export function getNamespace(host: string, auth: string): Promise<string> {
 
 function saveCredentialStore(store: CredentialStore) {
     const toWrite = JSON.stringify(store, null, 2)
-    //console.log("writing credential store")
+    debug("writing credential store")
     fs.writeFileSync(credentialStore(), toWrite)
 }
 
 function saveLegacyInfo(apihost: string, auth: string) {
     saveWskProps(apihost, auth)
-    //console.log("stored .wskprops with API host", apihost)
+    debug("stored .wskprops with API host %s", apihost)
 }
 
 function loadCredentialStore(): Promise<CredentialStore> {
@@ -416,7 +412,7 @@ function getUniqueCredentials(namespace: string, apihost: string|undefined, stor
         }
     }
     const { storageKey, api_key, redis } = credentialEntry
-    //console.log('have authkey', api_key)
+    debug('have authkey: %s', api_key)
     return { namespace, ow: { apihost: newHost, api_key }, storageKey, redis }
 }
 
@@ -434,7 +430,7 @@ function parseStorageString(storage: string, namespace: string): CredentialStora
 
 // Subroutine to invoke OW with a GET and return the response
 function wskRequest(url: string, auth: string = undefined): Promise<any> {
-    //console.log("Request to", url)
+    debug("Request to: %s", url)
     return new Promise(function (resolve, reject) {
         const xhr = new XMLHttpRequest()
         xhr.open('GET', url)
@@ -442,19 +438,19 @@ function wskRequest(url: string, auth: string = undefined): Promise<any> {
         xhr.setRequestHeader('User-Agent', userAgent)
         xhr.onload = function () {
             if (this.status >= 200 && this.status < 300) {
-                //console.log("useful response")
+                debug("useful response")
                 resolve(JSON.parse(xhr.responseText))
             } else {
-                //console.log("Error from OW", xhr.status, xhr.responseText)
+                debug("Error from OW %s %s", xhr.status, xhr.responseText)
                 reject(new Error(xhr.responseText))
             }
         }
         xhr.onerror = function () {
-            //console.log("network error")
+            debug("network error")
             reject({statusText: "Network error"})
         }
         if (auth) {
-            //console.log("Setting basic authorization header")
+            debug("Setting basic authorization header")
             xhr.setRequestHeader('Authorization', 'Basic ' + Buffer.from(auth).toString('base64'))
         }
         xhr.send()

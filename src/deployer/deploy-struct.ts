@@ -102,6 +102,24 @@ export interface BuildTable {
     [ key: string]: BuildStatus
 }
 
+// Object to provide feedback (warnings and progress reports) in real time during execution.
+// NOT for debugging.
+// NOT for normal communication: summary messages should be fed back through DeployResponse
+// NOT for hard errors: those should be thrown or Promise-rejected.
+export interface Feedback {
+    warn(message?: any, ...optionalParams: any[]): void
+    progress(message?: any, ...optionalParams: any[]): void
+}
+
+export class DefaultFeedback implements Feedback {
+    warn(message?: any, ...optionalParams: any[]) {
+        console.warn(message, optionalParams)
+    }
+    progress(message?: any, ...optionalParams: any[]) {
+        console.log(message, optionalParams)
+    }
+}
+
 // The top-level deploy structure.  Nothing is required.  If the structure is vacuous, nothing is deployed.   This interface
 // describes the syntax of project.yml and also the structure of a project on disk (where 'web' and 'packages') are
 // subdirectories of the project).   The two sources of information are merged.
@@ -127,6 +145,7 @@ export  interface DeployStructure {
     includer?: Includer              // The 'includer' for deciding which packages, actions, web are included in the deploy
     reader?: ProjectReader           // The project reader to use
     versions?: VersionEntry          // The VersionEntry for credentials.namespace on the selected API host if available
+    feedback?: Feedback              // The object to use for immediate communication to the user (e.g. for warnings and progress reports)
 }
 
 // The specification of information guiding bucket deployment of web resources if that feature is to be employed

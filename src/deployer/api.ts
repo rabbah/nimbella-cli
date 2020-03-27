@@ -21,7 +21,7 @@
 // Contains the main public (library) API of the deployer (some exports in 'util' may also be used externally but are incidental)
 
 import { cleanOrLoadVersions, doDeploy, actionWrap, cleanPackage } from './deploy'
-import { DeployStructure, DeployResponse, PackageSpec, OWOptions, WebResource, Credentials, Flags, Includer } from './deploy-struct'
+import { DeployStructure, DeployResponse, PackageSpec, OWOptions, WebResource, Credentials, Flags, Includer, Feedback, DefaultFeedback } from './deploy-struct'
 import { readTopLevel, buildStructureParts, assembleInitialStructure } from './project-reader'
 import { isTargetNamespaceValid, wrapError, wipe, saveUsFromOurselves, writeProjectStatus, getTargetNamespace,
     needsBuilding } from './util'
@@ -38,26 +38,25 @@ const debug = makeDebug('nim:deployer:api')
 // Deploy a disk-resident project given its path and options to pass to openwhisk.  The options are merged
 // with those in the config; the result must include api or apihost, and must include api_key.
 export function deployProject(path: string, owOptions: OWOptions, credentials: Credentials|undefined, persister: Persister,
-        flags: Flags, userAgent: string): Promise<DeployResponse> {
-    //console.log("deployProject invoked with incremental", flags.incremental)
+        flags: Flags, userAgent: string, feedback?: Feedback): Promise<DeployResponse> {
+    debug("deployProject invoked with incremental %s", flags.incremental)
     return readPrepareAndBuild(path, owOptions, credentials, persister, flags, userAgent).then(deploy).catch((err) => {
-        //console.log("An error was caught")
-        //console.dir(err, { depth: null })
+        debug("An error was caught: %O", err)
         return Promise.resolve(wrapError(err, undefined))
     })
 }
 
 // Combines the read, prepare, and build phases but does not deploy
 export function readPrepareAndBuild(path: string, owOptions: OWOptions, credentials: Credentials, persister: Persister,
-        flags: Flags, userAgent: string): Promise<DeployStructure> {
+        flags: Flags, userAgent: string, feedback?: Feedback): Promise<DeployStructure> {
     return readAndPrepare(path, owOptions, credentials, persister, flags, userAgent).then((spec) => buildProject(spec))
 }
 
 // Combines the read and prepare phases but does not build or deploy
 export function readAndPrepare(path: string, owOptions: OWOptions, credentials: Credentials, persister: Persister,
-        flags: Flags, userAgent: string): Promise<DeployStructure> {
+        flags: Flags, userAgent: string, feedback?: Feedback): Promise<DeployStructure> {
     const includer = makeIncluder(flags.include, flags.exclude)
-    return readProject(path, flags.env, userAgent, includer).then((spec) =>
+    return readProject(path, flags.env, userAgent, includer, feedback).then((spec) =>
         prepareToDeploy(spec, owOptions, credentials, persister, flags))
 }
 
@@ -66,7 +65,10 @@ export function deploy(todeploy: DeployStructure): Promise<DeployResponse> {
     debug("Starting deploy")
     return cleanOrLoadVersions(todeploy).then(doDeploy).then(results => {
         if (!todeploy.githubPath) {
-            writeProjectStatus(todeploy.filePath, results, todeploy.includer.isIncludingEverything())
+            const statusDir = writeProjectStatus(todeploy.filePath, results, todeploy.includer.isIncludingEverything())
+            if (statusDir) {
+                todeploy.feedback.progress(`Deployment status recorded in '${statusDir}'`)
+            }
         }
         if (!results.namespace && todeploy.credentials) {
             results.namespace = todeploy.credentials.namespace
@@ -76,9 +78,10 @@ export function deploy(todeploy: DeployStructure): Promise<DeployResponse> {
 }
 
 // Read the information contained in the project, initializing the DeployStructure
-export async function readProject(projectPath: string, envPath: string, userAgent: string, includer: Includer): Promise<DeployStructure> {
+export async function readProject(projectPath: string, envPath: string, userAgent: string, includer: Includer,
+        feedback: Feedback = new DefaultFeedback()): Promise<DeployStructure> {
     debug("Starting readProject, projectPath=%s, envPath=%s, userAgent=%s", projectPath, envPath, userAgent)
-    const ans = await readTopLevel(projectPath, envPath, userAgent, includer, false).then(buildStructureParts).then(assembleInitialStructure)
+    const ans = await readTopLevel(projectPath, envPath, userAgent, includer, false, feedback).then(buildStructureParts).then(assembleInitialStructure)
         .catch((err) => { return Promise.reject(err) })
     debug("evaluating the just-read project: %O", ans)
     if (needsBuilding(ans) && ans.reader.getFSLocation() === null) {
@@ -86,7 +89,7 @@ export async function readProject(projectPath: string, envPath: string, userAgen
         if (inBrowser) {
             return Promise.reject(new Error(`Project '${projectPath}' cannot be deployed from the cloud because it requires building`))
         }
-        return readTopLevel(projectPath, envPath, userAgent, includer, true).then(buildStructureParts).then(assembleInitialStructure)
+        return readTopLevel(projectPath, envPath, userAgent, includer, true, feedback).then(buildStructureParts).then(assembleInitialStructure)
             .catch((err) => { return Promise.reject(err) })
     } else {
         return ans
@@ -95,15 +98,15 @@ export async function readProject(projectPath: string, envPath: string, userAgen
 
 // 'Build' the project by running the "finder builder" steps in each action-as-directory and in the web directory
 export function buildProject(project: DeployStructure): Promise<DeployStructure> {
-    debug("Starting buildProject")
+    debug("Starting buildProject with spec %O", project)
     let webPromise: Promise<WebResource[]> = undefined
     project.sharedBuilds = { }
     if (project.webBuild) {
         const displayPath = project.githubPath || project.filePath
         webPromise = buildWeb(project.webBuild, project.sharedBuilds, 'web', path.join(displayPath, 'web'),
-            project.flags, project.reader)
+            project.flags, project.reader, project.feedback)
     }
-    const actionPromise: Promise<PackageSpec[]> = buildAllActions(project.packages, project.sharedBuilds, project.flags, project.reader)
+    const actionPromise: Promise<PackageSpec[]> = buildAllActions(project.packages, project.sharedBuilds, project.flags, project.reader, project.feedback)
     if (webPromise) {
         if (actionPromise) {
             return Promise.all([webPromise, actionPromise]).then(result => {
@@ -137,7 +140,7 @@ export function buildProject(project: DeployStructure): Promise<DeployStructure>
 //    are not deleted but are not deployed as such.
 export async function prepareToDeploy(inputSpec: DeployStructure, owOptions: OWOptions, credentials: Credentials, persister: Persister,
         flags: Flags): Promise<DeployStructure> {
-    debug("Starting prepare")
+    debug("Starting prepare with spec: %O", inputSpec)
     // 1.  Acquire credentials if not already present
     if (!credentials) {
         if (inputSpec.targetNamespace) {
@@ -151,11 +154,11 @@ export async function prepareToDeploy(inputSpec: DeployStructure, owOptions: OWO
     debug('owOptions: %O', owOptions)
     debug('credentials.ow: %O', credentials.ow)
     const wskoptions = Object.assign({}, credentials.ow, owOptions || {})
-    //console.log('wskoptions', wskoptions)
+    debug('wskoptions" %O', wskoptions)
     inputSpec.credentials = credentials
-    //console.log("prepareToDeploy merging flags", flags)
+    debug("prepareToDeploy merging flags: %O", flags)
     inputSpec.flags = flags
-    //console.log("Options merged")
+    debug("Options merged")
     // 3.  Open handles
     const needsBucket = inputSpec.web && inputSpec.web.length > 0 && !inputSpec.actionWrapPackage && !flags.webLocal
     if (needsBucket && !credentials.storageKey) {
@@ -163,23 +166,23 @@ export async function prepareToDeploy(inputSpec: DeployStructure, owOptions: OWO
             `Deployment of web content to namespace '${credentials.namespace}' requires a storage key but none is present`
         ))
     }
-    //console.log("Auth sufficiency established")
+    debug("Auth sufficiency established")
     inputSpec.owClient = openwhisk(wskoptions)
     if (!credentials.namespace) {
         credentials.namespace = await getTargetNamespace(inputSpec.owClient)
     } else {
         await isTargetNamespaceValid(inputSpec.owClient, credentials.namespace)
     }
-    //console.log("Target namespace validated")
+    debug("Target namespace validated")
     if (!flags.production) {
         saveUsFromOurselves(credentials.namespace, credentials.ow.apihost)
     }
-    //console.log("Sensitive project/namespace guard passed")
+    debug("Sensitive project/namespace guard passed")
     if (needsBucket) {
         inputSpec.bucketClient = await openBucketClient(credentials, inputSpec.bucket)
             .catch(() => Promise.reject(new Error('Could not access object storage using the supplied credentials')))
     }
-    //console.log("Bucket client created")
+    debug("Bucket client created")
     // 4.  Action wrapping
     const { web, packages } = inputSpec
     if (web && web.length > 0 && inputSpec.actionWrapPackage) {
@@ -202,6 +205,7 @@ export async function prepareToDeploy(inputSpec: DeployStructure, owOptions: OWO
             return inputSpec
         })
     } else {
+        debug('returning spec %O', inputSpec)
         return Promise.resolve(inputSpec)
     }
 }
@@ -224,10 +228,10 @@ export function getMessageFromError(err: any): string {
 
 // Wipe a namespace of everything except its activations (the activations cannot be wiped via the public API)
 export async function wipeNamespace(host: string, auth: string) {
-    // console.log("Requested wipe-namespace function with host", host, "and auth", auth)
+    debug("Requested wipe-namespace function with host %s and auth %s", host, auth)
     const init: OWOptions = { apihost: host, api_key: auth}
     const client = openwhisk(init)
-    // console.log("Client opened")
+    debug("Client opened")
     return wipe(client)
 }
 

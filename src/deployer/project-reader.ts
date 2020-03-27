@@ -19,7 +19,7 @@
  */
 
 import * as path from 'path'
-import { DeployStructure, PackageSpec, ActionSpec, WebResource, Includer, ProjectReader, PathKind } from './deploy-struct'
+import { DeployStructure, PackageSpec, ActionSpec, WebResource, Includer, ProjectReader, PathKind, Feedback } from './deploy-struct'
 import { emptyStructure, actionFileToParts, filterFiles, convertToResources, promiseFilesAndFilterFiles, loadProjectConfig } from './util'
 import { getBuildForAction, getBuildForWeb } from  './finder-builder'
 import { isGithubRef, parseGithubRef, fetchProject } from './github'
@@ -43,20 +43,21 @@ interface TopLevel {
     githubPath: string
     includer: Includer
     reader: ProjectReader
+    feedback: Feedback
 }
 export async function readTopLevel(filePath: string, env: string, userAgent: string, includer: Includer,
-        mustBeLocal: boolean): Promise<TopLevel> {
+        mustBeLocal: boolean, feedback: Feedback): Promise<TopLevel> {
     // The mustBeLocal arg is only important if the filePath denotes a github location.  In that case, a true value for
     // mustBeLocal causes the github contents to be fetched to a local cache and a FileReader is used.  A false value
     // causes a GithubReader to be used.
     debug("readTopLevel with filePath:'%s' and mustBeLocal:'%s'", filePath, String(mustBeLocal))
+    debug("feedback is %O", feedback)
     let githubPath: string = undefined
     let reader = makeFileReader(filePath) // Only useful iff it turns out filePath != github
     if (isGithubRef(filePath)) {
         const github = parseGithubRef(filePath)
         if (!github.auth) {
-            // TODO should not be using console.log here
-            console.log('Warning: access to github will be un-authenticated; rate will be severely limited')
+            feedback.warn('Warning: access to github will be un-authenticated; rate will be severely limited')
         }
         githubPath = filePath
         if (mustBeLocal) {
@@ -105,16 +106,16 @@ export async function readTopLevel(filePath: string, env: string, userAgent: str
         }
         if (legacyConfig && !config) {
             config = legacyConfig
-            console.log(`Warning: the name '${LEGACY_CONFIG_FILE}' is deprecated; please rename to '${CONFIG_FILE}' soon`)
+            feedback.warn(`Warning: the name '${LEGACY_CONFIG_FILE}' is deprecated; please rename to '${CONFIG_FILE}' soon`)
         }
         if (notconfig && !config) {
-            console.log("Warning: found", notconfig, "but no", CONFIG_FILE)
+            feedback.warn("Warning: found", notconfig, "but no", CONFIG_FILE)
         }
         if (githubPath) {
             debug('githhub path was %s', githubPath)
             debug('filePath is %s', filePath)
         }
-        const ans = { web, packages, config, strays, filePath, env, githubPath, includer, reader }
+        const ans = { web, packages, config, strays, filePath, env, githubPath, includer, reader, feedback }
         debug('readTopLevel returning %O', ans)
         return ans
     })
@@ -123,7 +124,7 @@ export async function readTopLevel(filePath: string, env: string, userAgent: str
 // Probe the top level structure to obtain the major parts of the final config.  Spawn builders for those parts and
 // assemble a "Promise.all" for the combined work
 export function buildStructureParts(topLevel: TopLevel): Promise<DeployStructure[]> {
-    const { web, packages, config, strays, filePath, env, githubPath, includer, reader } = topLevel
+    const { web, packages, config, strays, filePath, env, githubPath, includer, reader, feedback } = topLevel
     let packagesGithub = packages
     if (githubPath) {
         if (packages) {
@@ -134,7 +135,7 @@ export function buildStructureParts(topLevel: TopLevel): Promise<DeployStructure
     return new Promise(function(resolve) {
         const webPart = getBuildForWeb(web, reader).then(build => buildWebPart(web, build, reader))
         const actionsPart = buildActionsPart(packages, packagesGithub, includer, reader)
-        const configPart = readConfig(config, env, filePath, strays, githubPath, includer, reader)
+        const configPart = readConfig(config, env, filePath, strays, githubPath, includer, reader, feedback)
         resolve(Promise.all([webPart, actionsPart, configPart]))
     })
 }
@@ -143,7 +144,7 @@ export function buildStructureParts(topLevel: TopLevel): Promise<DeployStructure
 // before deployment.  Input is the resolved output of buildStructureParts.  At this point, the web part may have names that
 // are only suitable for bucket deploy so we check for that problem here.
 export function assembleInitialStructure(parts: DeployStructure[]): DeployStructure {
-    // console.log("Assembling structure from parts")
+    debug("Assembling structure from parts")
     const [ webPart, actionsPart, configPart ] = parts
     const strays = (actionsPart.strays || []).concat(configPart.strays || [])
     configPart.strays = strays
@@ -276,13 +277,10 @@ function mergeActions(fs: ActionSpec[], config: ActionSpec[]): ActionSpec[] {
 // Merge a single ActionSpec: the file system and config contributions have the same name.  The config contributions
 // take precedence
 function mergeAction(fs: ActionSpec, config: ActionSpec): ActionSpec {
-    // console.log("Action from filesystem")
-    // console.dir(fs, { depth: null} )
-    // console.log("Action from config")
-    // console.dir(config, { depth: null })
+    debug("Action from filesystem: %O", fs)
+    debug("Action from config: %O", config)
     const result = Object.assign({}, fs, config)
-    // console.log("Result of merge")
-    // console.dir(result, { depth: null })
+    debug("Result of merge: %O", result)
     return result
 }
 
@@ -320,7 +318,7 @@ function buildActionsPart(pkgsdir: string, displayPath: string, includer: Includ
 
 // Accumulate the arrays of PackageSpecs and Strays in the 'packages' directory
 function buildPkgArray(pkgsDir: string, displayPath: string, includer: Includer, reader: ProjectReader): Promise<any> {
-    // console.log("Building package array")
+    debug("Building package array")
     return reader.readdir(pkgsDir).then((items: PathKind[]) => {
         items = filterFiles(items)
         const strays = items.filter(dirent => !dirent.isDirectory).map(dirent => dirent.name)
@@ -386,17 +384,18 @@ function duplicateName(actionName: string, formerUse: string, newUse: string) {
     return new Error(`The action name '${actionName}' appears twice, once ${former} and once ${present}`)
 }
 
-// Read the config file if present.  For convenience, the extra information not provide elsewhere is tacked on here
+// Read the config file if present.  For convenience, the extra information not merged from elsewhere is tacked on here
 function readConfig(configFile: string, envPath: string, filePath: string, strays: string[], githubPath: string,
-        includer: Includer, reader: ProjectReader): Promise<DeployStructure> {
+        includer: Includer, reader: ProjectReader, feedback: Feedback): Promise<DeployStructure> {
+    const alwaysIncluded = { strays, filePath, githubPath, includer, reader, feedback }
     if (!configFile) {
-        // console.log("No config file found")
-        const ans = Object.assign({}, emptyStructure(), { strays, filePath, githubPath, includer, reader })
+        debug("No config file found")
+        const ans = Object.assign({}, emptyStructure(), alwaysIncluded)
         return Promise.resolve(ans)
     }
-    // console.log("Reading config file")
+    debug("Reading config file")
     return loadProjectConfig(configFile, envPath, filePath, reader).then(config => trimConfigWithIncluder(config, includer))
-        .then(config => Object.assign({strays, filePath, githubPath, includer, reader}, config))
+        .then(config => Object.assign({}, config, alwaysIncluded))
 }
 
 // Given a DeployStructure with web and package sections, trim those sections according to the rules of an Includer
