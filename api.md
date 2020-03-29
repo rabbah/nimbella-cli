@@ -12,7 +12,7 @@ All examples are TypeScript.  Using the API from JavaScript should be mostly a m
 You import from the API like this
 
 ```
-import { Flags, Credentials, deployProject, ... } from 'nimbella-cli/deployer'
+import { initializeAPI, Flags, deployProject, ... } from 'nimbella-cli/deployer'
 ```
 
 The types, objects, and functions that you _may_ import with some expectation of support are covered in the following sections.
@@ -88,7 +88,10 @@ export  interface DeployStructure {
     githubPath?: string              // The original github path specified, if deploying from github
     owClient?: Client                // The openwhisk client for deploying actions and packages
     bucketClient?: Bucket            // The gcloud storage client for deploying to a bucket
+    includer?: Includer              // The 'includer' for deciding which packages, actions, web are included in the deploy
+    reader?: ProjectReader           // The project reader to use
     versions?: VersionEntry          // The VersionEntry for credentials.namespace on the selected API host if available
+    feedback?: Feedback              // The object to use for immediate communication to the user (e.g. for warnings and progress reports)
 }
 ```
 
@@ -106,6 +109,18 @@ export interface DeploySuccess {
     kind: DeployKind
     skipped: boolean
     wrapping?: string
+}
+```
+
+### Feedback
+
+```
+// Object to provide feedback (warnings and progress reports) in real time during execution.
+// Not used for debugging, for normal communiation, or for errors, all of
+//   which use other mechanisms.
+export interface Feedback {
+    warn(message?: any, ...optionalParams: any[]): void
+    progress(message?: any, ...optionalParams: any[]): void
 }
 ```
 
@@ -156,6 +171,25 @@ A well-known instance of `Persister` for saving the credential store in the loca
 
 ## Functions
 
+### initializeAPI
+
+Always call this before using other API functions.
+
+```
+initializeAPI(userAgent: string): {[key: string]: string}
+```
+
+- **userAgent** the value that should be sent in `user-agent` headers when invoking remote services.  This value
+    1. Must use only characters that are legal in http headers as specified by RFC 7230.
+    2. Should begin with a field of the form `<product-name>/version` where the product name is something meaningful to identify the body of code that is using the API and version corresponds to the current version of that code
+    3. May contain additional fields with additional information as desired
+
+The function prepares the process environment for other API calls by
+
+1.  Removing all existing `__OW_*` environment variables.  These can cause unexpected results when using the openwhisk NodeJS client.
+2.  Storing the **userAgent** value in `__OW_USER_AGENT` in the environment.
+3.  Returning a map consisting of the environment variables that were deleted from the environment in the event that you need to restore them.
+
 ### addGithubAccount
 
 Adds information about a github account for later use by the deployer when deploying from github.
@@ -164,7 +198,7 @@ Adds information about a github account for later use by the deployer when deplo
 addGithubAccount(name: string, token: string): Promise<any>
 ```
 
-The name must denote a valid `github` username and the `token` must be an access token that is valid for that account (preferably one that will not expire).
+The `token` argument must a valid access token for github (preferably one that will not expire).   The `name` argument provides the account name under which the token is recorded.   It is highly recommended that this name match the actual github username that the `token` belongs to.  This is not checked by the API but an incorrect name can cause confusion later, as more accounts are added.
 
 ### buildProject
 
@@ -191,17 +225,19 @@ The highest level API for deploying a project.  It actually performs four steps 
 ```
 deployProject(path: string,
               owOptions: OWOptions,
-              credentials: Credentials,
+              credentials: Credentials|undefined,
               persister: Persister,
               flags: Flags,
-              userAgent: string): Promise<DeployResponse>
+              userAgent?: string,
+              feedback?: Feedback): Promise<DeployResponse>
 ```
 - **path**: the project path as it would appear on the command line (github or local)
 - **owOptions**: used when `credentials` is omitted (see below)
 - **credentials**: the `Credentials` object to use as Nimbella authentication
 - **persister**:  one of `fileSystemPersister` or `browserPersister` to be used if `credentials` is omitted
 - **flags**: contains flags normally specified on the command line
-- **userAgent**: a string to use as a user agent in the request header when contacting github (the user agent for contacting Nimbella is determined differently at present and is not controlled here ... this is likely to change).
+- **userAgent**: a placeholder, optional, and always ignored.  Will be removed soon
+- **feedback**: an optional object of type `Feedback`, used to feedback progress reports and warnings during the deployment.  If this is not provided, progress reports and warnings will print via the global `console` object.
 
 Credentials processing is a bit complicated because there are a number of cases to be supported.  _In general_ supply a `Credentials` object with at least the `ow` field initialized.
 
@@ -256,7 +292,9 @@ readAndPrepare(path: string,
                credentials: Credentials,
                persister: Persister,
                flags: Flags,
-               userAgent: string): Promise<DeployStructure>
+               userAgent?: string,
+               feedback?: Feedback): Promise<DeployStructure>
+}
 ```
 
 For an explanation of the arguments, see `deployProject`.
@@ -271,7 +309,8 @@ readPrepareAndBuild(path: string,
                     credentials: Credentials,
                     persister: Persister,
                     flags: Flags,
-                    userAgent: string): Promise<DeployStructure>
+                    userAgent?: string,
+                    feedback?: Feedback): Promise<DeployStructure>
 ```
 
 For an explanation of the arguments, see `deployProject`.
@@ -281,15 +320,15 @@ For an explanation of the arguments, see `deployProject`.
 Performs the first of the four steps (read, prepare, build, deploy) in deploying a project.  Produces a basic `DeployStructure` for the project but does not merge in credentials and flags (that is done in the prepare step).
 
 ```
-readProject(projectPath: string,
-            envPath: string,
-            userAgent: string,
-            includer: Includer): Promise<DeployStructure> {
+function readProject(projectPath: string,
+                     envPath: string,
+                     includer: Includer,
+                     feedback?: Feedback): Promise<DeployStructure>
 ```
 
 - **projectPath**: the project path as it would appear on the command line (github or local)
 - **envPath**: what would appear in the `env` member of `Flags` of `deployProject`
-- **userAgent**: see `deployProject`
 - **includer**: a parsed form of what would appear in the `include` and `exclude` members of `Flags` of `deployProject`
+- **feedback**: see `deployProject`
 
 

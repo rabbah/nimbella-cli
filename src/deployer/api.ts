@@ -35,12 +35,34 @@ import { inBrowser } from '../NimBaseCommand'
 import * as makeDebug from 'debug'
 const debug = makeDebug('nim:deployer:api')
 
+// Initialize the API by 1. purging existing __OW_ entries from the environment, 2.  setting __OW_USER_AGENT, 3. returning a map of
+// entries that were purged.
+export function initializeAPI(userAgent: string): {[key: string]: string} {
+    const result = {}
+    for (const item in process.env) {
+        if (item.startsWith('__OW_')) {
+            result[item] = process.env[item]
+            delete process.env[item]
+        }
+    }
+    process.env['__OW_USER_AGENT'] = userAgent
+    return result
+}
+
+// Get a vaguely valid user agent string.  Hopefully, this was set in the environment during initialize.  But, we use some fallbacks if not.
+// It is not necessary to call this function when using the OW client because it will respect __OW_USER_AGENT directly.  It is used
+// when using other web APIs in order to set a valid and possibly useful value in the user-agent header.
+export function getUserAgent(): string {
+    const ans = process.env['__OW_USER_AGENT']
+    return ans || (inBrowser ? 'nimbella-workbench' : 'nimbella-cli')
+}
+
 // Deploy a disk-resident project given its path and options to pass to openwhisk.  The options are merged
 // with those in the config; the result must include api or apihost, and must include api_key.
 export function deployProject(path: string, owOptions: OWOptions, credentials: Credentials|undefined, persister: Persister,
-        flags: Flags, userAgent: string, feedback?: Feedback): Promise<DeployResponse> {
+        flags: Flags, userAgent?: string, feedback?: Feedback): Promise<DeployResponse> {
     debug("deployProject invoked with incremental %s", flags.incremental)
-    return readPrepareAndBuild(path, owOptions, credentials, persister, flags, userAgent).then(deploy).catch((err) => {
+    return readPrepareAndBuild(path, owOptions, credentials, persister, flags).then(deploy).catch((err) => {
         debug("An error was caught: %O", err)
         return Promise.resolve(wrapError(err, undefined))
     })
@@ -48,15 +70,15 @@ export function deployProject(path: string, owOptions: OWOptions, credentials: C
 
 // Combines the read, prepare, and build phases but does not deploy
 export function readPrepareAndBuild(path: string, owOptions: OWOptions, credentials: Credentials, persister: Persister,
-        flags: Flags, userAgent: string, feedback?: Feedback): Promise<DeployStructure> {
-    return readAndPrepare(path, owOptions, credentials, persister, flags, userAgent).then((spec) => buildProject(spec))
+        flags: Flags, userAgent?: string, feedback?: Feedback): Promise<DeployStructure> {
+    return readAndPrepare(path, owOptions, credentials, persister, flags, undefined, feedback).then((spec) => buildProject(spec))
 }
 
 // Combines the read and prepare phases but does not build or deploy
 export function readAndPrepare(path: string, owOptions: OWOptions, credentials: Credentials, persister: Persister,
-        flags: Flags, userAgent: string, feedback?: Feedback): Promise<DeployStructure> {
+        flags: Flags, userAgent?: string, feedback?: Feedback): Promise<DeployStructure> {
     const includer = makeIncluder(flags.include, flags.exclude)
-    return readProject(path, flags.env, userAgent, includer, feedback).then((spec) =>
+    return readProject(path, flags.env, includer, feedback).then((spec) =>
         prepareToDeploy(spec, owOptions, credentials, persister, flags))
 }
 
@@ -78,10 +100,10 @@ export function deploy(todeploy: DeployStructure): Promise<DeployResponse> {
 }
 
 // Read the information contained in the project, initializing the DeployStructure
-export async function readProject(projectPath: string, envPath: string, userAgent: string, includer: Includer,
+export async function readProject(projectPath: string, envPath: string, includer: Includer,
         feedback: Feedback = new DefaultFeedback()): Promise<DeployStructure> {
-    debug("Starting readProject, projectPath=%s, envPath=%s, userAgent=%s", projectPath, envPath, userAgent)
-    const ans = await readTopLevel(projectPath, envPath, userAgent, includer, false, feedback).then(buildStructureParts).then(assembleInitialStructure)
+    debug("Starting readProject, projectPath=%s, envPath=%s", projectPath, envPath)
+    const ans = await readTopLevel(projectPath, envPath, includer, false, feedback).then(buildStructureParts).then(assembleInitialStructure)
         .catch((err) => { return Promise.reject(err) })
     debug("evaluating the just-read project: %O", ans)
     if (needsBuilding(ans) && ans.reader.getFSLocation() === null) {
@@ -89,7 +111,7 @@ export async function readProject(projectPath: string, envPath: string, userAgen
         if (inBrowser) {
             return Promise.reject(new Error(`Project '${projectPath}' cannot be deployed from the cloud because it requires building`))
         }
-        return readTopLevel(projectPath, envPath, userAgent, includer, true, feedback).then(buildStructureParts).then(assembleInitialStructure)
+        return readTopLevel(projectPath, envPath, includer, true, feedback).then(buildStructureParts).then(assembleInitialStructure)
             .catch((err) => { return Promise.reject(err) })
     } else {
         return ans

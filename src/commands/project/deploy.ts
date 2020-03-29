@@ -71,9 +71,8 @@ export class ProjectDeploy extends NimBaseCommand {
 
     // Deploy each project
     let success = true
-    const userAgent = process.env['__OW_USER_AGENT'] || (inBrowser ? 'nimbella-workbench' : 'nimbella-cli')
     for (const project of argv) {
-      success = success && await doDeploy(project, cmdFlags, creds, owOptions, false, logger, userAgent)
+      success = success && await doDeploy(project, cmdFlags, creds, owOptions, false, logger)
     }
     if (!success) {
       logger.exit(1)
@@ -109,8 +108,8 @@ export async function processCredentials(ignore_certs: boolean, apihost: string|
 
 // Deploy one project
 export async function doDeploy(project: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions, watching: boolean,
-    logger: NimLogger, userAgent: string): Promise<boolean> {
-  const todeploy = await readAndPrepare(project, owOptions, creds, authPersister, cmdFlags, userAgent)
+    logger: NimLogger): Promise<boolean> {
+  const todeploy = await readAndPrepare(project, owOptions, creds, authPersister, cmdFlags)
     .catch(err => logger.handleError(err.message, err))
   if (!watching) {
     displayHeader(project, todeploy.credentials, logger)

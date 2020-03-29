@@ -20,7 +20,7 @@
  * from Nimbella Corp.
  */
 
- import { cleanEnvironment } from './NimBaseCommand'
+ import { initializeAPI } from './deployer/api'
 
 // List of plural commands to be replaced by singular equivalents before being delegated to aio runtime plugin
 const pluralCommands = ['actions', 'activations', 'packages', 'routes', 'rules', 'triggers' ]
@@ -29,10 +29,10 @@ const pluralCommands = ['actions', 'activations', 'packages', 'routes', 'rules',
 export async function run() {
     // Perform preparsing tasks: splitting on tokens and pushing 'help' to the end
     preParse()
-    // Remove __OW stuff from environment
-    cleanEnvironment()
-    // Add user agent
-    process.env['__OW_USER_AGENT'] = 'nimbella-cli/' + require('../package.json').version
+    // Compute user agent
+    const userAgent = 'nimbella-cli/' + require('../package.json').version
+    // Initialize the API environment
+    initializeAPI(userAgent)
     // Apply simple "plurals" fix
     const cmd = process.argv[2]
     if (pluralCommands.includes(cmd)) {

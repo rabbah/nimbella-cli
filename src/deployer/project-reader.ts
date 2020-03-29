@@ -19,6 +19,7 @@
  */
 
 import * as path from 'path'
+import { getUserAgent } from './api'
 import { DeployStructure, PackageSpec, ActionSpec, WebResource, Includer, ProjectReader, PathKind, Feedback } from './deploy-struct'
 import { emptyStructure, actionFileToParts, filterFiles, convertToResources, promiseFilesAndFilterFiles, loadProjectConfig } from './util'
 import { getBuildForAction, getBuildForWeb } from  './finder-builder'
@@ -45,8 +46,7 @@ interface TopLevel {
     reader: ProjectReader
     feedback: Feedback
 }
-export async function readTopLevel(filePath: string, env: string, userAgent: string, includer: Includer,
-        mustBeLocal: boolean, feedback: Feedback): Promise<TopLevel> {
+export async function readTopLevel(filePath: string, env: string, includer: Includer, mustBeLocal: boolean, feedback: Feedback): Promise<TopLevel> {
     // The mustBeLocal arg is only important if the filePath denotes a github location.  In that case, a true value for
     // mustBeLocal causes the github contents to be fetched to a local cache and a FileReader is used.  A false value
     // causes a GithubReader to be used.
@@ -61,10 +61,10 @@ export async function readTopLevel(filePath: string, env: string, userAgent: str
         }
         githubPath = filePath
         if (mustBeLocal) {
-            filePath = await fetchProject(github, userAgent)
+            filePath = await fetchProject(github, getUserAgent())
             reader = makeFileReader(filePath)
         } else {
-            reader = makeGithubReader(github, userAgent)
+            reader = makeGithubReader(github, getUserAgent())
         }
     }
     const webDir = 'web', pkgDir = 'packages'

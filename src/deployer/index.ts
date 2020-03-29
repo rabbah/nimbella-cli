@@ -20,7 +20,7 @@
 
  // Gather together the major deployer exports for convenient import in other packages
 
-export { deployProject, readPrepareAndBuild, readAndPrepare, deploy, readProject, buildProject, prepareToDeploy,
+export { initializeAPI, deployProject, readPrepareAndBuild, readAndPrepare, deploy, readProject, buildProject, prepareToDeploy,
     wipeNamespace, wipePackage } from './api'
 export { DeployStructure, DeployResponse, DeploySuccess, OWOptions, Credentials, CredentialRow, Flags, PackageSpec, ActionSpec,
     CredentialHostMap, CredentialNSMap, DeployerAnnotation, VersionMap } from './deploy-struct'

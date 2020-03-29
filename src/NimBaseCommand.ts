@@ -290,18 +290,6 @@ export function parseAPIHost (host: string|undefined): string|undefined {
   return 'https://' + host + ".nimbella.io"
 }
 
-
-// Purge the process environment of entries that match __OW_*.   These are not attempting to influence 'nim' because
-// we specifically document that that doesn't work.  If they are there at all they are strays from some other usage but
-// they can do mischief via their effect on the node client.
-export function cleanEnvironment() {
-    for (const item in process.env) {
-        if (item.startsWith('__OW_')) {
-            delete process.env[item]
-        }
-    }
-}
-
 // Stuff the current namespace, API host, and AUTH key into the environment so that AIO does not look in .wskprops when invoked by nim
 export function fixAioCredentials() {
     let store = authPersister.loadCredentialStoreIfPresent()

@@ -27,7 +27,7 @@ import { CredentialStore, CredentialStorageEntry, CredentialEntry, CredentialHos
     CredentialRow, Feedback } from './deploy-struct'
 import { FullCredentials } from '../oauth'
 import * as createDebug from 'debug'
-import { inBrowser } from '../NimBaseCommand'
+import { getUserAgent } from '../deployer/api'
 const debug = createDebug('nimbella.cli')
 
 // Local types
@@ -434,7 +434,7 @@ function wskRequest(url: string, auth: string = undefined): Promise<any> {
     return new Promise(function (resolve, reject) {
         const xhr = new XMLHttpRequest()
         xhr.open('GET', url)
-        const userAgent = process.env.__OW_USER_AGENT || (inBrowser ? 'nimbella-workbench' : 'nimbella-cli')
+        const userAgent = getUserAgent()
         xhr.setRequestHeader('User-Agent', userAgent)
         xhr.onload = function () {
             if (this.status >= 200 && this.status < 300) {
