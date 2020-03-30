@@ -1,5 +1,11 @@
 # Nimbella CLI Change History
 
+## Changes in release 0.1.15
+
+- some bug fixes
+- user agent headers are set consistently when invoking Nimbella and Github services
+- the macos installer no longer triggers security warnings (these were happening in releases 0.1.12 - 0.1.14 due to changes in dependencies that were beyond our control but are since fixed)
+
 ## Changes in release 0.1.14
 
 - the flags `--include` and `--exclude` are now accepted in `nim project deploy` and `nim project watch`.  Documentation added.
