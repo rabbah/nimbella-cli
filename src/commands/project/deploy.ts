@@ -19,7 +19,7 @@
  */
 
 import { flags } from '@oclif/command'
-import { NimBaseCommand, NimLogger, authPersister, parseAPIHost, inBrowser } from '../../NimBaseCommand'
+import { NimBaseCommand, NimLogger, NimFeedback, authPersister, parseAPIHost, inBrowser } from '../../NimBaseCommand'
 import { readAndPrepare, buildProject, deploy } from '../../deployer/api'
 import { Flags, OWOptions, DeployResponse, Credentials } from '../../deployer/deploy-struct'
 import { getCredentialList, getCredentialsForNamespace } from '../../deployer/login'
@@ -109,7 +109,7 @@ export async function processCredentials(ignore_certs: boolean, apihost: string|
 // Deploy one project
 export async function doDeploy(project: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions, watching: boolean,
     logger: NimLogger): Promise<boolean> {
-  const todeploy = await readAndPrepare(project, owOptions, creds, authPersister, cmdFlags)
+  const todeploy = await readAndPrepare(project, owOptions, creds, authPersister, cmdFlags, undefined, new NimFeedback(logger))
     .catch(err => logger.handleError(err.message, err))
   if (!watching) {
     displayHeader(project, todeploy.credentials, logger)
