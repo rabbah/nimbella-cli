@@ -75,10 +75,10 @@ export class NimFeedback implements Feedback {
     this.logger = logger
   }
   warn(msg?: any, ...args: any[]) {
-    this.logger.log(String(msg), args)
+    this.logger.log(String(msg), ...args)
   }
   progress(msg?: any, ...args: any[]) {
-    this.logger.log(String(msg), args)
+    this.logger.log(String(msg), ...args)
   }
 }
 

@@ -113,10 +113,10 @@ export interface Feedback {
 
 export class DefaultFeedback implements Feedback {
     warn(message?: any, ...optionalParams: any[]) {
-        console.warn(message, optionalParams)
+        console.warn(message, ...optionalParams)
     }
     progress(message?: any, ...optionalParams: any[]) {
-        console.log(message, optionalParams)
+        console.log(message, ...optionalParams)
     }
 }
 

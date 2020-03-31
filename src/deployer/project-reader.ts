@@ -109,7 +109,7 @@ export async function readTopLevel(filePath: string, env: string, includer: Incl
             feedback.warn(`Warning: the name '${LEGACY_CONFIG_FILE}' is deprecated; please rename to '${CONFIG_FILE}' soon`)
         }
         if (notconfig && !config) {
-            feedback.warn("Warning: found", notconfig, "but no", CONFIG_FILE)
+            feedback.warn("Warning: found %s but no %s", notconfig, CONFIG_FILE)
         }
         if (githubPath) {
             debug('githhub path was %s', githubPath)

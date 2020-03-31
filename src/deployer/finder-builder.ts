@@ -623,9 +623,9 @@ function build(cmd: string, args: string[], realPath: string, displayPath: strin
         child.on('close', (code) => {
             if (code != 0) {
                 if (!verbose) {
-                    feedback.warn('Output of failed build in', realPath)
+                    feedback.warn('Output of failed build in %s', realPath)
                     if (isGithubRef(displayPath)) {
-                        feedback.warn(realPath, 'is a cache location for', displayPath)
+                        feedback.warn('%s is a cache location for %s', realPath, displayPath)
                     }
                     feedback.warn(result)
                 }
