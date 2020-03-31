@@ -120,7 +120,7 @@ export default class AuthGithub extends NimBaseCommand {
   }
 
   async doShow(name: string, logger: NimLogger) {
-    const accounts = Object.keys(await getGithubAccounts())
+    const accounts = await getGithubAccounts()
     if (accounts[name]) {
         logger.log(accounts[name])
     } else {
