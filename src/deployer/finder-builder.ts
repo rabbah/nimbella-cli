@@ -206,7 +206,7 @@ async function identifyActionFiles(action: ActionSpec, incremental: boolean, ver
         // If there is .include or .source, it is canonical and all else is ignored
         return processInclude(includesPath, action.file, reader).then(pairs => {
             if (pairs.length == 0) {
-                return Promise.reject(includesPath + " is empty")
+                return Promise.reject(new Error(includesPath + " is empty"))
             } else if (pairs.length > 1) {
                 return autozipBuilder(pairs, action, incremental, verboseZip, reader, feedback)
             } else {
@@ -224,7 +224,9 @@ async function identifyActionFiles(action: ActionSpec, incremental: boolean, ver
             if (absolute) {
                 items = items.map(item => path.join(action.file, item))
             }
-            if (items.length == 1) {
+            if (items.length == 0) {
+                return Promise.reject(new Error(`Action '${action.name}' has no included files`))
+            } else if (items.length == 1) {
                 return singleFileBuilder(action, items[0])
             } else {
                 const pairs = items.map(item => {

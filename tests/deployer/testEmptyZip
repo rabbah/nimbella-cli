@@ -1,0 +1,40 @@
+#
+# Nimbella CONFIDENTIAL
+# ---------------------
+#
+#   2018 - present Nimbella Corp
+#   All Rights Reserved.
+#
+# NOTICE:
+#
+# All information contained herein is, and remains the property of
+# Nimbella Corp and its suppliers, if any.  The intellectual and technical
+# concepts contained herein are proprietary to Nimbella Corp and its
+# suppliers and may be covered by U.S. and Foreign Patents, patents
+# in process, and are protected by trade secret or copyright law.
+#
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Nimbella Corp.
+#
+
+# Test whether the vacuous action (no files to zip) is detected and stops deployment
+
+SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $SELFDIR
+ZIPFILE=emptyZip/packages/default/action/__deployer__.zip
+
+rm -f $ZIPFILE
+echo "The following deploy should not succeed"
+nim project deploy emptyZip
+RESULT="$?"
+if [ -f "$ZIPFILE" ]; then
+	 echo "Test failed: a zipfile should not have been created"
+	 exit 1
+fi
+if [ "$RESULT" == "0" ]; then
+	 echo "Test failed: deployment of the emptyZip project should not have succeeded"
+	 exit 1
+fi
+
+echo "Empty zip test succeeded"
