@@ -52,20 +52,19 @@ export default class AuthLogin extends NimBaseCommand {
       if (flags.auth || flags.namespace || !apihost) {
         logger.handleError("Internal error: incorrect use of administrative flags")
       }
-      credentials = await doAdminLogin(apihost).catch(err => this.handleError(err.message, err))
+      credentials = await doAdminLogin(apihost).catch(err => this.handleError('', err))
     } else if (flags.auth) {
       // Low level login: set 'allowReplace' to false to guard against an overwrite that loses storage or redis.  An exception to this
       // is when the (hidden) namespace flag is provided.  This is to enable low level logins by nimadmin when doing a deploy.
       credentials = await addCredentialAndSave(apihost, flags.auth, undefined, false, authPersister, flags.namespace, !!flags.namespace)
-        .catch((err: Error) => logger.handleError(err.message, err))
-      logger.log(`Stored a credential set for namespace '${credentials.namespace}' and API host '${credentials.ow.apihost}'`)
+        .catch((err: Error) => logger.handleError('', err))
       authPersister.saveLegacyInfo(apihost, flags.auth)
     } else if (flags.apihost) {
       logger.handleError("The --apihost flag can only be used in conjunction with --auth or a login token")
     } else {
-      const response = await doOAuthFlow(logger, false).catch(err => logger.handleError(err.message, err))
+      const response = await doOAuthFlow(logger, false).catch(err => logger.handleError('', err))
       if (isFullCredentials(response)) {
-        credentials = await doInteractiveLogin(response, authPersister).catch(err => logger.handleError(err.message, err))
+        credentials = await doInteractiveLogin(response, authPersister).catch(err => logger.handleError('', err))
       } else {
         logger.handleError(`Login failed.  Response was '${response}'`)
       }
