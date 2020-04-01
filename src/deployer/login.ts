@@ -357,8 +357,8 @@ function initialCredentialStore(): CredentialStore {
     return { currentHost: undefined, currentNamespace: undefined, credentials: {}}
 }
 
-// Determine if a new namespace/auth pair would replace an entry with the same pair.  This is allowed for
-// "high level" logins where the information is presumably coming via a token or oauth flow or via
+// Determine if a new namespace/auth pair would replace an entry with the same pair that has storage or redis.
+// This is allowed for "high level" logins where the information is presumably coming via a token or oauth flow or via
 // `nimadmin user set`.   This checking function is not called in those cases.
 // However, "low level" logins by customers are given an informational message and the entry is not replaced.
 // This is to guard against surprising lossage of storage or redis information since a low level login with
@@ -368,7 +368,7 @@ function initialCredentialStore(): CredentialStore {
 // key of 'nimbella' which is first set with a low-level login.
 function wouldReplace(store: CredentialStore, apihost: string, namespace: string, auth: string): boolean {
     const existing = store.credentials[apihost] ? store.credentials[apihost][namespace] : undefined
-    if (!existing) {
+    if (!existing || !existing.storageKey && !existing.redis) {
         return false
     }
     return auth == existing.api_key
