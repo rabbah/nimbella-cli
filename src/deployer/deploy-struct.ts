@@ -131,7 +131,6 @@ export  interface DeployStructure {
     bucket?:  BucketSpec             // Information guiding deployment of web resources into an s3 (or s3-like) object store bucket
     actionWrapPackage?: string       // The name of a package into which web resources will be action-wrapped.
     parameters?: Dict                // Parameters to apply to all packages in the project
-    // If actionWrapPackage is absent, object store deployment will occur even if 'bucket' is absent.
     // The following fields are not permitted in project.yml but are filled in internally
     credentials?: Credentials         // The full credentials for the deployment (consistent with targetNamespace if one was specified)
     flags? : Flags                   // options typically specified on the command line
@@ -146,6 +145,7 @@ export  interface DeployStructure {
     reader?: ProjectReader           // The project reader to use
     versions?: VersionEntry          // The VersionEntry for credentials.namespace on the selected API host if available
     feedback?: Feedback              // The object to use for immediate communication to the user (e.g. for warnings and progress reports)
+    error?: Error                    // Records an error in reading, preparing, or building; the structure should not be used
 }
 
 // The specification of information guiding bucket deployment of web resources if that feature is to be employed

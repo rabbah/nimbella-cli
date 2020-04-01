@@ -41,7 +41,7 @@ export const FILES_TO_SKIP = [ '.gitignore', '.DS_Store' ]
 //
 
 // Read the project config file, with validation
-export function loadProjectConfig(configFile: string, envPath: string, filePath: string, reader: ProjectReader): Promise<object> {
+export function loadProjectConfig(configFile: string, envPath: string, filePath: string, reader: ProjectReader): Promise<DeployStructure> {
     return reader.readFileContents(configFile).then(async data => {
         try {
             const content = substituteFromEnvAndFiles(String(data), envPath, filePath)
@@ -50,15 +50,14 @@ export function loadProjectConfig(configFile: string, envPath: string, filePath:
                 config = JSON.parse(content)
             } else {
                 if (content.includes('\t')) {
-                    Promise.reject(new Error("YAML configuration may not contain tabs"))
-                    return
+                    throw new Error("YAML configuration may not contain tabs")
                 } else {
                     config = yaml.safeLoad(content)
                 }
             }
             const configError = validateDeployConfig(config)
             if (configError) {
-                Promise.reject(new Error(configError))
+                throw new Error(configError)
             } else {
                 removeEmptyStringMembers(config)
                 return config
@@ -68,7 +67,7 @@ export function loadProjectConfig(configFile: string, envPath: string, filePath:
                 // Attempt to remove crufty overhead from js-yaml
                 error = new Error(error.message)
             }
-            Promise.reject(error)
+            return errorStructure(error)
         }
     })
 }
@@ -419,6 +418,13 @@ export function makeDict(keyVal: openwhisk.KeyVal[]): openwhisk.Dict {
 // Provide an empty DeployStructure with all array and object members defined but empty
 export function emptyStructure(): DeployStructure {
     return { web: [], packages: [], strays: [] }
+}
+
+// Provide an empty DeployStructure that records an error
+export function errorStructure(err: Error): DeployStructure {
+    const ans = emptyStructure()
+    ans.error = err
+    return ans
 }
 
 // Provide an empty DeployResponse with all required members defined but empty
@@ -862,7 +868,7 @@ export function generateSecret(): string {
 // 'nim install actions' will set this flag.
 // The workbench 'project deploy' command will never set this flag
 // Developers using the deployProject CLI may set this flag but presumably will only do so by intention.
-export function saveUsFromOurselves(namespace: string, apihost: string) {
+export function saveUsFromOurselves(namespace: string, apihost: string): boolean {
     let sensitiveNamespaces : string[]
     let productionProjects : string[]
     try {
@@ -870,11 +876,9 @@ export function saveUsFromOurselves(namespace: string, apihost: string) {
         productionProjects = require('../../productionProjects.json')
     } catch (_) {
         // Customers don't need a --production flag ... their auth token defines what they can and can't do
-        return
+        return false
     }
-    if (sensitiveNamespaces.includes(namespace) && isProductionProject(apihost, productionProjects)) {
-        throw new Error(`To deploy to namespace '${namespace}' on host '${apihost}' you must specifiy the '--production' flag`)
-    }
+    return sensitiveNamespaces.includes(namespace) && isProductionProject(apihost, productionProjects)
 }
 
 // Determine whether an apihost (given as a string URL) denotes any of a list of projects

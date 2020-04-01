@@ -109,17 +109,24 @@ export async function processCredentials(ignore_certs: boolean, apihost: string|
 // Deploy one project
 export async function doDeploy(project: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions, watching: boolean,
     logger: NimLogger): Promise<boolean> {
-  const todeploy = await readAndPrepare(project, owOptions, creds, authPersister, cmdFlags, undefined, new NimFeedback(logger))
-    .catch(err => logger.handleError(err.message, err))
+  let todeploy = await readAndPrepare(project, owOptions, creds, authPersister, cmdFlags, undefined, new NimFeedback(logger))
+   if (!todeploy) {
+    return false
+  } else if (todeploy.error) {
+      logger.displayError('', todeploy.error)
+      return false
+  }
   if (!watching) {
     displayHeader(project, todeploy.credentials, logger)
   }
-  return buildProject(todeploy).then(deploy)
-    .then((result: DeployResponse) => displayResult(result, watching, cmdFlags.webLocal, logger))
-    .catch((err: Error) => {
-      logger.displayError(err.message, err)
+  todeploy = await buildProject(todeploy)
+  if (todeploy.error) {
+      logger.displayError('', todeploy.error)
       return false
-  })
+  }
+  const result: DeployResponse = await deploy(todeploy)
+  displayResult(result, watching, cmdFlags.webLocal, logger)
+  return true
 }
 
 // Disambiguate a namespace name when the user ends the name with a '-' character

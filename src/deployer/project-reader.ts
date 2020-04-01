@@ -21,7 +21,7 @@
 import * as path from 'path'
 import { getUserAgent } from './api'
 import { DeployStructure, PackageSpec, ActionSpec, WebResource, Includer, ProjectReader, PathKind, Feedback } from './deploy-struct'
-import { emptyStructure, actionFileToParts, filterFiles, convertToResources, promiseFilesAndFilterFiles, loadProjectConfig } from './util'
+import { emptyStructure, actionFileToParts, filterFiles, convertToResources, promiseFilesAndFilterFiles, loadProjectConfig, errorStructure } from './util'
 import { getBuildForAction, getBuildForWeb } from  './finder-builder'
 import { isGithubRef, parseGithubRef, fetchProject } from './github'
 import * as makeDebug from 'debug'
@@ -123,7 +123,7 @@ export async function readTopLevel(filePath: string, env: string, includer: Incl
 
 // Probe the top level structure to obtain the major parts of the final config.  Spawn builders for those parts and
 // assemble a "Promise.all" for the combined work
-export function buildStructureParts(topLevel: TopLevel): Promise<DeployStructure[]> {
+export async function buildStructureParts(topLevel: TopLevel): Promise<DeployStructure[]> {
     const { web, packages, config, strays, filePath, env, githubPath, includer, reader, feedback } = topLevel
     let packagesGithub = packages
     if (githubPath) {
@@ -132,12 +132,10 @@ export function buildStructureParts(topLevel: TopLevel): Promise<DeployStructure
         }
     }
     debug('display path for actions is %O', packagesGithub)
-    return new Promise(function(resolve) {
-        const webPart = getBuildForWeb(web, reader).then(build => buildWebPart(web, build, reader))
-        const actionsPart = buildActionsPart(packages, packagesGithub, includer, reader)
-        const configPart = readConfig(config, env, filePath, strays, githubPath, includer, reader, feedback)
-        resolve(Promise.all([webPart, actionsPart, configPart]))
-    })
+    const webPart = await getBuildForWeb(web, reader).then(build => buildWebPart(web, build, reader))
+    const actionsPart = await buildActionsPart(packages, packagesGithub, includer, reader)
+    const configPart = await readConfig(config, env, filePath, strays, githubPath, includer, reader, feedback)
+    return [webPart, actionsPart, configPart]
 }
 
 // Assemble a complete initial structure containing all file system information and config.  May be deployed as is or adjusted
@@ -146,6 +144,10 @@ export function buildStructureParts(topLevel: TopLevel): Promise<DeployStructure
 export function assembleInitialStructure(parts: DeployStructure[]): DeployStructure {
     debug("Assembling structure from parts")
     const [ webPart, actionsPart, configPart ] = parts
+    const errPart = parts.find(part => part.error)
+    if (errPart) {
+        return errPart
+    }
     const strays = (actionsPart.strays || []).concat(configPart.strays || [])
     configPart.strays = strays
     configPart.web = (webPart.web && configPart.web) ? mergeWeb(webPart.web, configPart.web) :
@@ -395,7 +397,7 @@ function readConfig(configFile: string, envPath: string, filePath: string, stray
     }
     debug("Reading config file")
     return loadProjectConfig(configFile, envPath, filePath, reader).then(config => trimConfigWithIncluder(config, includer))
-        .then(config => Object.assign({}, config, alwaysIncluded))
+        .then(config => Object.assign({}, config, alwaysIncluded)).catch(err => errorStructure(err))
 }
 
 // Given a DeployStructure with web and package sections, trim those sections according to the rules of an Includer

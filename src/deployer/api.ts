@@ -24,7 +24,7 @@ import { cleanOrLoadVersions, doDeploy, actionWrap, cleanPackage } from './deplo
 import { DeployStructure, DeployResponse, PackageSpec, OWOptions, WebResource, Credentials, Flags, Includer, Feedback, DefaultFeedback } from './deploy-struct'
 import { readTopLevel, buildStructureParts, assembleInitialStructure } from './project-reader'
 import { isTargetNamespaceValid, wrapError, wipe, saveUsFromOurselves, writeProjectStatus, getTargetNamespace,
-    needsBuilding } from './util'
+    needsBuilding, errorStructure } from './util'
 import { openBucketClient } from './deploy-to-bucket'
 import { buildAllActions, buildWeb } from './finder-builder'
 import * as openwhisk from 'openwhisk'
@@ -62,23 +62,27 @@ export function getUserAgent(): string {
 export function deployProject(path: string, owOptions: OWOptions, credentials: Credentials|undefined, persister: Persister,
         flags: Flags, userAgent?: string, feedback?: Feedback): Promise<DeployResponse> {
     debug("deployProject invoked with incremental %s", flags.incremental)
-    return readPrepareAndBuild(path, owOptions, credentials, persister, flags).then(deploy).catch((err) => {
-        debug("An error was caught: %O", err)
-        return Promise.resolve(wrapError(err, undefined))
+    return readPrepareAndBuild(path, owOptions, credentials, persister, flags).then(spec => {
+        if (spec.error) {
+            debug("An error was caught prior to deployment: %O", spec.error)
+            return Promise.resolve(wrapError(spec.error, undefined))
+        }
+        return deploy(spec)
     })
 }
 
 // Combines the read, prepare, and build phases but does not deploy
 export function readPrepareAndBuild(path: string, owOptions: OWOptions, credentials: Credentials, persister: Persister,
         flags: Flags, userAgent?: string, feedback?: Feedback): Promise<DeployStructure> {
-    return readAndPrepare(path, owOptions, credentials, persister, flags, undefined, feedback).then((spec) => buildProject(spec))
+    return readAndPrepare(path, owOptions, credentials, persister, flags, undefined, feedback).then(spec => spec.error ? spec :
+        buildProject(spec))
 }
 
 // Combines the read and prepare phases but does not build or deploy
 export function readAndPrepare(path: string, owOptions: OWOptions, credentials: Credentials, persister: Persister,
         flags: Flags, userAgent?: string, feedback?: Feedback): Promise<DeployStructure> {
     const includer = makeIncluder(flags.include, flags.exclude)
-    return readProject(path, flags.env, includer, feedback).then((spec) =>
+    return readProject(path, flags.env, includer, feedback).then(spec => spec.error ? spec :
         prepareToDeploy(spec, owOptions, credentials, persister, flags))
 }
 
@@ -104,15 +108,15 @@ export async function readProject(projectPath: string, envPath: string, includer
         feedback: Feedback = new DefaultFeedback()): Promise<DeployStructure> {
     debug("Starting readProject, projectPath=%s, envPath=%s", projectPath, envPath)
     const ans = await readTopLevel(projectPath, envPath, includer, false, feedback).then(buildStructureParts).then(assembleInitialStructure)
-        .catch((err) => { return Promise.reject(err) })
+        .catch((err) => { return errorStructure(err) })
     debug("evaluating the just-read project: %O", ans)
     if (needsBuilding(ans) && ans.reader.getFSLocation() === null) {
         debug("project '%s' will be re-read and cached because it's a github project that needs building", projectPath)
         if (inBrowser) {
-            return Promise.reject(new Error(`Project '${projectPath}' cannot be deployed from the cloud because it requires building`))
+            return errorStructure(new Error(`Project '${projectPath}' cannot be deployed from the cloud because it requires building`))
         }
         return readTopLevel(projectPath, envPath, includer, true, feedback).then(buildStructureParts).then(assembleInitialStructure)
-            .catch((err) => { return Promise.reject(err) })
+            .catch((err) => { return errorStructure(err) })
     } else {
         return ans
     }
@@ -136,18 +140,18 @@ export function buildProject(project: DeployStructure): Promise<DeployStructure>
                 project.web = web
                 project.packages = packages
                 return project
-            })
+            }).catch(err => errorStructure(err))
         } else {
             return webPromise.then(web => {
                 project.web = web
                 return project
-            })
+            }).catch(err => errorStructure(err))
         }
     } else if (actionPromise) {
         return actionPromise.then(packages => {
             project.packages = packages
             return project
-        })
+        }).catch(err => errorStructure(err))
     } else {
         return Promise.resolve(project)
     }
@@ -184,9 +188,8 @@ export async function prepareToDeploy(inputSpec: DeployStructure, owOptions: OWO
     // 3.  Open handles
     const needsBucket = inputSpec.web && inputSpec.web.length > 0 && !inputSpec.actionWrapPackage && !flags.webLocal
     if (needsBucket && !credentials.storageKey) {
-        return Promise.reject(new Error(
-            `Deployment of web content to namespace '${credentials.namespace}' requires a storage key but none is present`
-        ))
+        return errorStructure(new Error(
+            `Deployment of web content to namespace '${credentials.namespace}' requires a storage key but none is present`))
     }
     debug("Auth sufficiency established")
     inputSpec.owClient = openwhisk(wskoptions)
@@ -196,36 +199,49 @@ export async function prepareToDeploy(inputSpec: DeployStructure, owOptions: OWO
         await isTargetNamespaceValid(inputSpec.owClient, credentials.namespace)
     }
     debug("Target namespace validated")
-    if (!flags.production) {
-        saveUsFromOurselves(credentials.namespace, credentials.ow.apihost)
+    if (!flags.production && saveUsFromOurselves(credentials.namespace, credentials.ow.apihost)) {
+        return errorStructure(new Error(
+            `To deploy to namespace '${credentials.namespace}' on host '${credentials.ow.apihost}' you must specifiy the '--production' flag`))
     }
     debug("Sensitive project/namespace guard passed")
     if (needsBucket) {
-        inputSpec.bucketClient = await openBucketClient(credentials, inputSpec.bucket)
-            .catch(() => Promise.reject(new Error('Could not access object storage using the supplied credentials')))
+        let error: Error
+        const bucketClient = await openBucketClient(credentials, inputSpec.bucket)
+            .catch(() => {
+                error = new Error('Could not access object storage using the supplied credentials')
+                return undefined
+            })
+        if (error) {
+            return errorStructure(error)
+        }
+        inputSpec.bucketClient = bucketClient
     }
     debug("Bucket client created")
     // 4.  Action wrapping
     const { web, packages } = inputSpec
     if (web && web.length > 0 && inputSpec.actionWrapPackage) {
-        const wrapping = web.map(res => {
-            if (!res.mimeType) {
-                throw new Error(`Could not deploy web resource ${res.filePath}; mime type cannot be determined`)
-            }
-            return actionWrap(res, inputSpec.reader)
-        })
-        const wrapPackage = inputSpec.actionWrapPackage
-        return Promise.all(wrapping).then(wrapped => {
-            // If wrapPackage is already in the inputSpec, add the new actions to it.  Otherwise, make a new PackageSpec
-            const existing: PackageSpec[] = packages.filter(pkg => pkg.name == wrapPackage)
-            if (existing.length == 0) {
-                packages.push({name: wrapPackage, actions: wrapped, shared: false } )
-            } else {
-                const modified = existing[0].actions.concat(wrapped)
-                existing[0].actions = modified
-            }
-            return inputSpec
-        })
+        try {
+            const wrapping = web.map(res => {
+                if (!res.mimeType) {
+                    throw new Error(`Could not deploy web resource ${res.filePath}; mime type cannot be determined`)
+                }
+                return actionWrap(res, inputSpec.reader)
+            })
+            const wrapPackage = inputSpec.actionWrapPackage
+            return Promise.all(wrapping).then(wrapped => {
+                // If wrapPackage is already in the inputSpec, add the new actions to it.  Otherwise, make a new PackageSpec
+                const existing: PackageSpec[] = packages.filter(pkg => pkg.name == wrapPackage)
+                if (existing.length == 0) {
+                    packages.push({name: wrapPackage, actions: wrapped, shared: false } )
+                } else {
+                    const modified = existing[0].actions.concat(wrapped)
+                    existing[0].actions = modified
+                }
+                return inputSpec
+            })
+        } catch(err) {
+            return errorStructure(err)
+        }
     } else {
         debug('returning spec %O', inputSpec)
         return Promise.resolve(inputSpec)
