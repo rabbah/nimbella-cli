@@ -21,16 +21,14 @@
 import * as fs from 'fs'
 import * as Path from 'path'
 import { promisify } from 'util'
-import { inBrowser } from '../NimBaseCommand'
 import { ProjectReader, PathKind } from './deploy-struct'
 import * as makeDebug from 'debug'
 const debug = makeDebug('nim:deployer:file-reader')
 
-// Guard with inBrowser in order to safely declare as module constants.  If used correctly
-// the functions will never be called in a browser.
-const fs_readdir = inBrowser ? (() => undefined) : promisify(fs.readdir)
-const fs_readfile = inBrowser ? (() => undefined) : promisify(fs.readFile)
-const fs_lstat = inBrowser ? (() => undefined) : promisify(fs.lstat)
+// Don't run promisify at module scope: will fail in browser.  This module will never actually be used in a browser.
+let fs_readdir: (dir: fs.PathLike, options: { withFileTypes: boolean }) => Promise<fs.Dirent[]>
+let fs_readfile: (file: fs.PathLike) => Promise<any>
+let fs_lstat: (path: fs.PathLike) => Promise<any>
 
 // The file system implementation of ProjectReader
 // The file system implementation accepts absolute paths and relative paths landing anywhere in the filesystem.
@@ -39,6 +37,9 @@ const fs_lstat = inBrowser ? (() => undefined) : promisify(fs.lstat)
 // Make
 export function makeFileReader(basepath: string): ProjectReader {
     debug("making file reader on basepath '%s'", basepath)
+    fs_readdir = promisify(fs.readdir)
+    fs_readfile = promisify(fs.readFile)
+    fs_lstat = promisify(fs.lstat)
     return new FileProjectReader(basepath)
 }
 
@@ -62,7 +63,7 @@ class FileProjectReader implements ProjectReader {
         path = Path.resolve(this.basepath, path)
         debug("resolved to directory '%s", path)
         return fs_readdir(path, { withFileTypes: true }).then((entries: fs.Dirent[]) => entries.map(entry => {
-            return  { name: entry.name, isDirectory: entry.isDirectory(), isFile: entry.isFile() }
+            return  { name: entry.name, isDirectory: entry.isDirectory(), isFile: entry.isFile(), mode: 0o666 }
         }))
     }
 
