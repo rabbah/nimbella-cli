@@ -804,7 +804,7 @@ export async function getDeployerAnnotation(project: string, githubPath: string)
         const git = simplegit().silent(true)
         const root = await git.revparse(['--show-toplevel'])
         const repo = await git.raw(['config', '--get', 'remote.origin.url'])
-        const user = await git.raw(['config', '--get', 'user.email'])
+        const user = (await git.raw(['config', '--get', 'user.email'])).trim()
         const projectPath = path.relative(root, path.resolve(project))
         let commit = await git.revparse(['head'])
         commit = commit.substring(0, 8)
@@ -814,7 +814,7 @@ export async function getDeployerAnnotation(project: string, githubPath: string)
         }
         return { user, repository: repo.trim(), projectPath, commit, digest }
     } catch {
-        const user = os.userInfo().username
+        const user = os.userInfo().username.trim()
         const projectPath = path.resolve(project)
         return { user, projectPath, digest }
     }
