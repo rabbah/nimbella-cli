@@ -110,6 +110,9 @@
       "autocomplete": {
         "hidden": true
       },
+      "workbench": {
+        "description": "send commands to the Nimbella workbench"
+      },
       "project": {
         "description": "manage and deploy Nimbella projects"
       },
