@@ -44,6 +44,7 @@ PROJECT=$(jq -r .current < $CONFIGDIR/nimconfig.json)
 SUFFIX="-api${PROJECT:3}.nimbella.io"
 
 # Build the list of files
+set -e
 pushd $DEPLOYDIR
 QRFILES=$(find qrcode/web -type f -print)
 CALCFILES=$(find calculator/web -type f -print)
@@ -79,7 +80,6 @@ function testFile() {
 }
 
 # Test all files
-set -e
 for file in $WEBFILES; do
 		testFile $file
 done
