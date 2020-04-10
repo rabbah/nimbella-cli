@@ -27,7 +27,7 @@ cd $SELFDIR
 
 echo "Deploying using the '.env' default"
 nim project deploy environ
-RESULT=$(nim action get variable | tail -n +2 | jq -r .exec.kind)
+RESULT=$(nim action get variable | jq -r .exec.kind)
 if [ "$RESULT" != "cloudjs:10" ]; then
 	 echo "Expected 'cloudjs:10' but got '$RESULT'"
 	 exit 1
@@ -35,7 +35,7 @@ fi
 
 echo "Deploying using the alternate file 'test.env'"
 nim project deploy environ --env test.env
-RESULT=$(nim action get variable | tail -n +2 | jq -r .exec.kind)
+RESULT=$(nim action get variable | jq -r .exec.kind)
 if [ "$RESULT" != "nodejs:8" ]; then
 	 echo "Expected 'nodejs:8' but got '$RESULT'"
 	 exit 1
@@ -43,7 +43,7 @@ fi
 
 echo "Deploying using an environment variable"
 RUNTIME=tessjs:10 nim project deploy environ
-RESULT=$(nim action get variable | tail -n +2 | jq -r .exec.kind)
+RESULT=$(nim action get variable | jq -r .exec.kind)
 if [ "$RESULT" != "tessjs:10" ]; then
 	 echo "Expected 'tessjs:10' but got '$RESULT'"
 	 exit 1

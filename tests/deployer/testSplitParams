@@ -34,7 +34,7 @@ cd $SELFDIR
 set -e
 
 nim project deploy splitParams
-RESULT=$(nim action get authorize | tail -n +2 | jq -r '.parameters')
+RESULT=$(nim action get authorize | jq -r '.parameters')
 echo $RESULT
 
 ONE=$(echo "$RESULT" | jq -r .[0])

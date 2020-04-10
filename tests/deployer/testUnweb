@@ -37,7 +37,7 @@ echo "        web: false" >> unweb/project.yml
 nim project deploy unweb
 
 # Get the action back for inspection
-RESULT=$(nim action get printer/notify | tail -n +2 | jq -r '.annotations[] | select(.key=="web-export") | .value')
+RESULT=$(nim action get printer/notify | jq -r '.annotations[] | select(.key=="web-export") | .value')
 if [ "$RESULT" != "false" ]; then
 	 echo "Unweb test failed"
    exit 1

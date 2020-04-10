@@ -28,7 +28,7 @@ cd $SELFDIR
 set -e
 unset A B C
 nim project deploy multiSubstitute
-ACTION=$(nim action get hello | tail -n +2)
+ACTION=$(nim action get hello)
 KEYS=$(echo "$ACTION" | jq -r .parameters[].key)
 VALUES=$(echo "$ACTION" | jq -r .parameters[].value)
 # Re-echo to canonicalize
