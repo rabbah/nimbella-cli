@@ -21,7 +21,7 @@
 import { DeployStructure, DeployResponse, ActionSpec, PackageSpec, WebResource, BucketSpec, DeployerAnnotation, VersionEntry,
     ProjectReader } from './deploy-struct'
 import { combineResponses, wrapError, wrapSuccess, keyVal, emptyResponse,
-    getDeployerAnnotation, straysToResponse, wipe, makeDict, generateSecret, digestPackage, digestAction, loadVersions } from './util'
+    getDeployerAnnotation, straysToResponse, wipe, makeDict, digestPackage, digestAction, loadVersions } from './util'
 import * as openwhisk from 'openwhisk'
 import { Bucket } from '@google-cloud/storage'
 import { deployToBucket, cleanBucket } from './deploy-to-bucket'
@@ -291,11 +291,8 @@ function encodeParameters(normalParms: openwhisk.Dict, envParms: openwhisk.Dict)
     // Merge the annotations
     const annotDict = Object.assign({}, oldAnnots, annotations)
     // Now process the webSecure annotation, which requires that the old annotations be available
-    if (typeof action.webSecure == 'string') {
+    if (typeof action.webSecure == 'string' || action.webSecure === true) {
         annotDict['require-whisk-auth'] = action.webSecure
-    } else if (action.webSecure === true && !annotDict['require-whisk-auth']) {
-        // The webSecure=true case is only operative if there is not already a require-whisk-auth value
-        annotDict['require-whisk-auth'] = generateSecret()
     } else if (action.webSecure === false) {
         delete annotDict['require-whisk-auth']
     }
