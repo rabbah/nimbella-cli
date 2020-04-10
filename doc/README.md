@@ -65,7 +65,7 @@ The Nimbella Command Line Tool (nim) is your primary portal to Nimbella services
 A comprehensive CLI for the Nimbella stack
 
 VERSION
-  nimbella-cli/0.1.11 ...
+  nimbella-cli/0.1.15 ...
 
 USAGE
   $ nim [COMMAND]
@@ -73,25 +73,26 @@ USAGE
 COMMANDS
   action      work with actions
   activation  work with activations
-  auth        manage Nimbella namespace credentials
+  auth        manage Nimbella and Github credentials
   doc         display the full documentation of this CLI
   help        display help for nim
   info        show information about this version of 'nim'
+  key-value   work with key-value store
   namespace   work with namespaces
+  objects     work with objects store
   package     work with packages
   project     manage and deploy Nimbella projects
   route       work with routes
   rule        work with rules
   trigger     work with triggers
   update      update the nim CLI
+  web         work with web contents
+  workbench   send commands to the Nimbella workbench
 ```
 
-These commands fall into four categories, shown in the following diagram and described in the following sections.
+These commands fall into four categories, described in the following sections.
 
-![](./fig1-nim-commands.svg)
-<center>**Figure 1: nim commands**</center>
-
-**Note:** In the figure, the `auth:` subtree commands in the first group and `project:` subtree commands in the second group show colon separators because nim is based on [oclif](https://github.com/oclif), the Open CLI Framework from Heroku, which requires them. However, nim has logic to allow blank separators, so you can also use these commands with blank separators, as in these examples:
+**Note:** In some of the help output from `nim` (as shown) there are colon separators between parts of the command.  This happens because nim is based on [oclif](https://github.com/oclif), the Open CLI Framework from Heroku, which requires them. However, nim has logic to allow blank separators, so you can also use these commands with blank separators, as in these examples:
 
 ```
 > nim auth list
@@ -109,16 +110,17 @@ The `nim auth` subtree has its own set of commands, as follows.
 
 ```
 > nim auth
-Manage Nimbella namespace credentials
+manage Nimbella and Github credentials
 
 USAGE
   $ nim auth:COMMAND
 
 COMMANDS
   auth:current  Get current namespace with optional details
-  auth:list     List all your Nimbella Namespaces
+  auth:github   manage github accounts
+  auth:list     List all your Nimbella namespaces
   auth:login    Gain access to a Nimbella namespace
-  auth:logout   Drop access to a Nimbella Namespace
+  auth:logout   Drop access to a Nimbella namespace
   auth:switch   Switch to a different Nimbella namespace
 ```
 
@@ -238,19 +240,20 @@ See [Project watching](#project-watching-for-incremental-deployment) for an exam
 
 ### 3 Entity management commands
 
-The `action`, `activation`, `namespace`, `package`, `route`, `rule` and `trigger` commands each manage the corresponding type of entity.
+The `action`, `activation`, `key-value`, `namespace`, `objects`, `package`, `route`, `rule`, `trigger`, and `web` commands each manage the corresponding type of entity in your namespace.
 
 If you’re an [Apache OpenWhisk](https://openwhisk.apache.org) developer, see [Entity Management commands in nim vs. wsk](#entity-management-commands-in-nim-vs.-wsk) for a comparison of entity management commands.
 
 
 ### 4 Supporting commands
 
-The `doc`, `help`, `info` and `update` commands provide the following supporting services:
+The `doc`, `help`, `info`, `update`, and `workbench` commands provide the following supporting services:
 
 *   `doc`: Displays the documentation set for the nim CLI.
 *   `help`: Displays help for nim.
 *   `info`: Displays information about the version of nim that is installed.
 *   `update`: Updates to the latest version of nim.
+*   `workbench`: runs commands in the Nimbella Cloud Workbench, providing graphical and interactive output in some cases
 
 **Note:** `nim update` works only when nim is installed [using the recommended installation method for use from a shell](#install-nim-for-shell-invocation-globally). It does not work when nim is installed [as a dependency using npm or yarn](#install-nim-as-a-dependency).
 
@@ -482,7 +485,7 @@ Deployed actions:
 Here’s a diagram of the project structure that was created in this procedure.
 
 <center id="fig2"><img src="./fig2-nim-example1-project-directory-structure.svg" height="300" id=></center>
-<center>**Figure 2: Directory structure of the example1 project**</center>
+<center>**Figure 1: Directory structure of the example1 project**</center>
 
 **Notes:**
 
@@ -511,7 +514,7 @@ A project represents a logical unit of functionality whose boundaries are up to 
 A project has a fixed directory structure, which determines how projects are deployed. Here’s a diagram that summarizes the directory structure of an individual project with no project configuration, with explanation below.
 
 <center><img src="./fig3-nim-project-directory-structure.svg" height="300"></center>
-<center>**Figure 3: Basic directory structure of a project**</b></center>
+<center>**Figure 2: Basic directory structure of a project**</b></center>
 
 The project has a root directory, within which a certain small number of directory names are significant to the deployer, specifically:
 
@@ -583,7 +586,7 @@ Zipped actions are usually created in a separate build step. As an alternative, 
 By creating a directory under the package directory, named for the action, and containing its source file(s), you can expand to multiple source files and they will be zipped automatically. Certain conditions must be met for this to work. Suppose the [example1 project](#example-create-and-deploy-a-project-with-a-single-action) has a `hello` action with two source files: _helloMain.js_ and _helloAux.js_. To create the `demo/hello` action, add a `hello` directory as a child of the `demo` directory, as shown in this diagram.
 
 <center><img src="./fig4-nim-example2-project-directory-structure.svg" height="450"></center>
-<center>**Figure 4: Two source files in an action directory for automatic zipping**</center>
+<center>**Figure 3: Two source files in an action directory for automatic zipping**</center>
 
 The difference from the [example1 directory structure](#fig2) is that the `hello` action is a _directory_ rather than a single source file. The source files in the directory are zipped automatically to form the action.
 
@@ -599,7 +602,7 @@ These conditions can be relaxed by using [project configuration](#adding-project
 Subdirectories can be present under an action directory (for example, a `node_modules` directory as in the following diagram). These directories are zipped up with everything else under the action directory.
 
 <center><img src="./fig5-nim-example2-complex-directory-structure.svg" height="450"></center>
-<center>**Figure 5: Autozipping a subdirectory of an action directory**</center>
+<center>**Figure 4: Autozipping a subdirectory of an action directory**</center>
 
 You can optionally limit the files to be zipped in either of two ways:
 
@@ -653,7 +656,7 @@ example3/web/favicon.ico
 Here’s a diagram of the `example3` project structure.
 
 <center><img src="./fig6-nim-example3-project-directory-structure.svg" height="450"></center>
-<center>**Figure 6: A project with static web content**</center>
+<center>**Figure 5: A project with static web content**</center>
 
 Here’s the output when the project is deployed.
 
@@ -792,6 +795,49 @@ The general rule for both `--include` and `--exclude` is a comma-separated list 
 
 If you specify only `--include`, then only the listed project portions are deployed.  If you specify only `--exclude`, then _all but_ the listed project portions are deployed.  If you specify both flags, the deployer first includes only what is listed in `--include` and then excludes from that list.  This allows you to include a package while excluding one or more of its actions.
 
+### Deploying Directly from Github
+
+If you have Nimbella projects in a Github repository, you can deploy directly from github without the need to create a local clone.  If you do have a local clone, you can deploy as needed from the clone (in which you have modifications) or from Github (restoring the deployed code to what is committed to the repository).
+
+The `nim` command does not get involved in keeping your clone in synch with the repository; that is up to you as a developer.
+
+To indicate you want to deploy from github, use a project path that starts with one of the following.
+
+```
+github:
+git@github.com:
+https://github.com/
+```
+
+You follow that with the "owner" (Github account), repository, path to the project within the repository (if any) and specific branch or commit (if not `master`).   For example,
+
+```
+nim project deploy github:nimbella/demo-projects/visits
+nim project deploy git@github.com:/my-account/my-repo/my-project#dev
+```
+
+We support the different syntaxes to align with developer habits and URLs copied from elsewhere: all three are equivalent and authenticate to github in exactly the same way.
+
+The deployer does not use SSL public/private keys or username/password authentication.  It relies on tokens issued by Github.
+
+If you obtained your Nimbella account using your Github account for identification, there is already a Github token stored as part of your Nimbella credentials and you need to nothing more.   Otherwise, you can merge in a Github token using
+
+```
+nim auth github --initial
+```
+
+A web page will open for you in your default browser, allowing you to login securely to Github for verification.  At the end of that process you will have a Github token.  You can check Github accounts for which you have tokens in your Nimbella credential store by issuing
+
+```
+nim auth github --list
+```
+
+You may discover that it is possible to deploy _very small_ projects from a public Github repository without having any Github credentials.  This works because Github allows some unauthenticated access.  It is not recommended that you make long-term use of this fact because Github will impose very severe rate limitations which will prevent you from deploying larger projects (and, of course, you will have no access to any private repositories you may own).
+
+At present, deploying from Github has these limitations.
+
+- the `--incremental` option is not available.
+
 ### Deployer recordkeeping
 
 The deployer creates two types of audit trails:
@@ -801,6 +847,7 @@ The deployer creates two types of audit trails:
 
 We’ll describe each type and show how they differ and how they can be used for comparison.
 
+Note that the local audit trail is not available when you deploy from Github.  Even if you have a local clone of the Github repository, the deployer does not know this and does not get involved in Github synchronization.
 
 #### Annotations for actions and packages deployed to your namespace
 
@@ -1382,7 +1429,7 @@ You can use both `strip` and `prefixPath` to remove existing segments and then a
 Here’s an example of a basic _web_ directory structure when you use a tool to generate web content. Chances are the tool puts its output in a specific directory. Here’s an example diagram of the _web_ directory for an `example4` project, using React to generate the web content.
 
 <center><img src="./fig7-nim-examples-project-chat-react-directory-structure.svg" height="550"></center>
-<center>**Figure 7: Project web directory structure for generated web content**</center>
+<center>**Figure 6: Project web directory structure for generated web content**</center>
 
 The _web_ directory contains a _.include_ file and some other files related to building not shown in the diagram. The _public_ and _src_ directories contain the source of the React web application. The _build_ directory is generated by the React build and contains all of the content to be deployed.
 
