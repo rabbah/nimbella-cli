@@ -43,7 +43,7 @@ export default class Doc extends NimBaseCommand {
         await open(html)
       }
     } catch (err) {
-      logger.displayError(err.message, err)
+      logger.displayError('', err)
       logger.log("Packaging error: cannot locate documentation")
     }
  }

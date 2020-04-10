@@ -44,7 +44,7 @@ export default class AuthInspect extends NimBaseCommand {
     } else if (!apihost && !auth && !storage && !redis) {
         name = true
     }
-    const creds = await getCredentials(authPersister).catch(err => logger.handleError(err.message, err))
+    const creds = await getCredentials(authPersister).catch(err => logger.handleError('', err))
     const ans: { name?: string, apihost?: string, auth?: string, storage?: boolean, redis?: boolean } = {}
     if (name) {
         ans.name = creds.namespace

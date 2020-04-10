@@ -99,7 +99,7 @@ async function fireDeploy(project: string, filename: string, cmdFlags: Flags, cr
     logger.log(`\nDeploying '${project}' due to change in '${filename}'`)
     let error = false
     await doDeploy(project, cmdFlags, creds, owOptions, true, logger).catch(err => {
-        logger.displayError(err.message, err)
+        logger.displayError('', err)
         error = true
     })
     if (error)

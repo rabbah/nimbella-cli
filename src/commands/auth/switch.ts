@@ -35,8 +35,8 @@ export default class AuthSwitch extends NimBaseCommand {
 
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
     const host = parseAPIHost(flags.apihost)
-    const namespace = await disambiguateNamespace(args.namespace, host).catch(err => logger.handleError(err.message, err))
-    const creds = await switchNamespace(namespace, host, authPersister).catch(err => logger.handleError(err.message, err))
+    const namespace = await disambiguateNamespace(args.namespace, host).catch(err => logger.handleError('', err))
+    const creds = await switchNamespace(namespace, host, authPersister).catch(err => logger.handleError('', err))
     logger.log(`Successful switch to namespace '${namespace}' on API host '${creds.ow.apihost}'`)
   }
 }

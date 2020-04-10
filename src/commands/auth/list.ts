@@ -60,6 +60,6 @@ export default class AuthList extends NimBaseCommand {
             const redis = row.redis ? YES : row.redis === false ? NO : MAYBE
             logger.log(ns + pad + curr + stor + redis + row.apihost)
         }
-    }).catch((err: Error) => logger.handleError(err.message, err))
+    }).catch((err: Error) => logger.handleError('', err))
   }
 }

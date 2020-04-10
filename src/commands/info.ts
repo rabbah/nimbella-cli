@@ -55,7 +55,7 @@ export default class Info extends NimBaseCommand {
         const html = require.resolve(`../../${topic}.html`)
         await open(html)
       } catch (err) {
-        logger.displayError(err.message, err)
+        logger.displayError('', err)
         logger.log(`Packaging error: cannot locate ${topic}`)
       }
   }

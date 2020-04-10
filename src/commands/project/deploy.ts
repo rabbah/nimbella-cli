@@ -95,8 +95,8 @@ export async function processCredentials(ignore_certs: boolean, apihost: string|
   // Iff a namespace switch was requested, perform it.  It might fail if there are no credentials for the target
   let creds: Credentials|undefined = undefined
   if (target) {
-    target = await disambiguateNamespace(target, owOptions.apihost).catch((err: Error) => logger.handleError(err.message, err))
-    creds = await getCredentialsForNamespace(target, owOptions.apihost, authPersister).catch((err: Error) => logger.handleError(err.message, err))
+    target = await disambiguateNamespace(target, owOptions.apihost).catch((err: Error) => logger.handleError('', err))
+    creds = await getCredentialsForNamespace(target, owOptions.apihost, authPersister).catch((err: Error) => logger.handleError('', err))
   } else if (apihost && auth) {
     // For backward compatibility with `wsk`, we accept the absence of target when both apihost and auth are
     // provided on the command line.  We synthesize credentials with (as yet) unknown namespace; if it later
@@ -232,7 +232,7 @@ function displayResult(result: DeployResponse, watching: boolean, webLocal: stri
               if (context) {
                   logger.displayError(`While deploying ${context}:`, err)
               }
-              logger.displayError(err.message, err)
+              logger.displayError('', err)
           }
       }
   }

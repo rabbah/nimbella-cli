@@ -38,7 +38,7 @@ export default class WebList extends NimBaseCommand {
     async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
         const { client } = await getWebStorageClient(args, flags, authPersister);
         if (!client) logger.handleError(`Couldn't get to the web storage, ensure it's enabled for the ${args.namespace || 'current'} namespace`);
-        await this.listFiles(client, logger, flags.long).catch((err: Error) => logger.handleError(err.message, err));
+        await this.listFiles(client, logger, flags.long).catch((err: Error) => logger.handleError('', err));
     }
 
     async listFiles(client: Bucket, logger: NimLogger, isLongFormat: boolean): Promise<void> {
