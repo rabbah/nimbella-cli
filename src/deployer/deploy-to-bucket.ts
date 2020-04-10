@@ -94,8 +94,13 @@ export async function deployToBucket(resource: WebResource, client: Bucket, spec
     debug('original destination: %s', destination)
     destination = destination.replace(/\\/g, '/') // windows conventions don't work on the bucket
     debug('fixed up destination: %s', destination)
-    // Upload
-    const metadata = { cacheControl: 'no-cache', contentType: resource.mimeType }
+    // Setup parameters for the upload
+    const metadata = { contentType: resource.mimeType }
+    if (!spec || !spec.useCache) {
+        metadata['cacheControl'] = 'no-cache'
+    }
+    // Upload.  We _deliberately_ do this in two steps (yes, I know there is a one-step way).  The reason is that the
+    // one-step way fails mysteriously when run in the cloud.
     const remoteFile = client.file(destination)
     debug(`bucket save operation for %s with data of length %d and metadata %O`, resource.simpleName, data.length, metadata)
     // Specify resumable explicitly to avoid spurious fs call to retrieve config when running in the cloud

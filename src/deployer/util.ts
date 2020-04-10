@@ -233,6 +233,7 @@ function validateBucketSpec(arg: {}): string {
                 }
                 break
             case "clean":
+            case "useCache":
                 if (!(typeof arg[item] == 'boolean')) {
                     return `'${item}' member of 'bucket' must be a boolean`
                 }

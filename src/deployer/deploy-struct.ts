@@ -154,7 +154,8 @@ export interface BucketSpec {
     strip?: number           // The number of path segments to strip from every resource when deploying (before adding prefix path, if any)
     mainPageSuffix?: string  // The suffix to append to any directory URL (including the bucket root) to form the URL of a web page (defaults to 'index.html')
     notFoundPage?: string    // The name of a page (relative to the root) to show on 404 errors.
-    clean?: boolean          // Deletes from the at prefixPath or root before deploying new content
+    clean?: boolean          // Deletes existing content starting at prefixPath (or the root if no prefixPath) before deploying new content
+    useCache?: boolean        // If true, default cacheing (one hour) is enabled.  Otherwise a Cache-Control header of `no-cache` is set
  }
 
  // Types used in the DeployResponse

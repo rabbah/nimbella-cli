@@ -1,0 +1,46 @@
+#
+# Nimbella CONFIDENTIAL
+# ---------------------
+#
+#   2018 - present Nimbella Corp
+#   All Rights Reserved.
+#
+# NOTICE:
+#
+# All information contained herein is, and remains the property of
+# Nimbella Corp and its suppliers, if any.  The intellectual and technical
+# concepts contained herein are proprietary to Nimbella Corp and its
+# suppliers and may be covered by U.S. and Foreign Patents, patents
+# in process, and are protected by trade secret or copyright law.
+#
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Nimbella Corp.
+#
+
+# Test the useCache flag in project.yml bucket: has the desired effect
+
+SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $SELFDIR
+
+CREDS=$(nim auth current --name --apihost)
+NAMESPACE=$(echo $CREDS | jq -r .name)
+APIHOST=$(echo $CREDS | jq -r .apihost | cut -c9-)
+BUCKET=gs://$NAMESPACE-${APIHOST//./-}
+
+echo "bucket:" > webCache/project.yml
+echo "  clean: true" >> webCache/project.yml
+nim project deploy webCache
+gsutil ls -L $BUCKET/index.html | grep -q no-cache
+if [ "$?" != "0" ]; then
+	 echo "Deploy without 'useCache' should have set Cache-Control to no-cache but did not"
+	 exit 1
+fi
+echo "  useCache: true" >> webCache/project.yml
+nim project deploy webCache
+gsutil ls -L $BUCKET/index.html | grep -q Cache-Control
+if [ "$?" == "0" ]; then
+	 echo "Deploy without 'useCache' should not have set Cache-Control at all, but did so"
+	 exit 1
+fi
+echo "Use cache test succeeded"

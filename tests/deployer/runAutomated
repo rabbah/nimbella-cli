@@ -48,7 +48,7 @@ else
 	 popd
 fi
 
-for i in MultiSubstitute SplitParams IncludeExclude SharedBuild Filtering WebInclude Ignoring EmptyReduce Incremental Environment Errors Unweb ValidateRuntime ConfigTypes LoginAuth EmptyZip; do
+for i in MultiSubstitute SplitParams IncludeExclude WebCache SharedBuild Filtering WebInclude Ignoring EmptyReduce Incremental Environment Errors Unweb ValidateRuntime ConfigTypes LoginAuth EmptyZip; do
    runTest $i
 done
 if [ "$1" == "--ongcp" ]; then
