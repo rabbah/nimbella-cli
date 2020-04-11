@@ -20,6 +20,8 @@
 
 import { DeployStructure, DeployResponse, DeploySuccess, DeployKind, ActionSpec, PackageSpec,
     DeployerAnnotation, WebResource, VersionMap, VersionEntry, BucketSpec, Includer, PathKind, ProjectReader } from './deploy-struct'
+import { getUserAgent } from './api'
+import { XMLHttpRequest } from 'xmlhttprequest'
 import * as openwhisk from 'openwhisk'
 import * as fs from 'fs'
 import * as os from 'os'
@@ -1022,4 +1024,34 @@ export function loadVersions(projectPath: string, namespace: string, apihost: st
         }
     }
     return { namespace, apihost, packageVersions: {}, actionVersions: {}, webHashes: {} }
+}
+
+// Subroutine to invoke OW with a GET and return the response.  Bypasses the OW client.  Used
+// to invoke web actions, with or without auth needed.
+export function wskRequest(url: string, auth: string = undefined): Promise<any> {
+    debug("Request to: %s", url)
+    return new Promise(function (resolve, reject) {
+        const xhr = new XMLHttpRequest()
+        xhr.open('GET', url)
+        const userAgent = getUserAgent()
+        xhr.setRequestHeader('User-Agent', userAgent)
+        xhr.onload = function () {
+            if (this.status >= 200 && this.status < 300) {
+                debug("useful response")
+                resolve(JSON.parse(xhr.responseText))
+            } else {
+                debug("Error from OW %s %s", xhr.status, xhr.responseText)
+                reject(new Error(xhr.responseText))
+            }
+        }
+        xhr.onerror = function () {
+            debug("network error")
+            reject({statusText: "Network error"})
+        }
+        if (auth) {
+            debug("Setting basic authorization header")
+            xhr.setRequestHeader('Authorization', 'Basic ' + Buffer.from(auth).toString('base64'))
+        }
+        xhr.send()
+    })
 }

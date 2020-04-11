@@ -22,12 +22,11 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import { XMLHttpRequest } from 'xmlhttprequest'
 import { CredentialStore, CredentialStorageEntry, CredentialEntry, CredentialHostMap, Credentials,
     CredentialRow, Feedback } from './deploy-struct'
 import { FullCredentials } from '../oauth'
 import * as createDebug from 'debug'
-import { getUserAgent } from '../deployer/api'
+import { wskRequest } from './util'
 const debug = createDebug('nimbella.cli')
 
 // Local types
@@ -426,33 +425,4 @@ function parseStorageString(storage: string, namespace: string): CredentialStora
     }
     const { client_email, project_id, private_key } = parsedStorage
     return { project_id, credentials: { client_email, private_key }}
-}
-
-// Subroutine to invoke OW with a GET and return the response
-function wskRequest(url: string, auth: string = undefined): Promise<any> {
-    debug("Request to: %s", url)
-    return new Promise(function (resolve, reject) {
-        const xhr = new XMLHttpRequest()
-        xhr.open('GET', url)
-        const userAgent = getUserAgent()
-        xhr.setRequestHeader('User-Agent', userAgent)
-        xhr.onload = function () {
-            if (this.status >= 200 && this.status < 300) {
-                debug("useful response")
-                resolve(JSON.parse(xhr.responseText))
-            } else {
-                debug("Error from OW %s %s", xhr.status, xhr.responseText)
-                reject(new Error(xhr.responseText))
-            }
-        }
-        xhr.onerror = function () {
-            debug("network error")
-            reject({statusText: "Network error"})
-        }
-        if (auth) {
-            debug("Setting basic authorization header")
-            xhr.setRequestHeader('Authorization', 'Basic ' + Buffer.from(auth).toString('base64'))
-        }
-        xhr.send()
-    })
 }

@@ -20,7 +20,17 @@
 
 import  * as querystring from 'querystring'
 import { NimLogger, inBrowser } from './NimBaseCommand'
+import { OWOptions } from './deployer/deploy-struct'
 import { open } from './ui'
+import { wskRequest } from './deployer/util'
+
+import * as makeDebug from 'debug'
+const debug = makeDebug('nim:oauth')
+
+const TOKENIZER="/nimbella/user/tokenizer"
+
+// Contains support for the oauth flows underlying interactive login and `nim auth github`.  Also support for
+// the tokenizer used to pass credentials between workbenches and CLI.
 
 // These types duplicate declarations in main/deployable/login, except that Credentials is renamed to FullCredentials
 // to avoid confusing it with the Credentials type used throught nim.
@@ -44,7 +54,7 @@ export type FullCredentials = {
 // The response can be either
 export type OAuthResponse = FullCredentials | IdProvider
 
-// Differentiate
+// Differentiate responses
 export function isFullCredentials(toTest: OAuthResponse): toTest is FullCredentials {
   return 'status' in toTest && toTest.status === 'success'
 }
@@ -62,6 +72,8 @@ function providerFromResponse(response: OAuthResponse): string {
 }
 
 // Do an interactive token flow, either to establish an Nimella account or to add a github account
+// TODO this suggests it might be tweaked to work in the browser but (1) it does not currently work in a
+// browser and (2) I'm not yet quite sure what the browser design should be.
 export async function doOAuthFlow(logger: NimLogger, githubOnly: boolean): Promise<OAuthResponse> {
   // Common setup
   let deferredResolve: (response: OAuthResponse) => void
@@ -130,5 +142,19 @@ export async function doOAuthFlow(logger: NimLogger, githubOnly: boolean): Promi
       err)
   }
 
-  return await deferredPromise // TODO how does the promise get resolved in a browser?  Probably the logic needs to deviate more
+  return await deferredPromise
+}
+
+// Invoke the tokenizer given low level OW credentials (auth and apihost), getting back a bearer token to full credentials
+export async function getCredentialsToken(ow: OWOptions, logger: NimLogger): Promise<string> {
+    debug('getCredentialsToken with input %O', ow)
+    const url = ow.apihost + '/api/v1/web' + TOKENIZER
+    let response
+    try {
+      response = await wskRequest(url, ow.api_key)
+    } catch (err) {
+      logger.handleError('', err)
+    }
+    debug('response from tokenizer: %O', response)
+    return response.token
 }

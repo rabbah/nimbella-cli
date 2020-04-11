@@ -22,6 +22,7 @@ import * as WorkbenchRun from './run'
 import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
 import { openWorkbench } from '../../workbench'
 import { getCredentials } from '../../deployer'
+import { getCredentialsToken } from '../../oauth'
 
 // Command to open the workbench from the CLI or switch between preview and production workbench for the purpose of transferring credentials
 export default class WorkbenchLogin extends NimBaseCommand {
@@ -33,12 +34,10 @@ export default class WorkbenchLogin extends NimBaseCommand {
 
   static aliases = [ 'wb:login' ]
 
-  static hidden = true
-
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
     const creds = await getCredentials(authPersister)
-    // TODO We should eventually be able to exchange the OW auth for a bearer token granting all credentials
-    const command = `auth login --auth ${creds.ow.api_key}`
+    const token = await getCredentialsToken(creds.ow, logger)
+    const command = `auth login ${token}`
     openWorkbench(command, !!flags.preview, logger)
   }
 }
