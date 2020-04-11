@@ -29,7 +29,7 @@ nim project deploy causeRemoteError
 
 # Test that a remote error in package creation is reported and does not interfere with error reporting for actions
 RESULT=$(nim project deploy errors1 2>&1)
-if [[ "$RESULT" != *"Resource by this name exists"* ]] || [[ "$RESULT" != *"Error:"* ]]; then
+if [[ "$RESULT" != *"resource by this name exists"* ]] || [[ "$RESULT" != *"Error:"* ]]; then
     echo "Remote deployment error not reported"
 		exit 1
 fi
