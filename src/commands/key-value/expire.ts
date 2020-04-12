@@ -22,31 +22,30 @@ import { flags } from '@oclif/command'
 import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
 import { queryKVStore } from '../../storage/key-value'
 
-const queryCommand = 'redis/getMany'
+const queryCommand = 'redis/expire'
 
-export default class GetMany extends NimBaseCommand {
-    static description = 'Gets values for given Keys'
+export default class Expire extends NimBaseCommand {
+    static description = 'Sets the specified ttl value for the specified key'
 
     static flags = {
-        apihost: flags.string({ description: 'the API host of the namespace to list keys from' }),
+        apihost: flags.string({ description: 'the API host of the namespace' }),
         ...NimBaseCommand.flags
     }
 
     static args = [
-        { name: 'keyPrefix', description: 'the key for which value is to be retrieved' },
-        { name: 'startIndex', description: 'the index to start at' },
-        { name: 'count', description: 'the count to run to from start' }
+        { name: 'key', description: 'the key to be added at', required: true },
+        { name: 'ttl', description: 'the ttl value to be set', required: true }
     ];
 
-    static aliases = ['kv:getMany', 'kv:getmany']
+    static aliases = ['kv:expire'];
 
     async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
+        if (isNaN(args.ttl)) {
+            logger.log('Please specify a numeric value for ttl');
+            return;
+        }
         await queryKVStore(queryCommand, args, flags, authPersister)
-            .then(res => {
-                res.value.forEach(element => {
-                    logger.log(element);
-                });
-            })
+            .then(res => logger.log(res.value))
             .catch(err => logger.handleError(err.error, err));
     }
 }

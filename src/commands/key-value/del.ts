@@ -28,19 +28,14 @@ export default class DeleteKey extends NimBaseCommand {
     static description = 'Removes the specified keys and returns number of keys that were removed. A key is ignored if it does not exist.'
     static flags = {
         apihost: flags.string({ description: 'the API host of the namespace' }),
-        key: flags.string({ char: 'k', description: 'the key to be deleted' }),
         ...NimBaseCommand.flags
     }
 
-    static args = [{ name: 'namespace', description: 'the namespace to perform operation in (current namespace if omitted)', required: false }]
+    static args = [{ name: 'key', description: 'the key to be deleted', required: true }]
 
     static aliases = ['kv:del']
 
     async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
-        if (!flags.key) {
-            logger.log('Please specify a non-empty key')
-            return;
-        }
         await queryKVStore(queryCommand, args, flags, authPersister)
             .then(res => logger.log(res.value))
             .catch(err => logger.handleError(err.error,err));

@@ -31,22 +31,19 @@ export default class RPush extends NimBaseCommand {
 
     static flags = {
         apihost: flags.string({ description: 'the API host of the namespace' }),
-        key: flags.string({ char: 'k', description: 'the key to be added at' }),
-        value: flags.string({ description: 'the value to be added' }),
         ...NimBaseCommand.flags
     }
 
-    static args = [{ name: 'namespace', description: 'the namespace to perform operation in (current namespace if omitted)', required: false }]
+    static args = [
+        { name: 'key', description: 'the key to be added at', required: true },
+        { name: 'value', description: 'the value to be added', required: true }
+    ];
 
     static aliases = ['kv:rpush']
 
     async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
 
-        if (!flags.key || !flags.value) {
-            logger.log('Please specify a non-empty key and value')
-            return;
-        }
-        await  queryKVStore(queryCommand, args, flags, authPersister)
+        await queryKVStore(queryCommand, args, flags, authPersister)
             .then(res => logger.log(res.value))
             .catch(err => logger.handleError(err.error, err));
     }

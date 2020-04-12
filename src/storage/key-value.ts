@@ -36,5 +36,5 @@ export async function queryKVStore(query: string, args: any, flags: any, authPer
     if (!creds) { return; }
     if (!creds.redis) { throw new Error('Key-Value Store not enabled for namespace: ' + namespace); }
     const ow = openwhisk(creds.ow);
-    return ow.actions.invoke({ actionName: `/${systemNamespace}/${query}`, blocking: true, result: true, params: flags });
+    return ow.actions.invoke({ actionName: `/${systemNamespace}/${query}`, blocking: true, result: true, params: args });
 }

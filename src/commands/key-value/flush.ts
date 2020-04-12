@@ -25,30 +25,28 @@ import { prompt } from '../../ui'
 
 const queryCommand = 'redis/flush'
 export default class Flush extends NimBaseCommand {
-  static description = 'Clears the Key Value Store, be cautious!'
+  static description = 'Clears the Key Value Store, be cautious!';
 
   static flags = {
     apihost: flags.string({ description: 'the API host of the namespace' }),
-    force: flags.boolean({ char:'f', description: 'just do it, omitting confirmatory prompt' }),
+    force: flags.boolean({ char: 'f', description: 'just do it, omitting confirmatory prompt' }),
     ...NimBaseCommand.flags
   }
 
-
-  static args = [{ name: 'namespace', description: 'the namespace to perform operation in (current namespace if omitted)', required: false }]
-
-  static aliases = ['kv:flush']
+  static aliases = ['kv:flush'];
 
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
 
     if (!flags.force) {
-      const ans = await prompt(`Type yes to remove all content from Key-Value Store`)
+      const ans = await prompt(`Type yes to remove all content from Key-Value Store`);
       if (ans !== 'yes') {
-        logger.log('Doing nothing')
-        return
+        logger.log('doing nothing');
+        return;
       }
     }
+    args.flush = true;
     await queryKVStore(queryCommand, args, flags, authPersister)
-      .then(res => logger.log(res.value))
+      .then(res => { if (res.value) { logger.log('all content cleared') } else { logger.log('couldn\'t clear content') } })
       .catch(err => logger.handleError(err.error, err));
   }
 }

@@ -31,27 +31,24 @@ export default class LRange extends NimBaseCommand {
 
     static flags = {
         apihost: flags.string({ description: 'the API host of the namespace to list keys from' }),
-        key: flags.string({ char: 'k', description: 'the key to be queried' }),
-        start: flags.string({ char: 's', description: 'the index to start' }),
-        end: flags.string({ char: 'e', description: 'the index to stop' }),
         ...NimBaseCommand.flags
     }
 
-    static args = [{ name: 'namespace', description: 'the namespace to perform operation in (current namespace if omitted)', required: false }]
+    static args = [
+        { name: 'key', description: 'the key to be queried', required: true },
+        { name: 'start', description: 'the index to start', required: true },
+        { name: 'stop', description: 'the index to stop', required: true }
+    ];
 
     static aliases = ['kv:lrange']
 
     async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
-        if (!flags.key || !Number.isInteger(flags.start) || !Number.isInteger(flags.end)) {
-            logger.log('Please specify a non-empty key, numeric start and end')
-            return;
-        }
-        await  queryKVStore(queryCommand, args, flags, authPersister)
+        await queryKVStore(queryCommand, args, flags, authPersister)
             .then(res => {
                 res.value.forEach(element => {
                     logger.log(element);
                 });
             })
-            .catch(err => logger.handleError(err.error,err));
+            .catch(err => logger.handleError(err.error, err));
     }
 }

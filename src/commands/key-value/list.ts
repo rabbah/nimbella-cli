@@ -29,11 +29,10 @@ export default class KeysList extends NimBaseCommand {
 
     static flags = {
         apihost: flags.string({ description: 'the API host of the namespace to list keys from' }),
-        pattern: flags.string({ char: 'p', description: 'the string pattern to match keys against' }),
         ...NimBaseCommand.flags
     }
 
-    static args = [{ name: 'namespace', description: 'the namespace to list keys from (current namespace if omitted)', required: false }]
+    static args = [{ name: 'pattern', description: 'the string pattern to match keys against'}];
 
     static aliases = ['kv:list']
 

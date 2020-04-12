@@ -29,22 +29,19 @@ export default class SetMany extends NimBaseCommand {
 
     static flags = {
         apihost: flags.string({ description: 'the API host of the namespace to list keys from' }),
-        key: flags.string({ char: 'k', description: 'the key to be set at' }),
-        value: flags.string({ description: 'the value to be set' }),
-        start: flags.string({ char: 's', description: 'the index to start at' }),
-        count: flags.string({ char: 'c', description: 'the count to run to from start' }),
         ...NimBaseCommand.flags
     }
 
-    static args = [{ name: 'namespace', description: 'the namespace to perform operation in (current namespace if omitted)', required: false }]
+    static args = [
+        { name: 'keyPrefix', description: 'the key to be set at' },
+        { name: 'valuePrefix', description: 'the value to be set' },
+        { name: 'startIndex', description: 'the index to start at' },
+        { name: 'count', description: 'the count to run to from start'}
+    ];
 
-    static aliases = ['kv:setMany']
+    static aliases = ['kv:setMany', 'kv:setmany']
 
     async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
-
-        flags.key = flags.key || 'key';
-        flags.start = flags.start || 1;
-        flags.count = flags.count || 10;
         await queryKVStore(queryCommand, args, flags, authPersister)
             .then(res => logger.log(res.value))
             .catch(err => logger.handleError(err.error, err));

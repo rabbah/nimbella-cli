@@ -22,31 +22,23 @@ import { flags } from '@oclif/command'
 import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
 import { queryKVStore } from '../../storage/key-value'
 
-const queryCommand = 'redis/getMany'
+const queryCommand = 'redis/ttl'
 
-export default class GetMany extends NimBaseCommand {
-    static description = 'Gets values for given Keys'
+export default class Ttl extends NimBaseCommand {
+    static description = 'Get ttl value for a Key';
 
     static flags = {
         apihost: flags.string({ description: 'the API host of the namespace to list keys from' }),
         ...NimBaseCommand.flags
     }
 
-    static args = [
-        { name: 'keyPrefix', description: 'the key for which value is to be retrieved' },
-        { name: 'startIndex', description: 'the index to start at' },
-        { name: 'count', description: 'the count to run to from start' }
-    ];
+    static args = [{ name: 'key', description: 'the key for which ttl value is to be retrieved', required: true}];
 
-    static aliases = ['kv:getMany', 'kv:getmany']
+    static aliases = ['kv:ttl'];
 
     async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
         await queryKVStore(queryCommand, args, flags, authPersister)
-            .then(res => {
-                res.value.forEach(element => {
-                    logger.log(element);
-                });
-            })
-            .catch(err => logger.handleError(err.error, err));
+            .then(res => logger.log(res.value))
+            .catch(err => logger.handleError(err.error,err));
     }
 }
