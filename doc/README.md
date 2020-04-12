@@ -797,7 +797,7 @@ If you specify only `--include`, then only the listed project portions are deplo
 
 ### Deploying Directly from Github
 
-If you have Nimbella projects in a Github repository, you can deploy directly from github without the need to create a local clone.  If you do have a local clone, you can deploy as needed from the clone (in which you have modifications) or from Github (restoring the deployed code to what is committed to the repository).
+If you have Nimbella projects in a Github repository, you can deploy directly from github without the need to create a local clone.  If you do have a local clone, you can deploy as needed from the clone or directly from Github.  For example, deploy from the clone to include your local modifications.  Deploy from Github to ignore your local modifications and restore the deployed code to what is in the remote repository.
 
 The `nim` command does not get involved in keeping your clone in synch with the repository; that is up to you as a developer.
 
@@ -809,24 +809,22 @@ git@github.com:
 https://github.com/
 ```
 
-You follow that with the "owner" (Github account), repository, path to the project within the repository (if any) and specific branch or commit (if not `master`).   For example,
+The deployer supports all three prefix styles to align with developer habits and URLs copied from elsewhere: all three are equivalent and authenticate to github in exactly the same way.
+
+You follow the prefix with the "owner" (Github account), repository, path to the project within the repository (if any), and specific branch or commit (if not `master`).   For example,
 
 ```
 nim project deploy github:nimbella/demo-projects/visits
-nim project deploy git@github.com:/my-account/my-repo/my-project#dev
+nim project deploy git@github.com:/my-account/my-repo-with-project/#dev
 ```
 
-We support the different syntaxes to align with developer habits and URLs copied from elsewhere: all three are equivalent and authenticate to github in exactly the same way.
-
-The deployer does not use SSL public/private keys or username/password authentication.  It relies on tokens issued by Github.
-
-If you obtained your Nimbella account using your Github account for identification, there is already a Github token stored as part of your Nimbella credentials and you need to nothing more.   Otherwise, you can merge in a Github token using
+The deployer does not use SSL public/private keys or username/password authentication.  It relies on tokens issued for you by Github.  If you obtained your Nimbella account using your Github account for identification, there is already a Github token stored as part of your Nimbella credentials and you don't need to do anything more.   Otherwise, you can merge in a Github token using
 
 ```
 nim auth github --initial
 ```
 
-A web page will open for you in your default browser, allowing you to login securely to Github for verification.  At the end of that process you will have a Github token.  You can check Github accounts for which you have tokens in your Nimbella credential store by issuing
+A web page will open for you in your default browser, allowing you to login securely to Github for verification.  At the end of that process, you will have a Github token.  You can check Github accounts for which you have tokens in your Nimbella credential store by issuing
 
 ```
 nim auth github --list
@@ -837,6 +835,7 @@ You may discover that it is possible to deploy _very small_ projects from a publ
 At present, deploying from Github has these limitations.
 
 - the `--incremental` option is not available.
+- the `project watch` command does not work when deploying from github
 
 ### Deployer recordkeeping
 
