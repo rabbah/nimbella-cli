@@ -24,7 +24,7 @@ import { queryKVStore } from '../../storage/key-value'
 import { prompt } from '../../ui'
 
 const queryCommand = 'redis/flush'
-export default class Flush extends NimBaseCommand {
+export default class Clean extends NimBaseCommand {
   static description = 'Clears the Key Value Store, be cautious!';
 
   static flags = {
@@ -33,7 +33,7 @@ export default class Flush extends NimBaseCommand {
     ...NimBaseCommand.flags
   }
 
-  static aliases = ['kv:flush'];
+  static aliases = ['kv:clean'];
 
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
 
