@@ -32,7 +32,7 @@ export default class KeysList extends NimBaseCommand {
         ...NimBaseCommand.flags
     }
 
-    static args = [{ name: 'pattern', description: 'the string pattern to match keys against'}];
+    static args = [{ name: 'prefix', description: 'the prefix to match keys against'}];
 
     static aliases = ['kv:list']
 
