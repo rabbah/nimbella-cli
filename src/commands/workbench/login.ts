@@ -37,7 +37,7 @@ export default class WorkbenchLogin extends NimBaseCommand {
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
     const creds = await getCredentials(authPersister)
     const token = await getCredentialsToken(creds.ow, logger)
-    const command = `auth login ${token}`
+    const command = `auth login ${token} --apihost ${creds.ow.apihost}`
     openWorkbench(command, !!flags.preview, logger)
   }
 }
