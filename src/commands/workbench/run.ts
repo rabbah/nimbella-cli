@@ -27,7 +27,7 @@ export default class WorkbenchRun extends NimBaseCommand {
   static description = "open the Nimbella Workbench and run a command there"
 
   static flags = { ...NimBaseCommand.flags,
-    preview: flags.boolean({ description: 'open preview workbennch', char: 'p' })
+    preview: flags.boolean({ description: 'open preview workbench', char: 'p' })
   }
 
   static args = [{ name: 'command', description: 'the command to run' }]
