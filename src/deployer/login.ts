@@ -152,13 +152,13 @@ export function doAdminLogin(apihost: string): Promise<Credentials> {
 // Login using the result of a oauth flow (full interactive login using Auth0, either gmail or github)
 // This function is called with the _result_ of the flow after testing for success.
 export async function doInteractiveLogin(newCreds: FullCredentials, persister: Persister): Promise<Credentials> {
-    const { apihost, namespace, uuid, key, redis, storage, id } = newCreds
+    const { apihost, namespace, uuid, key, redis, storage, externalId  } = newCreds
     const auth = uuid + ':' + key
     const credStore = await persister.loadCredentialStore()
     const credentials = addCredential(credStore, apihost, namespace, auth, storage, redis)
-    if (id && id.name && id.key) {
-        credStore.github[id.name] = id.key
-        credStore.currentGithub = id.name
+    if (externalId && externalId.name && externalId.key) {
+        credStore.github[externalId.name] = externalId.key
+        credStore.currentGithub = externalId.name
     }
     persister.saveCredentialStore(credStore)
     return credentials

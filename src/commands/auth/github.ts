@@ -81,7 +81,7 @@ export default class AuthGithub extends NimBaseCommand {
         logger.log("Doing nothing.  Use '--add' if you really want to add more accounts")
         return
       } else {
-        const authResponse = await doOAuthFlow(logger, true)
+        const authResponse = await doOAuthFlow(logger, true, undefined)
         if (isGithubProvider(authResponse)) {
           const warn = !isInitial && !!existing[authResponse.name]
           await addGithubAccount(authResponse.name, authResponse.key)

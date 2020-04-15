@@ -59,12 +59,14 @@ export default class AuthLogin extends NimBaseCommand {
       credentials = await addCredentialAndSave(apihost, flags.auth, undefined, false, authPersister, flags.namespace, !!flags.namespace)
         .catch((err: Error) => logger.handleError('', err))
       authPersister.saveLegacyInfo(apihost, flags.auth)
-    } else if (flags.apihost) {
-      logger.handleError("The --apihost flag can only be used in conjunction with --auth or a login token")
     } else {
-      const response = await doOAuthFlow(logger, false).catch(err => logger.handleError('', err))
+      const response = await doOAuthFlow(logger, false, flags.apihost).catch(err => logger.handleError('', err))
       if (isFullCredentials(response)) {
         credentials = await doInteractiveLogin(response, authPersister).catch(err => logger.handleError('', err))
+      } else if (response === true) {
+        logger.log(`Login will run in a second tab or window, where it will complete by opening another instance of the workbench`)
+        logger.log('Both instances will be authenticated, as will future instances on the same browser and machine')
+        return
       } else {
         logger.handleError(`Login failed.  Response was '${response}'`)
       }

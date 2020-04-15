@@ -27,7 +27,10 @@ import { wskRequest } from './deployer/util'
 import * as makeDebug from 'debug'
 const debug = makeDebug('nim:oauth')
 
-const TOKENIZER="/nimbella/user/tokenizer"
+const DEFAULT_APIHOST = 'https://apigcp.nimbella.io'
+const NAMESPACE = 'nimbella'
+const TOKENIZER = '/user/tokenizer'
+const LOGIN = '/user/login'
 
 // Contains support for the oauth flows underlying interactive login and `nim auth github`.  Also support for
 // the tokenizer used to pass credentials between workbenches and CLI.
@@ -48,33 +51,51 @@ export type FullCredentials = {
     key: string,
     redis: boolean,
     storage?: string,
-    id?: IdProvider
+    externalId?: IdProvider
 }
 
 // The response can be either
-export type OAuthResponse = FullCredentials | IdProvider
+export type OAuthResponse = FullCredentials | IdProvider | true
 
 // Differentiate responses
 export function isFullCredentials(toTest: OAuthResponse): toTest is FullCredentials {
-  return 'status' in toTest && toTest.status === 'success'
+  return toTest !== true && 'status' in toTest && toTest.status === 'success'
 }
 
 export function isGithubProvider(toTest: OAuthResponse): toTest is IdProvider {
-  return 'provider' in toTest && toTest.provider === 'github'
+  return toTest != true && 'provider' in toTest && toTest.provider === 'github'
 }
 
 function providerFromResponse(response: OAuthResponse): string {
-  if (isFullCredentials(response)) {
-    return response.id.provider
+  if (response === true) {
+    return ''
+  } else if (isFullCredentials(response)) {
+    return response.externalId.provider
   } else {
     return response['provider']
   }
 }
 
-// Do an interactive token flow, either to establish an Nimella account or to add a github account
-// TODO this suggests it might be tweaked to work in the browser but (1) it does not currently work in a
-// browser and (2) I'm not yet quite sure what the browser design should be.
-export async function doOAuthFlow(logger: NimLogger, githubOnly: boolean): Promise<OAuthResponse> {
+// Compute the API url for a given namespace on a given host.   To this result, one typically appends
+// /pkg/action in order to invoke a (web) action.  The form of URL used here goes through the bucket ingress,
+// not directly to the api ingress
+function getAPIUrl(namespace: string, apihost: string): string {
+  const hostURL = new URL(apihost)
+  return `https://${namespace}-${hostURL.hostname}/api`
+}
+
+// Calculate the reentry point for redirects from the Auth0 flows back to the workbench
+function wbReentry(): string {
+  const { host, protocol, pathname } = window.location
+  return `${protocol}//${host}${pathname}`
+}
+
+// Do an interactive token flow, either to establish an Nimella account or to add a github account.
+// The behavior in the browser is quite different from the CLI.  In a CLI, this function returns a
+// Promise, which, when resolved, provides the information needed to store the credentials.
+// In a browser, it just returns a Promise<true> which can be discarded; the return flow with the
+// real information happens by a redirect in the browser causing the workbench to be invoked again.
+export async function doOAuthFlow(logger: NimLogger, githubOnly: boolean, apihost: string): Promise<OAuthResponse> {
   // Common setup
   let deferredResolve: (response: OAuthResponse) => void
   let deferredReject
@@ -83,7 +104,8 @@ export async function doOAuthFlow(logger: NimLogger, githubOnly: boolean): Promi
     deferredReject = reject
   })
   const query = {
-      provider: githubOnly ? 'github' : undefined
+      provider: githubOnly ? 'github' : undefined,
+      redirect: inBrowser ? wbReentry() : true
   }
 
   // Non-browser setup
@@ -91,7 +113,6 @@ export async function doOAuthFlow(logger: NimLogger, githubOnly: boolean): Promi
     const createServer = require('http').createServer
     const getPort = require('get-port')
     const port = await getPort({ port: 3000 })
-    query['redirect'] = true
     query['port'] = port
 
     const server = createServer(function(req, res) {
@@ -124,15 +145,15 @@ export async function doOAuthFlow(logger: NimLogger, githubOnly: boolean): Promi
       server.on('error', reject)
       server.listen(port, resolve)
     })
-  } // else browser setup?
+  } else {
+    // for browser, we will just return Promise<true> because the real callback will be in a separate flow altogether
+    deferredResolve(true)
+    query['tokenize'] = true
+  }
 
   // Common code
-  const webUI = 'https://preview-apigcp.nimbella.io/api'
-
-  const url =
-    webUI +
-    '/user/login?' +
-    querystring.stringify(query)
+  const url = getAPIUrl(NAMESPACE, apihost || DEFAULT_APIHOST) + LOGIN + '?' + querystring.stringify(query)
+  debug("computed url: %s", url)
 
   try {
     await open(url)
@@ -148,7 +169,7 @@ export async function doOAuthFlow(logger: NimLogger, githubOnly: boolean): Promi
 // Invoke the tokenizer given low level OW credentials (auth and apihost), getting back a bearer token to full credentials
 export async function getCredentialsToken(ow: OWOptions, logger: NimLogger): Promise<string> {
     debug('getCredentialsToken with input %O', ow)
-    const url = ow.apihost + '/api/v1/web' + TOKENIZER
+    const url = getAPIUrl(NAMESPACE, ow.apihost) + TOKENIZER
     let response
     try {
       response = await wskRequest(url, ow.api_key)
