@@ -148,7 +148,7 @@ export async function doOAuthFlow(logger: NimLogger, githubOnly: boolean, apihos
   } else {
     // for browser, we will just return Promise<true> because the real callback will be in a separate flow altogether
     deferredResolve(true)
-    query['tokenize'] = true
+    query['tokenize'] = !githubOnly
   }
 
   // Common code

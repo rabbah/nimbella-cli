@@ -22,6 +22,7 @@ import { flags } from '@oclif/command'
 import { NimBaseCommand, NimLogger } from '../../NimBaseCommand'
 import { isGithubProvider, doOAuthFlow } from '../../oauth'
 import { getGithubAccounts, deleteGithubAccount, switchGithubAccount, addGithubAccount } from '../../deployer/github'
+import { prompt } from '../../ui'
 
 let cli
 
@@ -29,14 +30,14 @@ export default class AuthGithub extends NimBaseCommand {
   static description = 'manage github accounts'
 
   static flags = {
-    add: flags.boolean({ char: 'a', description: 'add another github account with a different user name' }),
+    add: flags.boolean({ char: 'a', description: 'add a second or subsequent github account interactively' }),
     delete: flags.string({ char: 'd', description: 'forget a previously added github account' }),
-    initial: flags.boolean({ char: 'i', description: "add your github account if you didn't specify it earlier" }),
+    initial: flags.boolean({ char: 'i', description: "add an initial github account interactively" }),
     list: flags.boolean({ char: 'l', description: 'list previously added github accounts'}),
     show: flags.string({ description: 'show the access token currently associated with a username' }),
     switch: flags.string({ char: 's', description: 'switch to using a particular previously added github account' }),
-    token: flags.string({ description: 'the github token for adding an account', hidden: true }),
-    username: flags.string({ description: 'the github username for adding an account', hidden: true }),
+    token: flags.string({ description: 'the github token when adding an account manually' }),
+    username: flags.string({ description: 'the github username when adding an account manually' }),
     ...NimBaseCommand.flags
   }
 
@@ -89,6 +90,10 @@ export default class AuthGithub extends NimBaseCommand {
           if (warn) {
             logger.log(`You already had an entry for username '${authResponse.name}'.  It was replaced`)
           }
+        } else if (authResponse === true) {
+          // We assume this happens only in the workbench; prompt should appear as placeholder text in the CLI pane
+          await prompt(`Workbench will restart with added github credentials (please wait)`)
+          return
         } else {
           logger.handleError(`github authentication failed, response was '${authResponse}'`)
         }
