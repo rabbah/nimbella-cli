@@ -27,53 +27,35 @@ const pluralCommands = ['actions', 'activations', 'packages', 'routes', 'rules',
 
 // A screening function called at top level (before the real oclif dispatching begins).  Does various fixups.
 export async function run() {
-    // Perform preparsing tasks: splitting on tokens and pushing 'help' to the end
-    preParse()
     // Compute user agent
     const userAgent = 'nimbella-cli/' + require('../package.json').version
     // Initialize the API environment
     initializeAPI(userAgent)
+    // Split an initial colon-separated token if found
+    decolonize()
     // Apply simple "plurals" fix
     const cmd = process.argv[2]
     if (pluralCommands.includes(cmd)) {
         process.argv[2] = cmd.slice(0, -1)
     }
-    // Restore colons
+    // Insert a colon between the first two tokens (may have been split earlier or not)
     colonize()
     // Run the command
     await require('@oclif/command').run()
 }
 
-// Do various tasks that involve scanning and reorganizing the command line
-// 1.  Colon-seperated commands are split into tokens as if blank-separated.  Only those tokens that contain just lowercase and colons are
-//    split, to avoid splitting URLs and such-like
-// 2.  If a flag requesting help is present, remove it, note it, and add `--help` at the end.
-function preParse() {
+// Split the first token on a colon if present
+function decolonize() {
     let argvbase = process.argv.slice(0, 2)
     const oldargv = process.argv.slice(2)
     const cmdTokens: string[] = []
-    let haveHelp = false
-    const lowerAlpha = /^[a-z]+$/
     for (const arg of oldargv) {
-        if (isHelpToken(arg)) {
-            haveHelp = true
-        } else {
+        if (cmdTokens.length < 2 && !isFlag(arg)) {
             const parts = arg.split(':')
-            let split = true
-            for (const part of parts) {
-                if (!part.match(lowerAlpha)) {
-                    split = false
-                }
-            }
-            if (split) {
-                cmdTokens.push(...parts)
-            } else {
-                cmdTokens.push(arg)
-            }
+            cmdTokens.push(...parts)
+        } else {
+            cmdTokens.push(arg)
         }
-    }
-    if (haveHelp) {
-        cmdTokens.push('--help')
     }
     process.argv = argvbase.concat(cmdTokens)
 }
@@ -86,7 +68,8 @@ function isFlag(token: string): boolean {
 // Heuristically combine the first two consecutive non-flag arguments in process.argv using a colon separator,
 // starting at index position 2.  This will be useful to the extent that the topic space has a limited depth
 // (there are no commands requiring more than one colon separator).  This is true at present and can be
-// easily adjusted in the future).
+// easily adjusted in the future).  TODO there is a flaw here: it screws up top level commands that take arguments.
+// Currently, we have none.
 function colonize() {
     const args = process.argv
     let index = 2
@@ -100,9 +83,4 @@ function colonize() {
     const prefix = args.slice(0, index)
     const suffix = args.slice(index + 2)
     process.argv = prefix.concat([combined]).concat(suffix)
-}
-
-// Test whether a command line token is a help verb or flag
-function isHelpToken(arg: string): boolean {
-    return arg === '--help' || arg === '-h'
 }
