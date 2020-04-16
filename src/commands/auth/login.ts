@@ -22,6 +22,7 @@ import { flags } from '@oclif/command'
 import { NimBaseCommand, NimLogger, parseAPIHost, authPersister } from '../../NimBaseCommand'
 import { doLogin, doAdminLogin, doInteractiveLogin, addCredentialAndSave } from '../../deployer/login'
 import { doOAuthFlow, isFullCredentials } from '../../oauth'
+import { prompt } from '../../ui'
 import { Credentials } from '../../deployer/deploy-struct'
 
 export default class AuthLogin extends NimBaseCommand {
@@ -64,8 +65,8 @@ export default class AuthLogin extends NimBaseCommand {
       if (isFullCredentials(response)) {
         credentials = await doInteractiveLogin(response, authPersister).catch(err => logger.handleError('', err))
       } else if (response === true) {
-        logger.log(`Login will run in a second tab or window, where it will complete by opening another instance of the workbench`)
-        logger.log('Both instances will be authenticated, as will future instances on the same browser and machine')
+        // We assume this happens only in the workbench; prompt should appear as placeholder text in the CLI pane
+        await prompt(`Login will restart the workbench with appropriate credentials (please wait)`)
         return
       } else {
         logger.handleError(`Login failed.  Response was '${response}'`)

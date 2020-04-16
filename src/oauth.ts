@@ -156,7 +156,11 @@ export async function doOAuthFlow(logger: NimLogger, githubOnly: boolean, apihos
   debug("computed url: %s", url)
 
   try {
-    await open(url)
+    if (inBrowser) {
+      window.location.href = url
+    } else {
+      await open(url)
+    }
   } catch (err) {
     logger.handleError('Nimbella CLI could not open the browser for you.' +
       ' Please visit this URL in a browser on this device: ' + url,
