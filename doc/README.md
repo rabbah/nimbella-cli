@@ -65,7 +65,7 @@ The Nimbella Command Line Tool (nim) is your primary portal to Nimbella services
 A comprehensive CLI for the Nimbella stack
 
 VERSION
-  nimbella-cli/0.1.15 ...
+  nimbella-cli/0.1.15 darwin-x64 node-v13.12.0
 
 USAGE
   $ nim [COMMAND]
@@ -87,7 +87,7 @@ COMMANDS
   trigger     work with triggers
   update      update the nim CLI
   web         work with web contents
-  workbench   send commands to the Nimbella workbench
+  workbench   open Nimbella workbench with login or command
 ```
 
 These commands fall into four categories, described in the following sections.
@@ -104,7 +104,7 @@ If you find a case in which a blank separator doesn't work in nim, please [repor
 
 ### 1 Credential management to access Nimbella namespaces
 
-The `auth` subtree lets you manage Nimbella credentials for Nimbella _namespaces_, as described in the section [Nimbella Namespaces](#your-nimbella-cloud-account).
+The `auth` subtree lets you manage Nimbella credentials for Nimbella _namespaces_, as described in the section [Nimbella Namespaces](#nimbella-namespaces).
 
 The `nim auth` subtree has its own set of commands, as follows.
 
@@ -117,6 +117,7 @@ USAGE
 
 COMMANDS
   auth:current  Get current namespace with optional details
+  auth:export   Make a token for switching to another machine or web browser
   auth:github   manage github accounts
   auth:list     List all your Nimbella namespaces
   auth:login    Gain access to a Nimbella namespace
@@ -253,12 +254,47 @@ The `doc`, `help`, `info`, `update`, and `workbench` commands provide the follow
 *   `help`: Displays help for nim.
 *   `info`: Displays information about the version of nim that is installed.
 *   `update`: Updates to the latest version of nim.
-*   `workbench`: runs commands in the Nimbella Cloud Workbench, providing graphical and interactive output in some cases
+*   `workbench`: Manages the Nimbella Workbench for you.
+
+The Nimbella Workbench is described in [The Nimbella Workbench](#the-nimbella-workbench)
 
 **Note:** `nim update` works only when nim is installed [using the recommended installation method for use from a shell](#install-nim-for-shell-invocation-globally). It does not work when nim is installed [as a dependency using npm or yarn](#install-nim-as-a-dependency).
 
 ---
 
+## The Nimbella workbench
+
+Many (though not all) `nim` commands will also run in your web browser, which wraps some graphical assistance around `nim` and provides some additional commands.  This separate but closely related tool is called the Nimbella Workbench.
+
+If you've never used the workbench, you should enable your Nimbella account there by opening it from the command line, as follows.
+
+```
+nim workbench login
+```
+
+This will open the workbench in your default browser and log you in there with the same Nimbella namespace credentials you are using locally (see [Nimbella Namespaces](#nimbella-namespaces)).  Those credentials will be remembered for that browser on the current machine.  You can bookmark the workbench, or you can run it again with a particular command, as in the two following examples.
+
+```
+nim workbench run
+nim workbench run action list
+```
+
+Once you are in the workbench, all `nim` subcommands are available except for these few.
+
+```
+action create
+action update
+project create
+project watch
+workbench login
+workbench run
+```
+
+Those few commands are either inappropriate for the workbench or require filesystem access, which is unavailable in a browser.
+
+The prefix `nim` is optional in front of workbench commands.
+
+To transfer your credentials to the workbench running in a browser that is not the default browser just visit the workbench there and type `auth login`.
 
 ## Nimbella namespaces
 
