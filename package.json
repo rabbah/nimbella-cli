@@ -111,7 +111,7 @@
         "hidden": true
       },
       "workbench": {
-        "description": "send commands to the Nimbella workbench"
+        "description": "open Nimbella workbench with login or command"
       },
       "project": {
         "description": "manage and deploy Nimbella projects"

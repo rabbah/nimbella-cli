@@ -25,7 +25,7 @@ import { disambiguateNamespace } from '../project/deploy'
 import { getCredentialsToken } from '../../oauth'
 
 export default class AuthExport extends NimBaseCommand {
-  static description = 'Create a token to install namespace credentials on another machine or web browser'
+  static description = 'Make a token for switching to another machine or web browser'
 
   static flags = {
     apihost: flags.string({ description: 'API host serving the namespace'}),
