@@ -30,17 +30,18 @@ export default class WorkbenchRun extends NimBaseCommand {
     preview: flags.boolean({ description: 'open preview workbench', char: 'p' })
   }
 
-  static args = [{ name: 'command', description: 'the command to run' }]
+  static args = [{ name: 'command', description: 'an initial command to run', required: false }]
   static strict = false
 
   static aliases = [ 'wb:run' ]
 
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
+    let command: string
     if (argv.length == 0) {
-      this.doHelp()
+      command = ''
     } else {
-      const command = argv.join(' ')
-      openWorkbench(command, !!flags.preview, logger)
+      command = argv.join(' ')
     }
+    openWorkbench(command, !!flags.preview, logger)
   }
 }

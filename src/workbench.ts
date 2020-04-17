@@ -18,23 +18,20 @@
  * from Nimbella Corp.
  */
 
-import { NimLogger, inBrowser } from './NimBaseCommand'
+import { NimLogger } from './NimBaseCommand'
 import { open } from './ui'
 const workbenchURL = 'https://apigcp.nimbella.io/wb'
 const previewURL = 'https://preview-apigcp.nimbella.io/workbench'
 
-// Utility to open the workbench, either main or preview, either for credential transfer or to run a command.
+// Utility to open the workbench with or without an initial command.
 // Used by both "workbench:run" and "workbench:login".
+// Not expected to be used in the browser.
 
 export function openWorkbench(command: string, preview: boolean, logger: NimLogger) {
-    if (inBrowser) {
-        const inPreview = window.location.hostname.includes('preview')
-        if (inPreview === !!preview) {
-            logger.log(`You are already working in the Nimbella${inPreview ? ' preview ' : ''}workbench`)
-            return
-        }
+    let query = ''
+    if (command) {
+        query = '?command=' + encodeURIComponent(command)
     }
-    // Either we're not in the browser or we're switching from preview to non-preview
-    const url = (preview ? previewURL : workbenchURL) + '?command=' + encodeURIComponent(command)
+    const url = (preview ? previewURL : workbenchURL) + query
     open(url)
 }
