@@ -23,7 +23,7 @@ import { getCredentialList } from '../../deployer/login'
 import { CredentialRow } from '../../deployer/deploy-struct'
 
 // Constants used in formatting the credential list
-const LIST_HEADER = 'Namespace            Current Storage   Redis API Host'
+const LIST_HEADER = '  Namespace            Current Storage   Redis API Host'
 const NS_LEN = 21
 const YES = '   yes  '
 const NO = '    no  '
@@ -55,10 +55,11 @@ export default class AuthList extends NimBaseCommand {
             } else {
               ns = ns.slice(0, NS_LEN - 3) + '...'
             }
+            const check = row.current ? '\u2713 ' : '  '
             const curr = row.current ? YES : NO
             const stor = row.storage ? YES : NO
             const redis = row.redis ? YES : row.redis === false ? NO : MAYBE
-            logger.log(ns + pad + curr + stor + redis + row.apihost)
+            logger.log(check + ns + pad + curr + stor + redis + row.apihost)
         }
     }).catch((err: Error) => logger.handleError('', err))
   }
