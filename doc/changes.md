@@ -1,5 +1,21 @@
 # Nimbella CLI Change History
 
+## Changes in release 0.1.16
+
+- deploy from github is now documented and will work in the workbench too provided there are no builds that require forking processes
+- new command subtree `nim workbench` and new ways of moving credentials between `nim` and workbench
+- improvements to the output of many `nim * list` commands
+- the `webSecure=true` option in `project.yml` now works as originally intended (does _not_ generate a random secret but forces the use of OpenWhisk authentication)
+- some error handling improvements (duplicate messages are better avoided now)
+- the `nim key-value *` commands are revised to be more complete and more syntactically consistent with other entity management commands
+- it is possible to turn on cacheing of web content via a flag in `project.yml`.
+  - Cacheing remains off by default.
+  - Historically, cacheing has been off unconditionally in recent releases although it was once on unconditionally.
+- the `nim action invoke` command now waits for a result by default instead of returning an activation id to be polled.
+- the prohibition against `nim auth login` with the `--auth` flag is relaxed to allow it when it would not be destructive
+- an action directory that specifies no files to be included is now an error rather than deploying an empty zip
+
+
 ## Changes in release 0.1.15
 
 - some bug fixes
