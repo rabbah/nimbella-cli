@@ -19,9 +19,10 @@
  */
 
 import { flags } from '@oclif/command'
-import { NimBaseCommand, NimLogger, inBrowser, parseAPIHost } from '../NimBaseCommand'
+import { NimBaseCommand, NimLogger, inBrowser, parseAPIHost, authPersister } from '../NimBaseCommand'
 import { open } from '../ui'
 import { wskRequest, RuntimeTable, RuntimeEntry } from '../deployer/util'
+import { getCredentials } from '../deployer/login'
 
 export default class Info extends NimBaseCommand {
   static description = "show information about this version of 'nim'"
@@ -124,7 +125,8 @@ export default class Info extends NimBaseCommand {
     if (apihost) {
       apihost = parseAPIHost(apihost)
     } else {
-      apihost = 'https://apigcp.nimbella.io'
+      const creds = await getCredentials(authPersister)
+      apihost = creds.ow.apihost
     }
     const url = apihost + '/api/v1'
     return await wskRequest(url, undefined).catch(err => logger.handleError('', err))
