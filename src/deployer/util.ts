@@ -541,8 +541,8 @@ const validRuntimes: RuntimeToExtensions = { }
 let runtimesRead = false
 type ExtensionDetail = { binary: boolean }
 type ExtensionEntry = { [ key: string]: ExtensionDetail }
-type RuntimeEntry = { kind: string, default: boolean, extensions: ExtensionEntry }
-type RuntimeTable = { [ key: string ]: RuntimeEntry[] }
+export type RuntimeEntry = { kind: string, default: boolean, extensions: ExtensionEntry }
+export type RuntimeTable = { [ key: string ]: RuntimeEntry[] }
 function initRuntimes() {
     if (!runtimesRead) {
         runtimesRead = true
