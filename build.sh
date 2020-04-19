@@ -132,11 +132,13 @@ set -e
 # Build the HTML forms of the documentation, LICENSE, and changes
 cp doc/pandoc-header /tmp/nim.md
 tail -n +2 < doc/README.md >> /tmp/nim.md
-pandoc -o doc/nim.html -f markdown -s --css ./globalStyles.css -t html --toc --toc-depth=5 < /tmp/nim.md
+pandoc -o doc/nim.html -f markdown -s --css ./globalStyles.css -H ./doc/tracker.html -t html --toc --toc-depth=5 < /tmp/nim.md
 cp doc/change-header /tmp/changes.md
 tail -n +2 < doc/changes.md >> /tmp/changes.md
 pandoc -o changes.html -f markdown -s -t html < /tmp/changes.md
-pandoc -o license.html -f markdown-smart --html-q-tags -t html < LICENSE
+cp doc/license-header /tmp/license.md
+tail -n +2 < LICENSE >> /tmp/license.md
+pandoc -o license.html -f markdown-smart -s -H ./doc/tracker.html --html-q-tags -t html < /tmp/license.md
 pandoc -o thirdparty-licenses.html -f markdown_strict -t html < thirdparty-licenses.md
 
 # Full install
