@@ -25,7 +25,8 @@ SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 MAINDIR=$SELFDIR/../../../main
 cd $SELFDIR
 
-nim auth logout joshuaau-sp0k14rcwdy
+echo "A failure here is expected sometimes and always harmless:"
+nim auth logout dtestnim-5skkrmhfzyo
 set -e
 
 function runTest() {
