@@ -37,7 +37,7 @@ export default class AuthLogout extends NimBaseCommand {
     const host = parseAPIHost(flags.apihost)
     const namespace = await disambiguateNamespace(args.namespace, host).catch(err => logger.handleError('', err))
     const creds = await forgetNamespace(namespace, host, authPersister, new NimFeedback(logger)).catch(err => logger.handleError('', err))
-    logger.log(`Ok.  Removed the namespace '${namespace}' on host '${host}' from the credential store`)
+    logger.log(`Ok.  Removed the namespace '${namespace}' on host '${creds.ow.apihost}' from the credential store`)
     logger.log(`Successful logout from namespace '${namespace}' on API host '${creds.ow.apihost}'`)
   }
 }
