@@ -1515,18 +1515,18 @@ The file whose contents are inlined must either contain JSON or be in the form o
 
 **Warning:** All inclusions are processed _before_ the resulting YAML is parsed. For this reason, errors can be obscure when you violate the restrictions.
 
-### Multiple variable substitution
+### Dictionary substitution
 
-Sometimes you may have multiple parameters on individual actions or packages and a large number of parameters across the entire project, but it is wasteful to pass all parameters to all actions.  You can use a single environment file (specified on the command line or `.env` in the project root) and dole out the appropriate parts of it on a per action basis like this.
+Sometimes you may have a large number of parameters across the entire project, but it is wasteful to pass all parameters to all actions (which is what would happen if you used file substitution).  You can use a single environment file (specified on the command line or `.env` in the project root) and dole out the appropriate parts of it on a per action basis like this.
 
 ```
-  parameters: ${
+  parameters: $(
     userid
     password
-  }
+  )
 ```
 
-This is syntactic sugar for
+Note the use of `$( )` rather than `${ }`.  Dictionary substitution is syntactic sugar for
 
 ```
   parameters:
@@ -1537,12 +1537,19 @@ This is syntactic sugar for
 The whitespace separation within the substitution is arbitrary and you could alternatively have used
 
 ```
-  parameters: ${userid password}
+  parameters: $(userid password)
 ```
 
-Leading and trailing whitespace is simply elided, so it takes at least two variables to indicate that you are doing multiple variable substitution and not simple symbol substition.  It is important is that the initial token `${` be placed somewhere where the YAML parser expects a subdictionary, the same rule as for file substitution.
+Single variables can also be used in the dictionary form.
+```
+  parameters: $(
+    password
+  )
+```
 
-**Note:** As with file substitution, multiple variable substitution can only be used where the configuration expects a subdictionary, and you can't add to it.
+It is important is that the initial token `$(` be placed somewhere where the YAML parser expects a subdictionary, the same rule as for file substitution.
+
+**Note:** As with file substitution, dictionary substitution can only be used where the configuration expects a subdictionary, and you can't add to it.
 
 ---
 

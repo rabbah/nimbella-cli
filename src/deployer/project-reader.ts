@@ -396,7 +396,7 @@ function readConfig(configFile: string, envPath: string, filePath: string, stray
         return Promise.resolve(ans)
     }
     debug("Reading config file")
-    return loadProjectConfig(configFile, envPath, filePath, reader).then(config => trimConfigWithIncluder(config, includer))
+    return loadProjectConfig(configFile, envPath, filePath, reader, feedback).then(config => trimConfigWithIncluder(config, includer))
         .then(config => Object.assign({}, config, alwaysIncluded)).catch(err => errorStructure(err))
 }
 

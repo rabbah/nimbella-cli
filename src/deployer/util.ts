@@ -18,7 +18,7 @@
  * from Nimbella Corp.
  */
 
-import { DeployStructure, DeployResponse, DeploySuccess, DeployKind, ActionSpec, PackageSpec,
+import { DeployStructure, DeployResponse, DeploySuccess, DeployKind, ActionSpec, PackageSpec, Feedback,
     DeployerAnnotation, WebResource, VersionMap, VersionEntry, BucketSpec, Includer, PathKind, ProjectReader } from './deploy-struct'
 import { getUserAgent } from './api'
 import { XMLHttpRequest } from 'xmlhttprequest'
@@ -43,10 +43,11 @@ export const FILES_TO_SKIP = [ '.gitignore', '.DS_Store' ]
 //
 
 // Read the project config file, with validation
-export function loadProjectConfig(configFile: string, envPath: string, filePath: string, reader: ProjectReader): Promise<DeployStructure> {
+export function loadProjectConfig(configFile: string, envPath: string, filePath: string, reader: ProjectReader,
+        feedback: Feedback): Promise<DeployStructure> {
     return reader.readFileContents(configFile).then(async data => {
         try {
-            const content = substituteFromEnvAndFiles(String(data), envPath, filePath)
+            const content = substituteFromEnvAndFiles(String(data), envPath, filePath, feedback)
             let config: {}
             if (configFile.endsWith(".json")) {
                 config = JSON.parse(content)
@@ -671,25 +672,27 @@ async function promiseFilesRound(dir: string, files: string[], subdirs: string[]
 // The form ${ token1 token2 token3 } where tokens are non-whitespace separated by whitespace is a special shorthand
 // that expands to { token1: value, token2: value, token3: value } where the values are obtained by looking up the
 // tokens in the process environment (higher precedence) or property file located at 'envPath'.
-export function substituteFromEnvAndFiles(input: string, envPath: string, projectPath: string): string {
+export function substituteFromEnvAndFiles(input: string, envPath: string, projectPath: string, feedback: Feedback): string {
     let result = ""  // Will accumulate the result
     const badVars: string[] = [] // Will accumulate failures to resolve
     const props = envPath ? getPropsFromFile(envPath) : {}
     debug('envPath: %s', envPath)
     debug('props %O', props)
-    let nextBreak = input.indexOf("${")
-    while (nextBreak >= 0) {
-        const before = input.substr(0, nextBreak)
-        const after = input.substr(nextBreak + 2)
-        const endVar = after.indexOf("}")
+    let nextSym = findNextSymbol(input)
+    let warn = false
+    while (nextSym.index >= 0) {
+        const before = input.substr(0, nextSym.index)
+        const after = input.substr(nextSym.index + 2)
+        const endVar = after.indexOf(nextSym.terminator)
         if (endVar < 0) {
             throw new Error("Runaway variable name or path directive in project.yml")
         }
         let subst: string
         const envar = after.substr(0, endVar).trim()
         debug('substituting for envar: %s', envar)
-        if (/\s/.test(envar)) {
-            subst = getMultipleSubstitutions(envar, props)
+        if (nextSym.terminator === ')' || /\s/.test(envar)) {
+            warn = warn || nextSym.terminator !== ')'
+            subst = getDictionarySubstitution(envar, props, badVars)
         } else if (envar.startsWith('<')) {
             const fileSubst = path.join(projectPath, envar.slice(1))
             subst = getSubstituteFromFile(fileSubst)
@@ -700,26 +703,47 @@ export function substituteFromEnvAndFiles(input: string, envPath: string, projec
             badVars.push(envar)
             subst=""
         }
-        debug('substition is: %s', subst)
+        debug('substitution is: %s', subst)
         result = result + before + subst
         input = after.substr(endVar + 1)
-        nextBreak = input.indexOf("${")
+        nextSym = findNextSymbol(input)
     }
     if (badVars.length > 0) {
         const formatted = "'" + badVars.join("', '") + "'"
         throw new Error("The following substitutions could not be resolved: " + formatted)
     }
+    if (warn) {
+        feedback.warn("Using '${}' for dictionary substitution is now deprecated; use '$()'")
+    }
     return result + input
 }
 
-// Get multiple substitutions as a stringified object, given whitespace separated tokens.  Each token is
-// looked up in the process environment or env file
-function getMultipleSubstitutions(tokens: string, props: object): string {
-    debug('multiple substitution with %s', tokens)
+// Scan forward for the next symbol introducer
+function findNextSymbol(input: string): { index: number, terminator: string } {
+    const nextBrace = input.indexOf('${')
+    const nextParen = input.indexOf('$(')
+    if (nextBrace > nextParen) {
+        return { index: nextBrace, terminator: '}' }
+    } else if (nextParen >= 0) {
+        return { index: nextParen, terminator: ')' }
+    } else {
+        return { index: -1, terminator: '' }
+    }
+}
+
+// Get one or more substitutions in the form of a dictionary, given one or more tokens separated by whitespace.
+// Each token is a symbol to be looked up in the process environment or env file
+function getDictionarySubstitution(tokens: string, props: object, badVars: string[]): string {
+    debug('dictionary substitution with %s', tokens)
     const ans = {}
     for (const tok of tokens.split(/\s+/)) {
         debug('token: %s', tok)
-        ans[tok] = process.env[tok] || props[tok]
+        const value = process.env[tok] || props[tok]
+        if (value) {
+            ans[tok] = value
+        } else {
+            badVars.push(tok)
+        }
     }
     return JSON.stringify(ans)
 }

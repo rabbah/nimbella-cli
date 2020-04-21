@@ -16,11 +16,12 @@ packages:
         runtime: 'nodejs:default'
         web: true
         webSecure: false
-        parameters: ${
+        parameters: $(
 				  A
 					B
-					C
-				}
-        environment: {}
+				)
+        environment: $(
+				  C
+				)
         annotations: {}
         limits: {}
