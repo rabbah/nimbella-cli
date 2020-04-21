@@ -131,7 +131,7 @@ function languageToKindAndSample(language: string, logger: NimLogger): { kind: s
     // cloud editor, and this code
     if (language === 'javascript')
         return defaultSample
-    if (['java', 'python', 'php', 'swift', 'go'].includes(language))
+    if (['java', 'python', 'php', 'swift', 'go', 'typescript'].includes(language))
         return { kind: language + ':default', sampleText: samples[language] }
     logger.handleError(`${language} is not a supported language`)
 }
@@ -180,6 +180,14 @@ const javascript = `function main(args) {
   let greeting = 'Hello ' + name + '!'
   console.log(greeting)
   return {"greeting": greeting}
+}
+`
+
+const typescript = `export function main(args: {}): {} {
+  let name: string = args['name'] || 'stranger'
+  let greeting: string = 'Hello ' + name + '!'
+  console.log(greeting)
+  return { greeting }
 }
 `
 
@@ -241,5 +249,5 @@ func Main(args map[string]interface{}) map[string]interface{} {
 }
 `
 
-const samples = { javascript, python, php, swift, java, go }
+const samples = { javascript, python, php, swift, java, go, typescript }
 const defaultSample = { kind: 'nodejs:default', sampleText: javascript }
