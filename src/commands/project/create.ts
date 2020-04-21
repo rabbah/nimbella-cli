@@ -171,15 +171,16 @@ function seemsToBeProject(path: string): boolean {
 //  Samples
 //  TODO: these should be in common between here, the playground, and the cloud editor.
 //  As it stands
-//    - the playground has its own table although its samples are textually the same as these
-//    - the cloud editor has its own table (in placeholders.ts).  It samples are a subset of these (lacking java and go)
+//    - the playground has its own table although its samples are (mostly) textually the same as these
+//    - the cloud editor has its own table (in placeholders.ts).  It samples are similar to a subset of these
+//      (lacking java, go, and typescript)
 //
 
 const javascript = `function main(args) {
   let name = args.name || 'stranger'
   let greeting = 'Hello ' + name + '!'
   console.log(greeting)
-  return {"greeting": greeting}
+  return {"body": greeting}
 }
 `
 
@@ -187,7 +188,7 @@ const typescript = `export function main(args: {}): {} {
   let name: string = args['name'] || 'stranger'
   let greeting: string = 'Hello ' + name + '!'
   console.log(greeting)
-  return { greeting }
+  return { body: greeting }
 }
 `
 
@@ -195,7 +196,7 @@ const python = `def main(args):
     name = args.get("name", "stranger")
     greeting = "Hello " + name + "!"
     print(greeting)
-    return {"greeting": greeting}
+    return {"body": greeting}
 `
 
 const swift = `func main(args: [String:Any]) -> [String:Any] {
@@ -206,7 +207,7 @@ const swift = `func main(args: [String:Any]) -> [String:Any] {
     } else {
         let greeting = "Hello stranger!"
         print(greeting)
-        return [ "greeting" : greeting ]
+        return [ "body" : greeting ]
     }
 }
 `
@@ -217,7 +218,7 @@ function main(array $args) : array
     $name = $args["name"] ?? "stranger";
     $greeting = "Hello $name!";
     echo $greeting;
-    return ["greeting" => $greeting];
+    return ["body" => $greeting];
 }
 `
 
