@@ -18,12 +18,13 @@
  * from Nimbella Corp.
  */
 
- // Utilities for UI, versioned for CLI and workbench.   Interaction with the user has to be done differently
- // (in general) in the two cases.
+// Utilities for UI, versioned for CLI and workbench.   Interaction with the user has to be done differently
+// (in general) in the two cases.
 
 import { inBrowser } from './NimBaseCommand'
 
 let kuiPrompt: (msg: string) => Promise<string>
+let cli;
 
 // Open a URL in 'the' browser or the system default browser
 // Note: this is reliable for http[s] absolute URLs.  It won't work on file URLs in the browser.
@@ -50,7 +51,20 @@ export async function prompt(msg: string): Promise<string> {
         }
         return await kuiPrompt(msg)
     } else {
-        const cli = require('cli-ux').cli
+        if (!cli) { cli = require('cli-ux').cli }
         return await cli.prompt(msg)
+    }
+}
+
+export async function spinner(): Promise<any> {
+    if (inBrowser) {
+        return Promise.resolve({
+            start: _ => { },
+            stop: _ => { }
+        })
+    }
+    else {
+        if (!cli) { cli = require('cli-ux').cli }
+        return await cli.action;
     }
 }
