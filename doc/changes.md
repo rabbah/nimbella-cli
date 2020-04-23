@@ -1,5 +1,9 @@
 # Nimbella CLI Change History
 
+## Changes since release 0.1.17
+
+- new commands `objects create`, `objects get`, `objects clean`, and `objects delete` have been added and there are improvements to `objects list` and `web list`.
+
 ## Changes in release 0.1.17
 
 - the `nim info` command now has options to show the available runtime kinds and the current limits

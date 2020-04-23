@@ -284,6 +284,8 @@ Once you are in the workbench, all `nim` subcommands are available except for th
 ```
 action create
 action update
+objects create
+objects get
 project create
 project watch
 workbench login
@@ -294,7 +296,7 @@ Those few commands are either inappropriate for the workbench or require filesys
 
 The prefix `nim` is optional in front of workbench commands.
 
-To transfer your credentials to the workbench running in a browser that is not the default browser just visit the workbench there and type `auth login`.
+To transfer your credentials to the workbench running in a browser that is not the default browser, just visit the workbench there and type `auth login`.  You will need to provide some of the information you provided when you opened your Nimbella account but a duplicate account will not be created.  You will simply be connected to your existing account.
 
 ## Nimbella namespaces
 
@@ -728,6 +730,7 @@ See [an example of how to configure a project when you generate web content with
 The Nimbella deployer determines the kind of runtime required for the action from the file suffix. The following runtimes are supported:
 
 *   Node.js for suffix _.js_
+*   Typescript for suffix _.ts_
 *   Python for suffix _.py_
 *   Java for suffixes _.java_ and _.jar_
 *   Swift suffix _.swift_
