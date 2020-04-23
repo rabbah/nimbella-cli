@@ -33,16 +33,22 @@ export default class ObjectsList extends NimBaseCommand {
         ...NimBaseCommand.flags
     }
 
-    static args = [{ name: 'namespace', description: 'the namespace to list objects from (current namespace if omitted)', required: false }]
+    static args = [
+        { name: 'prefix', description: 'prefix to match objects against', required: false, default: '' },
+        { name: 'namespace', description: 'the namespace to list objects from (current namespace if omitted)', required: false }
+    ]
 
     async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
         const { client } = await getObjectStorageClient(args, flags, authPersister);
         if (!client) logger.handleError(`Couldn't get to the object store, ensure it's enabled for the ${args.namespace || 'current'} namespace`);
-        await this.listFiles(client, logger, flags.long).catch((err: Error) => logger.handleError('', err));
+        await this.listFiles(client, logger, flags.long, args.prefix).catch((err: Error) => logger.handleError('', err));
     }
 
-    async listFiles(client: Bucket, logger: NimLogger, isLongFormat: boolean): Promise<void> {
-        const [files] = await client.getFiles();
+    async listFiles(client: Bucket, logger: NimLogger, isLongFormat: boolean, prefix: string): Promise<void> {
+        const [files] = await client.getFiles({
+            prefix: prefix,
+        });
+        if (files.length === 0) { return logger.log(`No object available ${prefix ? `matching prefix '${prefix}'` : ''}`); }
         if (isLongFormat) {
             await fileMetaLong(files, client, logger).catch(err => logger.handleError(err))
         }
