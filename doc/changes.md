@@ -1,5 +1,12 @@
 # Nimbella CLI Change History
 
+## Changes in release 0.1.17
+
+- the `nim info` command now has options to show the available runtime kinds and the current limits
+- the syntax for "dictionary substitution" (previously called "multiple variable substitution") is changed; the former syntax is still accepted but deprecated
+- `nim project create` supports `--language typescript` and all samples now use a `body:` tag to make invocation via a URL friendlier
+- output improvements to `nim auth list`, other `nim * list` commands and `nim action get`
+
 ## Changes in release 0.1.16
 
 - deploy from github is now documented and will work in the workbench too provided there are no builds that require forking processes
