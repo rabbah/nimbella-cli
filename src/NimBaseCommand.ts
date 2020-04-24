@@ -151,7 +151,7 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
   // logger argument is a CaptureLogger in fact.
   async runAio(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger, aioClass: typeof RuntimeBaseCommand) {
     debug('runAio with rawArgv: %O, argv: %O, args: %O, flags: %O', rawArgv, argv, args, flags)
-    fixAioCredentials()
+    fixAioCredentials(logger)
     const cmd = new aioClass(rawArgv, {})
     cmd.handleError = this.handleError.bind(cmd)
     debug('handleError intercepted')
@@ -291,7 +291,7 @@ export function parseAPIHost (host: string|undefined): string|undefined {
 }
 
 // Stuff the current namespace, API host, and AUTH key into the environment so that AIO does not look in .wskprops when invoked by nim
-export function fixAioCredentials() {
+export function fixAioCredentials(logger: NimLogger) {
     let store = authPersister.loadCredentialStoreIfPresent()
     let currentHost: string
     let currentNamespace: string
@@ -299,17 +299,17 @@ export function fixAioCredentials() {
     if (store) {
         currentHost = store.currentHost
         currentNamespace = store.currentNamespace
-    } else {
-        // No credential store (brand new user who's never done a login?).   Not much we can do, other than using our default API host in place of AIO's
-        currentHost = 'https://apigcp.nimbella.io'
     }
-    if (store && currentHost && currentNamespace) {
+    if (currentHost && currentNamespace) {
         const creds = store.credentials[currentHost][currentNamespace]
         if (creds) {
+            debug('have creds for current namespace')
             currentAuth = creds.api_key
         } else {
             debug(`Error retrieving credentials for '${currentNamespace}' on host '${currentHost}'`)
         }
+    } else {
+        logger.handleError("You do not have a current namespace.  Use 'nim auth login' to create a new one or 'nim auth switch' to use an existing one")
     }
     process.env.AIO_RUNTIME_APIHOST = currentHost
     process.env.AIO_RUNTIME_AUTH = currentAuth

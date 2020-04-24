@@ -51,7 +51,7 @@ export default class PackageDelete extends NimBaseCommand {
 
   // Recursive deletion
   async recursiveDelete(args: any, flags: any, logger: NimLogger) {
-    const creds = await getCredentials(authPersister)
+    const creds = await getCredentials(authPersister).catch(err => logger.handleError('', err))
     const auth = flags.auth || (creds ? creds.ow.api_key : undefined)
     const apihost = flags.apihost || (creds ? creds.ow.apihost : undefined)
     if (!auth || !apihost) {

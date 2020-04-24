@@ -174,7 +174,14 @@ export async function prepareToDeploy(inputSpec: DeployStructure, owOptions: OWO
             credentials = await getCredentialsForNamespace(inputSpec.targetNamespace, owOptions.apihost, persister)
         } else {
             // There is no target namespace so get credentials for the current one
-            credentials = await getCredentials(persister)
+            let badCredentials: Error
+            credentials = await getCredentials(persister).catch(err => {
+                badCredentials = err
+                return undefined
+            })
+            if (badCredentials) {
+                return errorStructure(badCredentials)
+            }
         }
     }
     debug('owOptions: %O', owOptions)

@@ -125,7 +125,7 @@ export default class Info extends NimBaseCommand {
     if (apihost) {
       apihost = parseAPIHost(apihost)
     } else {
-      const creds = await getCredentials(authPersister)
+      const creds = await getCredentials(authPersister).catch(err => logger.handleError('', err))
       apihost = creds.ow.apihost
     }
     const url = apihost + '/api/v1'

@@ -44,7 +44,7 @@ export default class NamespaceClean extends NimBaseCommand {
         let namespace = args.namespace
         let creds: Credentials = undefined
         if (!namespace) {
-            creds = await getCredentials(authPersister)
+            creds = await getCredentials(authPersister).catch(err => logger.handleError('', err))
             namespace = creds.namespace
         }
         if (!flags.force) {
