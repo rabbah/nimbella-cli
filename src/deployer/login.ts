@@ -157,6 +157,9 @@ export async function doInteractiveLogin(newCreds: FullCredentials, persister: P
     const credStore = await persister.loadCredentialStore()
     const credentials = addCredential(credStore, apihost, namespace, auth, storage, redis)
     if (externalId && externalId.name && externalId.key) {
+        if (!credStore.github) {
+            credStore.github = {}
+        }
         credStore.github[externalId.name] = externalId.key
         credStore.currentGithub = externalId.name
     }
