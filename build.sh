@@ -28,7 +28,6 @@ if [ "$1" == "--pack" ]; then
 		PKG=true
 elif [ "$1" == "--preview" ]; then
 		PREVIEW=true
-		PREVIEW_TARGET="$2"
 elif [ "$1" == "--stable" ]; then
 		STABLE=true
 		PKG=true
@@ -58,9 +57,8 @@ DIRTY=$(git status --porcelain)
 
 # Check prereqs for --preview
 if [ -n "$PREVIEW" ]; then
-    if [ -n "$DIRTY" ] && [ -z "$PREVIEW_TARGET" ]; then
-        echo "The nimbella-cli repo is not fully committed: a 'public' preview cannot be created"
-				echo "Commit the repo and retry or else supply an additional argument to make a 'test' preview"
+    if [ -n "$DIRTY" ]; then
+        echo "The nimbella-cli repo is not fully committed: a preview cannot be created"
         exit 1
     fi
 fi
@@ -179,7 +177,7 @@ if [ -n "$PREVIEW" ]; then
 		git checkout userREADME.md
 		mv devREADME.md README.md
 		# Upload the result
-		PREVIEW_SITE="gs://preview-apigcp-nimbella-io/$PREVIEW_TARGET"
+		PREVIEW_SITE="gs://preview-apigcp-nimbella-io"
 		gsutil -m cp nimbella-cli.tgz doc/*.html doc/*.svg doc/*.css $PREVIEW_SITE
 		echo "$FULLVERSION" | gsutil cp - $PREVIEW_SITE/nim-version.txt
 		gsutil cp changes.html $PREVIEW_SITE/nim-changes.html
