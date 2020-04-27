@@ -141,6 +141,11 @@ export async function doOAuthFlow(logger: NimLogger, githubOnly: boolean, apihos
       deferredReject(new Error('Got invalid parameters for CLI login'))
     })
 
+    setTimeout(() => {
+      server.close()
+      deferredResolve(true)
+    }, 60000)
+
     await new Promise(function(resolve, reject) {
       server.on('error', reject)
       server.listen(port, resolve)

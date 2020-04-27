@@ -19,7 +19,7 @@
  */
 
 import { flags } from '@oclif/command'
-import { NimBaseCommand, NimLogger, parseAPIHost, authPersister } from '../../NimBaseCommand'
+import { NimBaseCommand, NimLogger, parseAPIHost, authPersister, inBrowser } from '../../NimBaseCommand'
 import { doLogin, doAdminLogin, doInteractiveLogin, addCredentialAndSave } from '../../deployer/login'
 import { doOAuthFlow, isFullCredentials } from '../../oauth'
 import { prompt } from '../../ui'
@@ -65,8 +65,16 @@ export default class AuthLogin extends NimBaseCommand {
       if (isFullCredentials(response)) {
         credentials = await doInteractiveLogin(response, authPersister).catch(err => logger.handleError('', err))
       } else if (response === true) {
-        // We assume this happens only in the workbench; prompt should appear as placeholder text in the CLI pane
-        await prompt(`Login will restart the workbench with appropriate credentials (please wait)`)
+        // We have two different logics here, one for CLI and one for workbench.
+        if (inBrowser) {
+          // In the workbench, a true response is the norm.  We just need to reassure the user.
+          await prompt(`Login will restart the workbench with appropriate credentials (please wait)`)
+        } else {
+          // In the CLI, a true response indicates a "long" provisioning (the wait for the redirect timed out).
+          // We also reassure the user, but with some more instructions.
+          logger.log("Your account is being provisioned and should be ready in a minute or two.")
+          logger.log("Try another 'nim auth login' then")
+        }
         return
       } else {
         logger.handleError(`Login failed.  Response was '${response}'`)
