@@ -1,5 +1,10 @@
 # Nimbella CLI Change History
 
+## Changes in release 1.0.0
+
+- general cleanup and small bug fixes
+- the intent is to observe semantic versioning rules more carefully going forward
+
 ## Changes in release 0.1.18
 
 - new commands `objects create`, `objects get`, `objects clean`, and `objects delete` have been added and there are improvements to `objects list` and `web list`.
@@ -83,6 +88,7 @@
 - Fixed bug in `environment` property as applied to packages
 - Fix `action invoke` mis-behavior when asynchronous
 - Hide `debug` flag in most help menus
+- Institute the change log
 
 
 
