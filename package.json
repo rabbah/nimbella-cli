@@ -1,6 +1,6 @@
 {
   "name": "nimbella-cli",
-  "version": "0.1.18",
+  "version": "1.0.0",
   "description": "A comprehensive CLI for the Nimbella stack",
   "main": "lib/index.js",
   "repository": {
