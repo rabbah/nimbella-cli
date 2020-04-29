@@ -53,7 +53,7 @@ export async function readTopLevel(filePath: string, env: string, includer: Incl
     debug("readTopLevel with filePath:'%s' and mustBeLocal:'%s'", filePath, String(mustBeLocal))
     debug("feedback is %O", feedback)
     let githubPath: string = undefined
-    let reader = makeFileReader(filePath) // Only useful iff it turns out filePath != github
+    let reader: ProjectReader
     if (isGithubRef(filePath)) {
         const github = parseGithubRef(filePath)
         if (!github.auth) {
@@ -61,11 +61,16 @@ export async function readTopLevel(filePath: string, env: string, includer: Incl
         }
         githubPath = filePath
         if (mustBeLocal) {
+            debug('github path which must be local, making file reader')
             filePath = await fetchProject(github, getUserAgent())
             reader = makeFileReader(filePath)
         } else {
+            debug('Github path which can be remote, making Github reader')
             reader = makeGithubReader(github, getUserAgent())
         }
+    } else {
+        debug('not a github path, making file reader')
+        reader = makeFileReader(filePath)
     }
     const webDir = 'web', pkgDir = 'packages'
     return reader.readdir('').then(items => {

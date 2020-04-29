@@ -21,7 +21,6 @@
 import { ProjectReader, PathKind } from './deploy-struct'
 import { GithubDef, makeClient, readContents, seemsToBeProject } from './github';
 import * as Octokit from '@octokit/rest'
-import { inBrowser } from '../NimBaseCommand'
 import * as PathPkg from 'path'
 import * as makeDebug from 'debug'
 const debug = makeDebug('nim:deployer:github-reader')
@@ -38,7 +37,7 @@ const debug = makeDebug('nim:deployer:github-reader')
 // Note that path.posix has known limitations: if you ask for a 'resolve' (or anything else that required the current
 // directory, it will use the OS call even though you specified posix.   But, we don't ever do a resolve here because
 // we are just doing path manipulation.
-const Path = inBrowser ? PathPkg : PathPkg.posix
+const Path = PathPkg.posix || PathPkg
 
 // Make
 export function makeGithubReader(def: GithubDef, userAgent: string): ProjectReader {
