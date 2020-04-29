@@ -307,20 +307,37 @@ This section contains information about how to create a Nimbella namespace, view
 
 ### Create a Nimbella namespace
 
-Here’s how to create a Nimbella workspace in nim.
+Here’s how to create a Nimbella workspace in `nim`.
 
-**To obtain a namespace using the Nimbella Command Line Tool:**
+**If you have not yet downloaded and installed the Nimbella Command Line Tool:**
 
-1.  Visit [the Nimbella Early Access Request site](https://nimbella.com/request/).
-2.  Provide the information requested.
-3.  Wait for an email response from Nimbella containing a _login token_, which is a very long mostly hexadecimal string.
-4.  Use `nim auth login` to activate your namespace, substituting our own login token in the following command:
+Visit [nimbella.com](https://nimbella.com) and press the signup button (it's free).
+
+**If you have already downloaded and installed the Nimbella Command Line Tool:**
+
+Issue
 
 ```
-> nim auth login <login token>
-stored a credential set for namespace '...' and API host '...'
+> nim auth login
 ```
 
+**In both cases:**
+
+After going through the signup process (which typically takes one or two minutes), you will land on a welcome page.  If you haven't downloaded `nim` yet, the page give you convenient links for doing so.  The page also provides a command like
+
+```
+> nim auth login <very-long-string>
+```
+
+This command will quickly connect `nim` to the just-created account.
+
+In general (e.g.) when switching to a different machine you can just issue
+
+```
+> nim auth login
+```
+
+This will connect the tool to your account (it may or may not ask for identification again, depending on whether or not your browser remembers this information).
 
 ### View the credential store
 
