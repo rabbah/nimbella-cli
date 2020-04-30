@@ -38,7 +38,7 @@ export default class Clean extends NimBaseCommand {
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
 
     if (!flags.force) {
-      const ans = await prompt(`Type yes to remove all content from Key-Value Store`);
+      const ans = await prompt(`Type 'yes' to remove all content from Key-Value Store`);
       if (ans !== 'yes') {
         logger.log('doing nothing');
         return;

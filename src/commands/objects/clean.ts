@@ -40,7 +40,7 @@ export default class ObjectClean extends NimBaseCommand {
 
     async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
         if (!flags.force) {
-            const ans = await prompt(`Type yes to remove all objects from Object Store`);
+            const ans = await prompt(`Type 'yes' to remove all objects from Object Store`);
             if (ans !== 'yes') {
                 logger.log('doing nothing');
                 return;
