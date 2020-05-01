@@ -1290,7 +1290,7 @@ The `clean` modifier requires some explanation. The deployer installs actions us
 
 ##### limits
 
-A nested map in which you can set limits for the timeout in milliseconds, memory in megabytes, and the number of logs. All three of these limits must be numbers and within the range permitted by the Nimbella cloud ([see this page](https://apigcp.nimbella.io/api/v1) for limits). When not specified, Nimbella Cloud defaults are assumed.
+A nested map in which you can set limits for the timeout in milliseconds, memory in megabytes, and the log size in kilobytes. All three of these limits must be numbers and within the range permitted by the Nimbella cloud (use `nim info --limits` to see the limits).  When not specified, Nimbella Cloud defaults are assumed.
 
 #### Package modifiers allowed in project.yml
 

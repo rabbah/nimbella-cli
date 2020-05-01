@@ -115,7 +115,9 @@ export default class Info extends NimBaseCommand {
         return limitValue + ' ms'
       }
     } else if (limitName.includes('memory')) {
-        return (limitValue/(1024*1024)) + ' mb'
+      return (limitValue/(1024*1024)) + ' mb'
+    } else if (limitName.includes('logs')) {
+      return (limitValue/1024 + ' kb')
     } else {
       return String(limitValue)
     }
