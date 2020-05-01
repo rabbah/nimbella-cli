@@ -19,6 +19,7 @@
  */
 
 import { NimBaseCommand, NimLogger, inBrowser } from '../../NimBaseCommand'
+import { flags } from '@oclif/command'
 import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
 const AioCommand: typeof RuntimeBaseCommand = require('@adobe/aio-cli-plugin-runtime/src/commands/runtime/action/create')
 
@@ -30,7 +31,21 @@ export default class ActionCreate extends NimBaseCommand {
 
   static args = AioCommand.args
 
-  static flags = AioCommand.flags
+  // Change description from what is in aio: log size limit is KB, not MB, and defaults should not be specified statically
+  static flags = Object.assign({}, AioCommand.flags, {
+    timeout: flags.integer({
+     char: 't',
+      description: 'the timeout LIMIT in milliseconds after which the action is terminated'
+    }),
+    memory: flags.integer({
+      char: 'm',
+      description: 'the maximum memory LIMIT in MB for the action'
+    }),
+    logsize: flags.integer({
+      char: 'l',
+      description: 'the maximum log size LIMIT in KB for the action'
+    })
+  })
 
   static description = AioCommand.description
 }
