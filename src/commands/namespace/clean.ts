@@ -19,7 +19,7 @@
  */
 
 import { flags } from '@oclif/command'
-import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
+import { NimBaseCommand, NimLogger, authPersister, parseAPIHost } from '../../NimBaseCommand'
 import { getCredentialsForNamespace, getCredentials } from '../../deployer/login'
 import { wipeNamespace } from '../../deployer/api'
 import { computeBucketStorageName, cleanBucket } from '../../deployer/deploy-to-bucket'
@@ -61,11 +61,12 @@ export default class NamespaceClean extends NimBaseCommand {
         if (flags.auth && flags.apihost) {
             // Bypass credential fetching (used by `nimadmin` when cleaning up a namespace)
             auth = flags.auth
-            apihost = flags.apihost
+            apihost = parseAPIHost(flags.apihost)
             storageKey = undefined
         } else {
             if (!creds) {
-                creds = await getCredentialsForNamespace(namespace, flags.apihost, authPersister)
+                creds = await getCredentialsForNamespace(namespace, parseAPIHost(flags.apihost), authPersister)
+                    .catch(err => logger.handleError('', err))
             }
             auth = creds.ow.api_key
             apihost = creds.ow.apihost

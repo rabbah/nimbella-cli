@@ -99,21 +99,17 @@ export async function deployToBucket(resource: WebResource, client: Bucket, spec
     if (!spec || !spec.useCache) {
         metadata['cacheControl'] = 'no-cache'
     }
-    // Upload.  We _deliberately_ do this in two steps (yes, I know there is a one-step way).  The reason is that the
-    // one-step way fails mysteriously when run in the cloud.
+    // Upload.
     const remoteFile = client.file(destination)
     debug(`bucket save operation for %s with data of length %d and metadata %O`, resource.simpleName, data.length, metadata)
     // Specify resumable explicitly to avoid spurious fs call to retrieve config when running in the cloud
-    await remoteFile.save(data, { resumable: false }).catch(err => {
+    try {
+        await remoteFile.save(data, { resumable: false, metadata })
+        debug('save operation for %s was successful', resource.simpleName)
+    } catch (err) {
         debug('error during bucket save operation: %O', err)
         return wrapError(err, `storing web resource '${resource.simpleName}'`)
-    })
-    debug('save operation for %s was successful', resource.simpleName)
-    await remoteFile.setMetadata(metadata).catch(err => {
-        debug('error during bucket setMetadata operation: %O', err)
-        return wrapError(err, `setting web resource metadata for '${resource.simpleName}'`)
-    })
-    debug('setMetaData operation for %s was successful', resource.simpleName)
+    }
     const item = `https://${client.name}/${destination}`
     const response = wrapSuccess(item, "web", false, undefined, {}, undefined)
     response.webHashes = {}
@@ -157,8 +153,12 @@ export async function cleanBucket(client: Bucket, spec: BucketSpec): Promise<str
 // Restore the 404.html page after wiping the bucket
 async function restore404Page(client: Bucket): Promise<string> {
     const our404 = require.resolve('../../404.html')
-    await client.upload(our404, { destination: '404.html'}).catch(() => {
-        return Promise.resolve("Standard 404.html page could not be restored")
+    let error = ''
+    // TODO the following will fail in a browser.  We need to do the original resolve in a way that works there
+    // (not requiring a file location).  Then, use a File.save() operation.  Once that works in the browser ...
+    await client.upload(our404, { destination: '404.html'}).catch(err => {
+        debug("Error uploading 404.html %O", err)
+        error = "Standard 404.html page could not be restored"
     })
-    return ''
+    return error
 }
