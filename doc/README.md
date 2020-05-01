@@ -266,7 +266,7 @@ The Nimbella Workbench is described in [The Nimbella Workbench](#the-nimbella-wo
 
 Many (though not all) `nim` commands will also run in your web browser, which wraps some graphical assistance around `nim` and provides some additional commands.  This separate but closely related tool is called the Nimbella Workbench.
 
-If you've never used the workbench, you should enable your Nimbella account there by opening it from the command line, as follows.
+If you've never used the workbench (and assuming you are logged into a Nimbella account) you should enable the same Nimbella account on the workbench by opening it from the command line, as follows.
 
 ```
 nim workbench login
@@ -288,6 +288,7 @@ objects create
 objects get
 project create
 project watch
+project deploy
 workbench login
 workbench run
 ```
@@ -296,7 +297,7 @@ Those few commands are either inappropriate for the workbench or require filesys
 
 The prefix `nim` is optional in front of workbench commands.
 
-To transfer your credentials to the workbench running in a browser that is not the default browser, just visit the workbench there and type `auth login`.  You will need to provide some of the information you provided when you opened your Nimbella account but a duplicate account will not be created.  You will simply be connected to your existing account.
+To transfer your credentials to the workbench running in a browser that is not the default browser, just visit the workbench there and type `auth login`.  You will need to provide some of the information you provided when you opened your Nimbella account but a duplicate account will not be created.  You will be connected to your existing account.
 
 ## Nimbella namespaces
 
