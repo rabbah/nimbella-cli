@@ -1,9 +1,21 @@
-# Nimbella CLI Change History
+# Nimbella CLI (and Workbench) Change History
+
+## Changes in release 1.0.2
+
+- fix pagination and tooltips in the `activation list` view in the workbench
+- fix `?` button in the upper right corner of workbench
+- adjustments to limits help text and documentation
+- `project deploy` is temporarily disabled in the workbench pending investigation of a problem
+  - no change to `project deploy` in the CLI
+
+## Changes in release 1.0.1
+
+- superceded by 1.0.2
 
 ## Changes in release 1.0.0
 
 - general cleanup and small bug fixes
-- the intent is to observe semantic versioning rules more carefully going forward
+- the intent is to observe semantic versioning rules going forward
 
 ## Changes in release 0.1.18
 
