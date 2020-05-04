@@ -23,7 +23,7 @@
  import { initializeAPI } from './deployer/api'
 
 // List of plural commands to be replaced by singular equivalents before being delegated to aio runtime plugin
-const pluralCommands = ['actions', 'activations', 'packages', 'routes', 'rules', 'triggers' ]
+const pluralCommands = ['actions', 'activations', 'packages', 'routes', 'rules', 'triggers', 'objects' ]
 
 const topicAliases = {'key-value':'kv', 'workbench':'wb', 'namespace':'ns'}
 
