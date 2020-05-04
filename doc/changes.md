@@ -7,6 +7,8 @@
 - adjustments to limits help text and documentation
 - `project deploy` is removed from the workbench, to be re-instated in a future release
   - no change to `project deploy` in the CLI
+- workbench response for partial matches to an unrecognized command is improved
+- better experience for a user creating a new account using `nim auth login`
 
 ## Changes in release 1.0.1
 
