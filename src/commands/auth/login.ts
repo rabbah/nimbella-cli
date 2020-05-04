@@ -71,9 +71,10 @@ export default class AuthLogin extends NimBaseCommand {
           await prompt(`Login will restart the workbench with appropriate credentials (please wait)`)
         } else {
           // In the CLI, a true response indicates a "long" provisioning (the wait for the redirect timed out).
+          // It can also happen if the user just ignores the browser and does nothing.
           // We also reassure the user, but with some more instructions.
-          logger.log("Your account is being provisioned and should be ready in a minute or two.")
-          logger.log("Try another 'nim auth login' then")
+          logger.log("If you logged in, your account is being provisioned and should be ready in a minute or two.")
+          logger.log("Try another 'nim auth login' then.")
         }
         return
       } else {
