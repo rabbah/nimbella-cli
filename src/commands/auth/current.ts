@@ -21,6 +21,7 @@
 import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
 import { flags } from '@oclif/command'
 import { getCredentials } from '../../deployer/login'
+import { computeBucketDomainName } from '../../deployer/deploy-to-bucket'
 
 export default class AuthInspect extends NimBaseCommand {
   static description = 'Get current namespace with optional details'
@@ -29,6 +30,7 @@ export default class AuthInspect extends NimBaseCommand {
     name: flags.boolean({ description: 'Show namespace name'}),
     apihost: flags.boolean({ description: 'Show API host' }),
     auth: flags.boolean({ description: 'Show API key' }),
+    web: flags.boolean({ description: 'Show web domain (if available)'}),
     storage: flags.boolean({ description: 'Show storage status'}),
     redis: flags.boolean({ description: 'Show redis status'}),
     all: flags.boolean({ description: 'Show all fields'}),
@@ -38,14 +40,14 @@ export default class AuthInspect extends NimBaseCommand {
   static args = [ ]
 
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
-    let { all, name, apihost, auth, storage, redis } = flags
+    let { all, name, apihost, auth, web, storage, redis } = flags
     if (all) {
-        name = apihost = auth = storage = redis = true
-    } else if (!apihost && !auth && !storage && !redis) {
+        name = apihost = auth = web = storage = redis = true
+    } else if (!apihost && !auth && !web && !storage && !redis) {
         name = true
     }
     const creds = await getCredentials(authPersister).catch(err => logger.handleError('', err))
-    const ans: { name?: string, apihost?: string, auth?: string, storage?: boolean, redis?: boolean } = {}
+    const ans: { name?: string, apihost?: string, auth?: string, web?: string, storage?: boolean, redis?: boolean } = {}
     if (name) {
         ans.name = creds.namespace
     }
@@ -54,6 +56,13 @@ export default class AuthInspect extends NimBaseCommand {
     }
     if (auth) {
         ans.auth = creds.ow.api_key
+    }
+    if (web) {
+        if (!!creds.storageKey) {
+            ans.web = `https://${computeBucketDomainName(creds.ow.apihost, creds.namespace)}`
+        } else {
+            ans.web = 'Not available, upgrade your account.'
+        }
     }
     if (storage) {
         ans.storage = !!creds.storageKey
@@ -64,7 +73,7 @@ export default class AuthInspect extends NimBaseCommand {
     if (Object.keys(ans).length == 1) {
         logger.log(String(Object.values(ans)[0]))
     } else {
-        logger.log(JSON.stringify(ans))
+        logger.log(JSON.stringify(ans, null, 2))
     }
   }
 }
