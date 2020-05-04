@@ -37,7 +37,7 @@ export default class Set extends NimBaseCommand {
         { name: 'value', description: 'the value to be added', required: true }
     ];
 
-    static aliases = ['kv:set'];
+    static aliases = ['kv:set', 'kv:add'];
 
     async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
         await queryKVStore(queryCommand, args, flags, authPersister)

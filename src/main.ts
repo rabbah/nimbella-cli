@@ -25,6 +25,8 @@
 // List of plural commands to be replaced by singular equivalents before being delegated to aio runtime plugin
 const pluralCommands = ['actions', 'activations', 'packages', 'routes', 'rules', 'triggers' ]
 
+const topicAliases = {'key-value':'kv', 'workbench':'wb', 'namespace':'ns'}
+
 // A screening function called at top level (before the real oclif dispatching begins).  Does various fixups.
 export async function run() {
     // Compute user agent
@@ -37,6 +39,13 @@ export async function run() {
     const cmd = process.argv[2]
     if (pluralCommands.includes(cmd)) {
         process.argv[2] = cmd.slice(0, -1)
+    }
+    // Apply alias fix till https://github.com/oclif/oclif/issues/237
+    const alias = Object.keys(topicAliases).filter((key) => {
+        return topicAliases[key] === cmd
+    })
+    if (alias.length) {
+        process.argv[2] = alias[0]
     }
     // Insert a colon between the first two tokens (may have been split earlier or not)
     colonize()
