@@ -312,7 +312,7 @@ Here’s how to create a Nimbella workspace in `nim`.
 
 **If you have not yet downloaded and installed the Nimbella Command Line Tool:**
 
-Visit [nimbella.com](https://nimbella.com) and press the signup button (it's free).
+Visit [nimbella.com](https://nimbella.com) and press the signup button (it's free).  Follow instructions from that point.
 
 **If you have already downloaded and installed the Nimbella Command Line Tool:**
 
@@ -322,15 +322,7 @@ Issue
 > nim auth login
 ```
 
-**In both cases:**
-
-After going through the signup process (which typically takes one or two minutes), you will land on a welcome page.  If you haven't downloaded `nim` yet, the page give you convenient links for doing so.  The page also provides a command like
-
-```
-> nim auth login <very-long-string>
-```
-
-This command will quickly connect `nim` to the just-created account.
+After going through the signup process (which typically takes one or two minutes), `nim` will return having fully provisioned your account.  Occasionally, if the process takes too long, `nim` may time out and encourage you to do another `nim auth login` in a minute or two.  The second attempt should succeed quickly.
 
 In general (e.g.) when switching to a different machine you can just issue
 
