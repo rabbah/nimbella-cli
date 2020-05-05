@@ -18,8 +18,9 @@
  * from Nimbella Corp.
  */
 
-import { NimBaseCommand, NimLogger } from '../../NimBaseCommand'
-import { default as ProjectCreate, createOrUpdateProject } from './create';
+import { NimBaseCommand, NimLogger, inBrowser } from '../../NimBaseCommand'
+import { createOrUpdateProject, seemsToBeProject } from '../../generator/project'
+import { default as ProjectCreate } from './create';
 
 export default class ProjectUpdate extends NimBaseCommand {
   static description = 'Update a Nimbella Project'
@@ -31,13 +32,31 @@ export default class ProjectUpdate extends NimBaseCommand {
 
   static args = ProjectCreate.args
 
-  // For now:
-  static hidden = true
-
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
-    if (!args.project) {
+    if (!args.project && !flags.source) {
       this.doHelp()
     }
-    await createOrUpdateProject(true, args, flags, logger)
+    if (inBrowser) {
+      logger.handleError(`'project update' needs local file access. Use the 'nim' CLI on your local machine`)
+    }
+    if (!seemsToBeProject(args.project)) {
+      logger.handleError(`A directory or file '${args.project}' does not appear to be a project`)
+    }
+    if (flags.source) {
+      const params = [flags.id, flags.key, flags.language];
+      if (flags.overwrite) { params.push('-o'); }
+      if (flags.updateSource) { params.push('-u'); }
+      if (flags.clientCode) { params.push('-c'); }
+      const pluginCommands = this.config.commands.filter(c => c.pluginName === flags.source);
+      if (pluginCommands.length) {
+        await pluginCommands[0].load().run([...params])
+      }
+      else {
+        logger.handleError(`the ${flags.source} plugin is not installed. try 'nim plugins add ${flags.source}'`);
+      }
+    }
+    else {
+      await createOrUpdateProject(true, args, flags, logger)
+    }
   }
 }

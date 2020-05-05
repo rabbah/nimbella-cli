@@ -1,0 +1,75 @@
+diff --git a/node_modules/@oclif/plugin-plugins/lib/commands/plugins/install.js b/node_modules/@oclif/plugin-plugins/lib/commands/plugins/install.js
+index 19fc56d..4fab323 100644
+--- a/node_modules/@oclif/plugin-plugins/lib/commands/plugins/install.js
++++ b/node_modules/@oclif/plugin-plugins/lib/commands/plugins/install.js
+@@ -39,6 +39,15 @@ class PluginsInstall extends command_1.Command {
+     }
+     /* eslint-enable no-await-in-loop */
+     async parsePlugin(input) {
++        if (this.plugins.hasValidRegistryUrl()) {
++            input = input.trim().toLowerCase();
++            let url = this.plugins.pluginsRegistryUrl();
++            if (url.endsWith('/'))
++                url = url.slice(0, -1);
++            const fullUrl = `${url}/${/\d/.test(input) ? input : input + '-latest'}.tgz`;
++            if (this.plugins.registryHasPlugin(fullUrl))
++                return { url: fullUrl, type: 'repo' };
++        }
+         if (input.includes('@') && input.includes('/')) {
+             input = input.slice(1);
+             const [name, tag = 'latest'] = input.split('@');
+diff --git a/node_modules/@oclif/plugin-plugins/lib/plugins.d.ts b/node_modules/@oclif/plugin-plugins/lib/plugins.d.ts
+index 3d27e82..dbf6c87 100644
+--- a/node_modules/@oclif/plugin-plugins/lib/plugins.d.ts
++++ b/node_modules/@oclif/plugin-plugins/lib/plugins.d.ts
+@@ -25,6 +25,9 @@ export default class Plugins {
+     unfriendlyName(name: string): string | undefined;
+     maybeUnfriendlyName(name: string): Promise<string>;
+     friendlyName(name: string): string;
++    pluginsRegistryUrl(): string;
++    registryHasPlugin(url: string): Promise<boolean>;
++    hasValidRegistryUrl(): boolean;
+     private createPJSON;
+     private readonly pjsonPath;
+     private readonly npmRegistry;
+diff --git a/node_modules/@oclif/plugin-plugins/lib/plugins.js b/node_modules/@oclif/plugin-plugins/lib/plugins.js
+index 2ae77ab..4c6acd1 100644
+--- a/node_modules/@oclif/plugin-plugins/lib/plugins.js
++++ b/node_modules/@oclif/plugin-plugins/lib/plugins.js
+@@ -194,6 +194,36 @@ class Plugins {
+             return name;
+         return match[1];
+     }
++      // 
++      pluginsRegistryUrl() {
++        return this.config.pjson.oclif.pluginsRegistry || '';
++    }
++    async registryHasPlugin(url) {
++        try {
++            const http = require('http-call').HTTP;
++            await http.get(url);
++            return true;
++        }
++        catch (error) {
++            this.debug(error);
++            return false;
++        }
++    }
++    hasValidRegistryUrl() {
++        try {
++            const expression = /[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)?/gi;
++            const regex = new RegExp(expression);
++            if (this.pluginsRegistryUrl().match(regex)) {
++                return true;
++            }
++            return false;
++        }
++        catch (error) {
++            this.debug(error);
++            return false;
++        }
++    }
++    // 
+     // private async loadPlugin(plugin: Config.PJSON.PluginTypes) {
+     //   return Config.load({...plugin as any, root: this.config.dataDir})
+     // }
