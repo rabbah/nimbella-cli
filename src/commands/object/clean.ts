@@ -42,7 +42,7 @@ export default class ObjectClean extends NimBaseCommand {
         if (!flags.force) {
             const ans = await prompt(`Type 'yes' to remove all objects from Object Store`);
             if (ans !== 'yes') {
-                logger.log('doing nothing');
+                logger.log('Doing nothing.');
                 return;
             }
         }

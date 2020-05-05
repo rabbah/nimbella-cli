@@ -51,7 +51,7 @@ export default class NamespaceClean extends NimBaseCommand {
             const ow = flags.justwhisk ? " openwhisk" : ""
             const ans = await prompt(`Type '${namespace}' to remove all${ow} content from namespace '${namespace}'`)
             if (ans !== namespace) {
-                logger.log('Doing nothing')
+                logger.log('Doing nothing.')
                 return
             }
         }

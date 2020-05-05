@@ -40,7 +40,7 @@ export default class Clean extends NimBaseCommand {
     if (!flags.force) {
       const ans = await prompt(`Type 'yes' to remove all content from Key-Value Store`);
       if (ans !== 'yes') {
-        logger.log('doing nothing');
+        logger.log('Doing nothing.');
         return;
       }
     }

@@ -20,8 +20,9 @@
 
 import { flags } from '@oclif/command'
 import { NimBaseCommand, NimLogger, NimFeedback, parseAPIHost, authPersister } from '../../NimBaseCommand'
-import { forgetNamespace } from '../../deployer/login'
+import { getCredentials, forgetNamespace } from '../../deployer/login'
 import { disambiguateNamespace } from '../project/deploy'
+import { prompt } from '../../ui'
 
 export default class AuthLogout extends NimBaseCommand {
   static description = 'Drop access to a Nimbella namespace'
@@ -31,10 +32,28 @@ export default class AuthLogout extends NimBaseCommand {
     ...NimBaseCommand.flags
   }
 
-  static args = [{name: 'namespace', description: 'the namespace you are dropping', required: true}]
+  static args = [{name: 'namespace', description: 'the namespace you are dropping', required: false}]
 
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
-    const host = parseAPIHost(flags.apihost)
+    let host = parseAPIHost(flags.apihost)
+    if (host && args.namespace === undefined) {
+      // what does it mean to logout from current namespace while specifying the api host? reject this.
+      logger.handleError(`Cannot specify an API host without also specifying the namespace.`)
+      return
+    }
+
+    if (!args.namespace) {
+      const creds = await getCredentials(authPersister).catch(err => logger.handleError('', err))
+      const ans = await prompt(`Type 'yes' to logout '${creds.namespace}' namespace on API host '${creds.ow.apihost}'`)
+      if (ans !== 'yes') {
+        logger.log('Doing nothing.')
+        return;
+      } else {
+        host = creds.ow.apihost
+        args.namespace = creds.namespace
+      }
+    }
+
     const namespace = await disambiguateNamespace(args.namespace, host).catch(err => logger.handleError('', err))
     const creds = await forgetNamespace(namespace, host, authPersister, new NimFeedback(logger)).catch(err => logger.handleError('', err))
     logger.log(`Ok.  Removed the namespace '${namespace}' on host '${creds.ow.apihost}' from the credential store`)
