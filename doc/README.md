@@ -1207,8 +1207,6 @@ packages:
       - name: hello
         web: false
         main: myMain
-    limits:
-      timeout: 10000
 ```
 
 The following sections contain a list of configuration members for [actions](#action-modifiers-allowed-in-project-yml), [packages](#package-modifiers-allowed-in-project-yml), and [global](#global-modifiers-allowed-in-project-yml). An additional configuration member is `bucket` which is documented in [Adding static web content](#adding-static-web-content).
@@ -1283,7 +1281,27 @@ The `clean` modifier requires some explanation. The deployer installs actions us
 
 ##### limits
 
-A nested map in which you can set limits for the timeout in milliseconds, memory in megabytes, and the log size in kilobytes. All three of these limits must be numbers and within the range permitted by the Nimbella cloud (use `nim info --limits` to see the limits).  When not specified, Nimbella Cloud defaults are assumed.
+A nested map in which you can set limits for
+
+- the timeout in milliseconds
+- memory in megabytes
+- log size in kilobytes
+
+For example
+
+```
+packages:
+  - name: demo
+    actions:
+      - name: hello
+        limits:
+          timeout: 10000
+          logs: 10,
+          memory: 256,
+```
+
+You need not specify all limits if you only wish to specify one or two.  All three of these limits must be numbers and within the range permitted by the Nimbella cloud (use `nim info --limits` to see the allowed range).  When not specified, Nimbella Cloud defaults are assumed.
+
 
 #### Package modifiers allowed in project.yml
 
