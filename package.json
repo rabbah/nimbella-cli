@@ -14,7 +14,7 @@
   "author": "Joshua Auerbach",
   "license": "SEE LICENSE IN 'LICENSE' or 'license.html'",
   "dependencies": {
-    "@adobe/aio-cli-plugin-runtime": "https://nimaio-apigcp.nimbella.io/adobe-aio-cli-plugin-runtime-82314fdb8f68d669972666e7a6f7b5f68f8d0430.tgz",
+    "@adobe/aio-cli-plugin-runtime": "https://nimaio-apigcp.nimbella.io/adobe-aio-cli-plugin-runtime-3faad3b342be8721afa6600a77112a6c227f7564.tgz",
     "@adobe/aio-lib-core-config": "^1.0.15",
     "@google-cloud/storage": "^3.2.1",
     "@oclif/command": "^1",
@@ -40,6 +40,8 @@
     "node-dir": "0.1.17",
     "open": "^6.3.0",
     "openwhisk": "3.18.0",
+    "patch-package": "^6.2.2",
+    "postinstall-prepare": "^1.0.1",
     "properties-parser": "0.3.1",
     "randomstring": "^1.1.5",
     "rimraf": "^3.0.1",
@@ -47,9 +49,7 @@
     "touch": "^3.1.0",
     "tslib": "^1",
     "url-parse": "1.4.4",
-    "xmlhttprequest": "^1.8.0",
-    "patch-package": "^6.2.2",
-    "postinstall-prepare": "^1.0.1"
+    "xmlhttprequest": "^1.8.0"
   },
   "devDependencies": {
     "@oclif/dev-cli": "^1",
