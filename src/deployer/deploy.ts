@@ -116,7 +116,10 @@ function cleanActionsAndPackages(todeploy: DeployStructure): Promise<DeployStruc
 export async function cleanPackage(client: openwhisk.Client, name: string, versions: VersionEntry): Promise<openwhisk.Package> {
     debug("Cleaning package %s", name)
     while (true) {
-        const pkg = await client.packages.get({ name })
+        const pkg = await client.packages.get({ name }).catch(() => undefined)
+        if (!pkg) {
+            return { name }
+        }
         if (!pkg.actions || pkg.actions.length == 0) {
             debug("No more actions, removing package")
             if (versions && versions.packageVersions)
