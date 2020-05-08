@@ -71,7 +71,11 @@ export class ProjectDeploy extends NimBaseCommand {
 
     // Deploy each project
     let success = true
+    const multiple = argv.length > 1
     for (const project of argv) {
+      if (multiple) {
+          logger.log(`\nReading project '${project}`)
+      }
       success = success && await doDeploy(project, cmdFlags, creds, owOptions, false, logger)
     }
     if (!success) {
