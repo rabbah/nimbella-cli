@@ -21,7 +21,6 @@
 import { NimBaseCommand, NimLogger } from '../../NimBaseCommand'
 import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
 const AioCommand: typeof RuntimeBaseCommand = require('@adobe/aio-cli-plugin-runtime/src/commands/runtime/activation/list')
-import { flags } from '@oclif/command'
 
 export default class ActivationList extends NimBaseCommand {
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
@@ -30,11 +29,7 @@ export default class ActivationList extends NimBaseCommand {
 
   static args = AioCommand.args
 
-  static flags = {
-    ...AioCommand.flags,
-    // unhide when ready
-    ui: flags.boolean({ hidden: true , description: 'requests graphical interactive output' })
-  }
+  static flags = AioCommand.flags
 
   static description = AioCommand.description
 }

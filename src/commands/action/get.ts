@@ -21,7 +21,6 @@
 import { NimBaseCommand, NimLogger, inBrowser } from '../../NimBaseCommand'
 import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
 const AioCommand: typeof RuntimeBaseCommand = require('@adobe/aio-cli-plugin-runtime/src/commands/runtime/action/get')
-import { flags } from '@oclif/command'
 
 export default class ActionGet extends NimBaseCommand {
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
@@ -31,11 +30,7 @@ export default class ActionGet extends NimBaseCommand {
 
   static args = AioCommand.args
 
-  static flags = {
-    ...AioCommand.flags,
-    // unhide when ready
-    ui: flags.boolean({ hidden: true , description: 'requests graphical interactive output' })
-  }
+  static flags = AioCommand.flags
 
   static description = AioCommand.description
 }
