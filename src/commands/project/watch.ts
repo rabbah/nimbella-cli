@@ -98,11 +98,11 @@ async function fireDeploy(project: string, filename: string, cmdFlags: Flags, cr
     reset()
     logger.log(`\nDeploying '${project}' due to change in '${filename}'`)
     let error = false
-    await doDeploy(project, cmdFlags, creds, owOptions, true, logger).catch(err => {
+    const result = await doDeploy(project, cmdFlags, creds, owOptions, true, logger).catch(err => {
         logger.displayError('', err)
         error = true
     })
-    if (error)
+    if (error || !result)
         return
     logger.log("Deployment complete.  Resuming watch.\n")
     await delay().then(() => watch())

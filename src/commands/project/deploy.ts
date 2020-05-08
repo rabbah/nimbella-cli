@@ -125,8 +125,7 @@ export async function doDeploy(project: string, cmdFlags: Flags, creds: Credenti
       return false
   }
   const result: DeployResponse = await deploy(todeploy)
-  displayResult(result, watching, cmdFlags.webLocal, logger)
-  return true
+  return displayResult(result, watching, cmdFlags.webLocal, logger)
 }
 
 // Disambiguate a namespace name when the user ends the name with a '-' character
