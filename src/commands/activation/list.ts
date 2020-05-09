@@ -18,12 +18,15 @@
  * from Nimbella Corp.
  */
 
-import { NimBaseCommand, NimLogger } from '../../NimBaseCommand'
+import { NimBaseCommand, NimLogger, inBrowser } from '../../NimBaseCommand'
 import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
 const AioCommand: typeof RuntimeBaseCommand = require('@adobe/aio-cli-plugin-runtime/src/commands/runtime/activation/list')
 
 export default class ActivationList extends NimBaseCommand {
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
+    if (inBrowser && !flags.limit) {
+      flags.limit = 10
+    }
     await this.runAio(rawArgv, argv, args, flags, logger, AioCommand)
   }
 
