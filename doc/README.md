@@ -288,12 +288,13 @@ objects create
 objects get
 project create
 project watch
-project deploy
 workbench login
 workbench run
 ```
 
 Those few commands are either inappropriate for the workbench or require filesystem access, which is unavailable in a browser.
+
+When running in the workbench, the `project deploy` command can only deploy from GitHub, not from the local file system.  It also cannot deploy projects that require building (forking a process and using the local file system).  A remote building option is planned for the future.
 
 The prefix `nim` is optional in front of workbench commands.
 
