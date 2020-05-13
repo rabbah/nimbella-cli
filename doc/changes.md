@@ -1,5 +1,22 @@
 # Nimbella CLI (and Workbench) Change History
 
+## Changes in release 1.0.3
+
+- `project deploy` once again working in the workbench (GitHub only)
+- support some new topic aliases (e.g. `kv` for `key-value`)
+- `auth current` now supports a `--web` flag showing the web URL
+- `nim object ...` accepted as well as `nim objects`
+- the namespace may be omitted on `nim logout` (defaults to current, causes a prompt)
+- documentation of the `limits` clause in `project.yml` is clarified
+- improvements to the output of `activation list` and `action list`
+- `nim project deploy` more consistently sets non-zero exit code after errors
+- improved error reporting when deploying multiple projects
+- the `nim` command in the workbench behaves more like a real command
+  - it is still optional
+  - the odd `nim-cmds` command is removed ... just type `nim`
+- `activation list` in workbench defaults to 10 activations instead of 30, results in better use of horizontal space in graphical section of the output
+- excessive command echoing reduced during workbench startup
+
 ## Changes in release 1.0.2
 
 - fix pagination and tooltips in the `activation list` view in the workbench
