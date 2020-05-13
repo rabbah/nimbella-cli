@@ -80,7 +80,7 @@ export default class NamespaceClean extends NimBaseCommand {
         const bucketName = computeBucketStorageName(apihost, namespace)
         const storage = new Storage(storageKey)
         const client = storage.bucket(bucketName)
-        const msg = await cleanBucket(client, undefined)
+        const msg = await cleanBucket(client, undefined, creds.ow)
         if (msg) {
             logger.log(msg)
         }

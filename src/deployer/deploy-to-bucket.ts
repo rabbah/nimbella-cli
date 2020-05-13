@@ -18,14 +18,17 @@
  * from Nimbella Corp.
  */
 
-import { Storage, Bucket } from '@google-cloud/storage'
-import { Credentials, WebResource, DeployResponse, DeploySuccess, BucketSpec, VersionEntry, ProjectReader } from './deploy-struct'
-import { wrapSuccess, wrapError } from './util';
-
+import { Storage, Bucket, GetSignedUrlConfig } from '@google-cloud/storage'
+import { Credentials, WebResource, DeployResponse, DeploySuccess, BucketSpec, VersionEntry, ProjectReader, OWOptions } from './deploy-struct'
+import { wrapSuccess, wrapError } from './util'
+import axios from 'axios'
+import * as openwhisk from 'openwhisk'
 import * as path from 'path'
+import * as fs from 'fs'
 import * as crypto from 'crypto'
 import * as URL from 'url-parse'
 import * as makeDebug from 'debug'
+import { inBrowser } from '../NimBaseCommand'
 const debug = makeDebug('nim:deployer:deploy-to-bucket')
 
 // Open a "bucket client" (object of type Bucket) to use in deploying web resources to the bucket associated with the
@@ -66,7 +69,7 @@ async function makeClient(bucketName: string, options: {}): Promise<Bucket> {
 
 // Deploy a single resource to the bucket
 export async function deployToBucket(resource: WebResource, client: Bucket, spec: BucketSpec, versions: VersionEntry,
-        reader: ProjectReader): Promise<DeployResponse> {
+        reader: ProjectReader, owOptions: OWOptions): Promise<DeployResponse> {
     // Determine if something will be uploaded or if that will be avoided due to a digest match in incremental mode
     // The 'versions' argument is always defined in incremental mode.
     const data = await reader.readFileContents(resource.filePath)
@@ -100,15 +103,20 @@ export async function deployToBucket(resource: WebResource, client: Bucket, spec
         metadata['cacheControl'] = 'no-cache'
     }
     // Upload.
-    const remoteFile = client.file(destination)
     debug(`bucket save operation for %s with data of length %d and metadata %O`, resource.simpleName, data.length, metadata)
-    // Specify resumable explicitly to avoid spurious fs call to retrieve config when running in the cloud
+    // Get signed URL for the upload (the more direct file.save() doesn't work in a browser, nor does calling file.getSignedUrl()
+    // directly.  We use an assistive action to acquire the signed URL.
+    let phaseTracker: string[] = []
     try {
-        await remoteFile.save(data, { resumable: false, metadata })
+        await doUpload(owOptions, destination, data, phaseTracker)
         debug('save operation for %s was successful', resource.simpleName)
+        phaseTracker[0] = 'setting metadata'
+        const remoteFile = client.file(destination)
+        await remoteFile.setMetadata(metadata)
+        debug('metadata saving operation for %s was successful', resource.simpleName)
     } catch (err) {
-        debug('error during bucket save operation: %O', err)
-        return wrapError(err, `storing web resource '${resource.simpleName}'`)
+        debug('an error occured: %O', err)
+        return wrapError(err, `web resource '${resource.simpleName}' (${phaseTracker[0]})`)
     }
     const item = `https://${client.name}/${destination}`
     const response = wrapSuccess(item, "web", false, undefined, {}, undefined)
@@ -116,6 +124,27 @@ export async function deployToBucket(resource: WebResource, client: Bucket, spec
     response.webHashes[resource.filePath] = digest
     debug('returning response %O', response)
     return response
+}
+
+// Subroutine to upload some data to a destination
+async function doUpload(owOptions: OWOptions, destination: string, data: Buffer, phaseTracker: string[]) {
+    phaseTracker[0] = 'getting signed URL'
+    const owClient = openwhisk(owOptions)
+    const urlResponse = await owClient.actions.invoke({
+        name: '/nimbella/websupport/getSignedUrl',
+        params: { fileName: destination },
+        blocking: true,
+        result: true
+    })
+    phaseTracker[0] = 'putting data to signed URL'
+    const url = urlResponse.url
+    if (!url) {
+        throw new Error(`Response from getSignedUrl was not a URL: ${urlResponse}`)
+    }
+    const putres = await axios.put(url, data)
+    if (putres.status !== 200) {
+        throw new Error(`Bad response [$putres.status}] from storage server`)
+    }
 }
 
 // Compute the actual name of a bucket as viewed by google storage
@@ -133,7 +162,7 @@ export function computeBucketDomainName(apiHost: string, namespace: string): str
 // Note: we use 'force' to make sure deletion is attempted for every file
 // Note: we don't throw errors since cleaning the bucket is a "best effort" feature.
 // Return (promise of) empty string on success, warning message if problems.
-export async function cleanBucket(client: Bucket, spec: BucketSpec): Promise<string> {
+export async function cleanBucket(client: Bucket, spec: BucketSpec, owOptions: OWOptions): Promise<string> {
    let prefix = spec ? spec.prefixPath : undefined
    if (prefix && !prefix.endsWith('/')) {
        prefix += '/'
@@ -144,21 +173,27 @@ export async function cleanBucket(client: Bucket, spec: BucketSpec): Promise<str
        return Promise.resolve("Note: one or more old web resources could not be deleted")
    })
    if (!prefix) {
-       return restore404Page(client)
+       return restore404Page(owOptions)
    } else {
        return ''
    }
 }
 
 // Restore the 404.html page after wiping the bucket
-async function restore404Page(client: Bucket): Promise<string> {
-    const our404 = require.resolve('../../404.html')
-    let error = ''
-    // TODO the following will fail in a browser.  We need to do the original resolve in a way that works there
-    // (not requiring a file location).  Then, use a File.save() operation.  Once that works in the browser ...
-    await client.upload(our404, { destination: '404.html'}).catch(err => {
-        debug("Error uploading 404.html %O", err)
-        error = "Standard 404.html page could not be restored"
-    })
-    return error
+async function restore404Page(owOptions: OWOptions): Promise<string> {
+    let our404
+    if (inBrowser) {
+        our404 = require('../../404.html')
+    } else {
+        const file404 = require.resolve('../../404.html')
+        our404 = fs.readFileSync(file404)
+    }
+    let phaseTracker: string[] = []
+    try {
+        await doUpload(owOptions, '404.html', our404, phaseTracker)
+        return ''
+    } catch (err) {
+        debug(`while ${phaseTracker[0]}, got error ${err}`)
+        return "Standard 404.html page could not be restored"
+    }
 }

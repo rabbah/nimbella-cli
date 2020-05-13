@@ -28,6 +28,7 @@
     "@oclif/plugin-which": "^1.0.3",
     "@octokit/rest": "16.36.0",
     "archiver": "^3.0.0",
+    "axios": "^0.19.2",
     "debug": "^4.1.1",
     "dotenv": "7.0.0",
     "expand-home-dir": "0.0.3",

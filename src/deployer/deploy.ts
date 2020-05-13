@@ -19,7 +19,7 @@
  */
 
 import { DeployStructure, DeployResponse, ActionSpec, PackageSpec, WebResource, BucketSpec, DeployerAnnotation, VersionEntry,
-    ProjectReader } from './deploy-struct'
+    ProjectReader, OWOptions } from './deploy-struct'
 import { combineResponses, wrapError, wrapSuccess, keyVal, emptyResponse,
     getDeployerAnnotation, straysToResponse, wipe, makeDict, digestPackage, digestAction, loadVersions } from './util'
 import * as openwhisk from 'openwhisk'
@@ -47,7 +47,7 @@ export async function cleanOrLoadVersions(todeploy: DeployStructure): Promise<De
     } else {
         if (todeploy.includer.isWebIncluded && (todeploy.cleanNamespace || todeploy.bucket && todeploy.bucket.clean)) {
             if (todeploy.bucketClient) {
-                const warn = await cleanBucket(todeploy.bucketClient, todeploy.bucket)
+                const warn = await cleanBucket(todeploy.bucketClient, todeploy.bucket, todeploy.credentials.ow)
                 if (warn) {
                     todeploy.feedback.warn(warn)
                 }
@@ -71,7 +71,7 @@ export function doDeploy(todeploy: DeployStructure): Promise<DeployResponse> {
         webLocal = ensureWebLocal(todeploy.flags.webLocal)
     }
     const webPromises = todeploy.web.map(res => deployWebResource(res, todeploy.actionWrapPackage, todeploy.bucket, todeploy.bucketClient,
-            todeploy.flags.incremental ? todeploy.versions : undefined, webLocal, todeploy.reader))
+            todeploy.flags.incremental ? todeploy.versions : undefined, webLocal, todeploy.reader, todeploy.credentials.ow))
     return getDeployerAnnotation(todeploy.filePath, todeploy.githubPath).then(deployerAnnot => {
         const actionPromises = todeploy.packages.map(pkg => deployPackage(pkg, todeploy.owClient, deployerAnnot, todeploy.parameters,
             todeploy.cleanNamespace, todeploy.flags.incremental ? todeploy.versions : undefined, todeploy.reader))
@@ -142,14 +142,14 @@ export async function cleanPackage(client: openwhisk.Client, name: string, versi
 // which is assumed to exist (it should have been created already).  Otherwise, if bucketClient is specified, this
 // is a traditional deploy to the bucket.  Otherwise (none specified) it is an error.
 export function deployWebResource(res: WebResource, actionWrapPackage: string, spec: BucketSpec,
-        bucketClient: Bucket, versions: VersionEntry, webLocal: string, reader: ProjectReader): Promise<DeployResponse> {
+        bucketClient: Bucket, versions: VersionEntry, webLocal: string, reader: ProjectReader, owOptions: OWOptions): Promise<DeployResponse> {
     // We can rely on the fact that prepareToDeploy would have rejected the deployment if action wrapping failed.
     if (actionWrapPackage) {
         return Promise.resolve(emptyResponse())
     } else if (webLocal) {
         return deployToWebLocal(res, webLocal, spec)
     } else if (bucketClient) {
-        return deployToBucket(res, bucketClient, spec, versions, reader)
+        return deployToBucket(res, bucketClient, spec, versions, reader, owOptions)
     } else {
         return Promise.resolve(wrapError(new Error(`No bucket client and/or bucket spec for '${res.simpleName}'`), 'web resources'))
     }
