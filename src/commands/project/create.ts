@@ -27,20 +27,16 @@ export default class ProjectCreate extends NimBaseCommand {
     static description = 'Create a Nimbella Project'
 
     static flags = {
-        target: flags.string({ description: 'Target namespace for the project' }),
-        clean: flags.boolean({ description: 'Clean the namespace before every deploy', allowNo: true }),
-        sample: flags.boolean({ description: 'Start off with hello world (default language javascript)' }),
         config: flags.boolean({ description: 'Generate template config file' }),
-
         source: flags.string({
             char: 's', description: 'API specs source',
             options: plugins
         }),
         id: flags.string({ char: 'i', description: 'API specs id/name/path' }),
-        key: flags.string({ char: 'k', dependsOn: ['source'], description: 'key to access the source API' }),
+        key: flags.string({ char: 'k', dependsOn: ['source'], description: 'Key to access the source API' }),
         language: flags.string({
-            char: 'l', description: 'Language for the project (implies sample unless source is specified)', default: 'javascript',
-            options: ['go', 'javascript', 'python', 'java', 'swift', 'php']
+            char: 'l', description: 'Language for the project (implies sample unless source is specified)', default: 'js',
+            options: ['go', 'js', 'ts', 'py', 'java', 'swift', 'php']
         }),
         overwrite: flags.boolean({ char: 'o', description: 'Overwrites the existing nimbella project directory if it exists', }),
         updateSource: flags.boolean({ char: 'u', description: 'Sync updated API specs back to source' }),

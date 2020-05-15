@@ -1,5 +1,5 @@
 diff --git a/node_modules/@oclif/plugin-plugins/lib/commands/plugins/install.js b/node_modules/@oclif/plugin-plugins/lib/commands/plugins/install.js
-index 19fc56d..4fab323 100644
+index 19fc56d..02f5885 100644
 --- a/node_modules/@oclif/plugin-plugins/lib/commands/plugins/install.js
 +++ b/node_modules/@oclif/plugin-plugins/lib/commands/plugins/install.js
 @@ -39,6 +39,15 @@ class PluginsInstall extends command_1.Command {
@@ -11,7 +11,7 @@ index 19fc56d..4fab323 100644
 +            let url = this.plugins.pluginsRegistryUrl();
 +            if (url.endsWith('/'))
 +                url = url.slice(0, -1);
-+            const fullUrl = `${url}/${/\d/.test(input) ? input : input + '-latest'}.tgz`;
++            const fullUrl = `${url}/${/\d/.test(input) ? input : input + '-latest'}.tgz?${new Date().getTime()}`;
 +            if (this.plugins.registryHasPlugin(fullUrl))
 +                return { url: fullUrl, type: 'repo' };
 +        }
@@ -33,15 +33,15 @@ index 3d27e82..dbf6c87 100644
      private readonly pjsonPath;
      private readonly npmRegistry;
 diff --git a/node_modules/@oclif/plugin-plugins/lib/plugins.js b/node_modules/@oclif/plugin-plugins/lib/plugins.js
-index 2ae77ab..4c6acd1 100644
+index 2ae77ab..79fbd45 100644
 --- a/node_modules/@oclif/plugin-plugins/lib/plugins.js
 +++ b/node_modules/@oclif/plugin-plugins/lib/plugins.js
 @@ -194,6 +194,36 @@ class Plugins {
              return name;
          return match[1];
      }
-+      // 
-+      pluginsRegistryUrl() {
++    // 
++    pluginsRegistryUrl() {
 +        return this.config.pjson.oclif.pluginsRegistry || '';
 +    }
 +    async registryHasPlugin(url) {

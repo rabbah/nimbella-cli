@@ -28,7 +28,7 @@
 //      (lacking java, go, and typescript)
 //
 
-const javascript = `function main(args) {
+const js = `function main(args) {
     let name = args.name || 'stranger'
     let greeting = 'Hello ' + name + '!'
     console.log(greeting)
@@ -36,7 +36,7 @@ const javascript = `function main(args) {
   }
   `
 
-  const typescript = `export function main(args: {}): {} {
+  const ts = `export function main(args: {}): {} {
     let name: string = args['name'] || 'stranger'
     let greeting: string = 'Hello ' + name + '!'
     console.log(greeting)
@@ -44,7 +44,7 @@ const javascript = `function main(args) {
   }
   `
 
-  const python = `def main(args):
+  const py = `def main(args):
       name = args.get("name", "stranger")
       greeting = "Hello " + name + "!"
       print(greeting)
@@ -75,10 +75,6 @@ const javascript = `function main(args) {
   `
 
   const java = `import com.google.gson.JsonObject;
-  import default from '../../plugins/openapi/src/index';
-  import default from '../../plugins/openapi/src/index';
-  import default from '../../plugins/openapi/src/index';
-  import default from '../plugins/openapi/src/index';
 
   public class Main {
       public static JsonObject main(JsonObject args) {
@@ -105,6 +101,4 @@ const javascript = `function main(args) {
     return msg
   }
   `
-
-export const samples = { javascript, python, php, swift, java, go, typescript }
-export const defaultSample = { kind: 'nodejs:default', sampleText: javascript }
+export const samples = { js, py, php, swift, java, go, ts }

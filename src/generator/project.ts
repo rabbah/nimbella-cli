@@ -23,12 +23,12 @@ import * as path from 'path'
 import { extFromRuntime } from '../deployer/util'
 import * as yaml from 'js-yaml'
 import { DeployStructure, PackageSpec, ActionSpec } from '../deployer/deploy-struct'
-import { samples, defaultSample } from './samples';
+import { samples } from './samples';
 
 // Working function used by both create and update
 export async function createOrUpdateProject(updating: boolean, args: any, flags: any, logger: any) {
-    const { target, clean, sample, config } = flags
-    const { kind, sampleText } = sample && !flags.language ? defaultSample : languageToKindAndSample(flags.language, logger)
+    const { target, clean, config } = flags
+    const { kind, sampleText } = languageToKindAndSample(flags.language, logger)
     let projectConfig: DeployStructure = config ? configTemplate() : (target || clean) ? {} : undefined
     const configFile = path.join(args.project, 'project.yml')
     const defaultPackage = path.join(args.project, 'packages', 'default')
@@ -53,7 +53,7 @@ export async function createOrUpdateProject(updating: boolean, args: any, flags:
                 logger.handleError(`A directory or file '${args.project}' does not appear to be a project`)
             }
         } else {
-            logger.handleError(`Cannot create project because '${args.project}' already exists in the file system`)
+            logger.handleError(`Cannot create project because '${args.project}' already exists in the file system, use '-o' to overwrite`)
         }
     } else {
         // Create the project from scratch
@@ -100,9 +100,7 @@ function languageToKindAndSample(language: string, logger: any): { kind: string,
     }
     // TODO the following should be coordinated with the runtime table and some common source of samples used by playground,
     // cloud editor, and this code
-    if (language === 'javascript')
-        return defaultSample
-    if (['java', 'python', 'php', 'swift', 'go', 'typescript'].includes(language))
+    if (['go', 'js', 'ts', 'py', 'java', 'php', 'swift'].includes(language))
         return { kind: language + ':default', sampleText: samples[language] }
     logger.handleError(`${language} is not a supported language`)
 }
@@ -110,6 +108,7 @@ function languageToKindAndSample(language: string, logger: any): { kind: string,
 // Generate a sample.   The sample is called 'hello'.   When we support update we will need to elaborate this when there are
 // pre-existing actions called 'hello'
 function generateSample(kind: string, config: DeployStructure | undefined, sampleText: string, defaultPackage: string) {
+    kind = mapLanguage(kind)
     const suffix = extFromRuntime(kind, false)
     const file = path.join(defaultPackage, `hello.${suffix}`)
     fs.writeFileSync(file, sampleText)
@@ -122,6 +121,24 @@ function generateSample(kind: string, config: DeployStructure | undefined, sampl
         }
         defPkg.actions.push(action)
     }
+}
+
+function mapLanguage(kind: string) {
+    let [language, variant] = kind.split(':')
+    switch (language) {
+        case 'js':
+            language = 'nodejs'
+            break
+        case 'ts':
+            language = 'typescript'
+            break
+        case 'py':
+            language = 'python'
+            break
+        default:
+            break
+    }
+    return `${language}:${variant}`
 }
 
 // Test whether a path in the file system is a project based on some simple heuristics.  The path is known to exist.
