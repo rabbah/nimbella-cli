@@ -39,6 +39,8 @@ export default class ObjectCreate extends NimBaseCommand {
         { name: 'namespace', description: 'the namespace to add object to (current namespace if omitted)', required: false }
     ]
 
+    static aliases = ['objects:add'];
+
     async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
         const { client } = await getObjectStorageClient(args, flags, authPersister);
         if (!client) logger.handleError(`Couldn't get to the object store, ensure it's enabled for the ${args.namespace || 'current'} namespace`);

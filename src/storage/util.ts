@@ -68,3 +68,14 @@ export function humanFileSize(bytes: number | undefined, si: boolean | undefined
     } while (Math.abs(bytes) >= thresh && u < units.length - 1);
     return bytes.toFixed(1) + ' ' + units[u];
 }
+
+export function errorHandler(err: any, logger: NimLogger, fileName: string) {
+    if (err.code === 'CONTENT_DOWNLOAD_MISMATCH') {
+        logger.log(`${fileName} content is not printable on prompt.`)
+    }
+    else if (err.code === 404) {
+        logger.log(`${fileName} is not available.`)
+    }
+    else
+        logger.handleError(err.message);
+}

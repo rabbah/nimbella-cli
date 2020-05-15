@@ -44,7 +44,8 @@ async function getStorageClient(args: any, flags: any, authPersister: any, bucke
     }
     const storage = new Storage(storageKey);
     const client = storage.bucket(bucketPrefix + bucketName);
-    return { bucketName, storage, client };
+    const ow = creds.ow;
+    return { bucketName, storage, client, ow };
 }
 
 export async function getWebStorageClient(args: any, flags: any, authPersister: any) {

@@ -18,7 +18,7 @@
  * from Nimbella Corp.
  */
 
-import { Storage, Bucket, GetSignedUrlConfig } from '@google-cloud/storage'
+import { Storage, Bucket } from '@google-cloud/storage'
 import { Credentials, WebResource, DeployResponse, DeploySuccess, BucketSpec, VersionEntry, ProjectReader, OWOptions } from './deploy-struct'
 import { wrapSuccess, wrapError } from './util'
 import axios from 'axios'
@@ -180,7 +180,7 @@ export async function cleanBucket(client: Bucket, spec: BucketSpec, owOptions: O
 }
 
 // Restore the 404.html page after wiping the bucket
-async function restore404Page(owOptions: OWOptions): Promise<string> {
+export async function restore404Page(owOptions: OWOptions): Promise<string> {
     let our404
     if (inBrowser) {
         our404 = require('../../404.html')
