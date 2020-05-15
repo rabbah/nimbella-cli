@@ -56,6 +56,6 @@ export default class WebContentClean extends NimBaseCommand {
     async cleanup(client: Bucket, ow: OWOptions, logger: NimLogger) {
         const loader = await spinner();
         loader.start(`deleting web content`, '', { stdout: true })
-        await client.deleteFiles().then(_ => restore404Page(ow)).then(_ => loader.stop('done')).catch(e => logger.handleError('', e));
+        await client.deleteFiles().then(_ => restore404Page(client, ow)).then(_ => loader.stop('done')).catch(e => logger.handleError('', e));
     }
 }

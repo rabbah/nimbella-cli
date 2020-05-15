@@ -173,15 +173,15 @@ export async function cleanBucket(client: Bucket, spec: BucketSpec, owOptions: O
        return Promise.resolve("Note: one or more old web resources could not be deleted")
    })
    if (!prefix) {
-       return restore404Page(owOptions)
+       return restore404Page(client, owOptions)
    } else {
        return ''
    }
 }
 
 // Restore the 404.html page after wiping the bucket
-export async function restore404Page(owOptions: OWOptions): Promise<string> {
-    let our404
+export async function restore404Page(client: Bucket, owOptions: OWOptions): Promise<string> {
+    let our404: Buffer
     if (inBrowser) {
         our404 = require('../../404.html')
     } else {
@@ -191,6 +191,10 @@ export async function restore404Page(owOptions: OWOptions): Promise<string> {
     let phaseTracker: string[] = []
     try {
         await doUpload(owOptions, '404.html', our404, phaseTracker)
+        phaseTracker[0] = 'setting metadata'
+        const remote404 = client.file('404.html')
+        const metadata = { contentType: 'text/html' }
+        await remote404.setMetadata(metadata)
         return ''
     } catch (err) {
         debug(`while ${phaseTracker[0]}, got error ${err}`)
