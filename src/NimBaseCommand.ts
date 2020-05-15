@@ -38,7 +38,7 @@ import { IArg } from '@oclif/parser/lib/args'
 import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
 import { format } from 'util'
 import { STATUS_CODES } from 'http'
-import { fileSystemPersister, browserPersister } from './deployer/login'
+import { fileSystemPersister, browserPersister } from './deployer/credentials'
 import { Feedback } from './deployer/deploy-struct'
 
 import * as createDebug  from 'debug'

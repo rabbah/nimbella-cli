@@ -20,7 +20,7 @@
 
 import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
 import { flags } from '@oclif/command'
-import { getCredentials } from '../../deployer/login'
+import { getCredentials } from '../../deployer/credentials'
 import { computeBucketDomainName } from '../../deployer/deploy-to-bucket'
 
 export default class AuthInspect extends NimBaseCommand {

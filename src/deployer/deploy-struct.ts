@@ -240,6 +240,7 @@ export interface CredentialEntry {
     api_key: string
     storageKey: CredentialStorageEntry
     redis: boolean
+    commander?: object
 }
 
 // Part of CredentialStore for the storage credentials.  THese are organized for convenience in initializing a Storage
@@ -255,6 +256,7 @@ export interface Credentials {
     ow: OWOptions
     storageKey: CredentialStorageEntry|undefined
     redis: boolean
+    commander?: object
 }
 
 // Compact and less complete information about a Credential suitable for listing and tabular display

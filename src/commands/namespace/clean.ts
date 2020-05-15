@@ -20,7 +20,7 @@
 
 import { flags } from '@oclif/command'
 import { NimBaseCommand, NimLogger, authPersister, parseAPIHost } from '../../NimBaseCommand'
-import { getCredentialsForNamespace, getCredentials } from '../../deployer/login'
+import { getCredentialsForNamespace, getCredentials } from '../../deployer/credentials'
 import { wipeNamespace } from '../../deployer/api'
 import { computeBucketStorageName, cleanBucket } from '../../deployer/deploy-to-bucket'
 import { Credentials } from '../../deployer/deploy-struct'

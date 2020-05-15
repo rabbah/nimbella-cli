@@ -19,7 +19,7 @@
  */
 
 import { Storage } from '@google-cloud/storage'
-import { getCredentials, getCredentialsForNamespace } from '../deployer/login';
+import { getCredentials, getCredentialsForNamespace } from '../deployer/credentials';
 import { computeBucketStorageName } from '../deployer/deploy-to-bucket';
 import { Credentials } from '../deployer/deploy-struct';
 

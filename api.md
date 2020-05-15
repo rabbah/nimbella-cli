@@ -34,8 +34,10 @@ export interface Credentials {
     ow: OWOptions
     storageKey: CredentialStorageEntry|undefined
     redis: boolean
+    commander?: object
 }
 ```
+The `commander` member is an example of an optional extension.  The deployer will define what extensions are legal but not concern itself with their contents.  Currently, `commander` is the only such extension.
 
 ### DeployResponse
 
@@ -195,10 +197,22 @@ The function prepares the process environment for other API calls by
 Adds information about a github account for later use by the deployer when deploying from github.
 
 ```
-addGithubAccount(name: string, token: string): Promise<any>
+addGithubAccount(name: string, token: string, persister: Persister):
+ Promise<any>
 ```
 
 The `token` argument must a valid access token for github (preferably one that will not expire).   The `name` argument provides the account name under which the token is recorded.   It is highly recommended that this name match the actual github username that the `token` belongs to.  This is not checked by the API but an incorrect name can cause confusion later, as more accounts are added.
+
+### addCommmanderData
+
+Adds or replaces the `commander` member of a credential entry.
+
+```
+addCommanderData(apihost: string, namespace: string, data: object,
+ persister: Persister): Promise<boolean> {
+```
+
+The entry must already exist and is identified by the combination of `apihost` and `namespace`.  A `false` return indicates that the entry was not found.  A `true` return indicates success.
 
 ### buildProject
 
@@ -264,7 +278,7 @@ getCredentialsForNamespace(namespace: string,
                            persister: Persister): Promise<Credentials>
 ```
 
-The `apihost` may be omitted, in which case the function will find the entry by name alone; however, an error will be thrown in that case if the namespace exists on more than one host in the credential store.
+The `apihost` may be falsey, in which case the function will find the entry by name alone; however, an error will be thrown in that case if the namespace exists on more than one host in the credential store.
 
 ### prepareToDeploy
 

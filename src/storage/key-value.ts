@@ -17,7 +17,7 @@
  * is strictly forbidden unless prior written permission is obtained
  * from Nimbella Corp.
  */
-import { getCredentials, getCredentialsForNamespace } from '../deployer/login';
+import { getCredentials, getCredentialsForNamespace } from '../deployer/credentials';
 import { Credentials } from '../deployer/deploy-struct';
 
 const openwhisk = require('openwhisk');

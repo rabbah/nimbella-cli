@@ -21,8 +21,8 @@
 import { flags } from '@oclif/command'
 import { NimBaseCommand, NimLogger, inBrowser, parseAPIHost, authPersister } from '../NimBaseCommand'
 import { open } from '../ui'
-import { wskRequest, RuntimeTable, RuntimeEntry } from '../deployer/util'
-import { getCredentials } from '../deployer/login'
+import { wskRequest, RuntimeTable } from '../deployer/util'
+import { getCredentials } from '../deployer/credentials'
 
 export default class Info extends NimBaseCommand {
   static description = "show information about this version of 'nim'"

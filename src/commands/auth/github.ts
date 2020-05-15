@@ -19,9 +19,9 @@
  */
 
 import { flags } from '@oclif/command'
-import { NimBaseCommand, NimLogger } from '../../NimBaseCommand'
+import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
 import { isGithubProvider, doOAuthFlow } from '../../oauth'
-import { getGithubAccounts, deleteGithubAccount, switchGithubAccount, addGithubAccount } from '../../deployer/github'
+import { getGithubAccounts, deleteGithubAccount, switchGithubAccount, addGithubAccount } from '../../deployer/credentials'
 import { prompt } from '../../ui'
 
 let cli
@@ -73,9 +73,9 @@ export default class AuthGithub extends NimBaseCommand {
   // Add a github credential.  Called for --add, --initial, and the combination --username + --token
   async doAdd(logger: NimLogger, isInitial: boolean, name: string, token: string) {
     if (name && token) {
-      await addGithubAccount(name, token)
+      await addGithubAccount(name, token, authPersister)
     } else {
-      const existing = await getGithubAccounts()
+      const existing = await getGithubAccounts(authPersister)
       if (isInitial && Object.keys(existing).length > 0) {
         const list = Object.keys(existing).join(', ')
         logger.log(`you already have github credentials: ${list}`)
@@ -85,7 +85,7 @@ export default class AuthGithub extends NimBaseCommand {
         const authResponse = await doOAuthFlow(logger, true, undefined)
         if (isGithubProvider(authResponse)) {
           const warn = !isInitial && !!existing[authResponse.name]
-          await addGithubAccount(authResponse.name, authResponse.key)
+          await addGithubAccount(authResponse.name, authResponse.key, authPersister)
           name = authResponse.name
           if (warn) {
             logger.log(`You already had an entry for username '${authResponse.name}'.  It was replaced`)
@@ -103,7 +103,7 @@ export default class AuthGithub extends NimBaseCommand {
   }
 
   async doSwitch(name: string, logger: NimLogger) {
-    const status = await switchGithubAccount(name)
+    const status = await switchGithubAccount(name, authPersister)
     if (status) {
         logger.log(`the github account of user name '${name}' is now current`)
     } else {
@@ -112,7 +112,7 @@ export default class AuthGithub extends NimBaseCommand {
   }
 
   async doList(logger: NimLogger) {
-    const accounts = await getGithubAccounts()
+    const accounts = await getGithubAccounts(authPersister)
     this.debug('accounts: %O', accounts)
     const accountNames = Object.keys(accounts)
     this.debug('accountNames: %O', accountNames)
@@ -125,7 +125,7 @@ export default class AuthGithub extends NimBaseCommand {
   }
 
   async doShow(name: string, logger: NimLogger) {
-    const accounts = await getGithubAccounts()
+    const accounts = await getGithubAccounts(authPersister)
     if (accounts[name]) {
         logger.log(accounts[name])
     } else {
@@ -134,7 +134,7 @@ export default class AuthGithub extends NimBaseCommand {
   }
 
   async doDelete(name: string, logger: NimLogger) {
-    const status = await deleteGithubAccount(name)
+    const status = await deleteGithubAccount(name, authPersister)
     switch (status) {
       case "DeletedOk":
         logger.log(`the github account of user name '${name}' is removed from the credential store`)

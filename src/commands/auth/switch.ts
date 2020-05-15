@@ -20,7 +20,7 @@
 
 import { flags } from '@oclif/command'
 import { NimBaseCommand, NimLogger, parseAPIHost, authPersister } from '../../NimBaseCommand'
-import { switchNamespace } from '../../deployer/login'
+import { switchNamespace } from '../../deployer/credentials'
 import { disambiguateNamespace } from '../project/deploy'
 
 export default class AuthSwitch extends NimBaseCommand {

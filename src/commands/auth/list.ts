@@ -19,7 +19,7 @@
  */
 
 import { NimBaseCommand, NimLogger, authPersister } from '../../NimBaseCommand'
-import { getCredentialList } from '../../deployer/login'
+import { getCredentialList } from '../../deployer/credentials'
 import { CredentialRow } from '../../deployer/deploy-struct'
 
 // Constants used in formatting the credential list

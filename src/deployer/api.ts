@@ -29,7 +29,7 @@ import { openBucketClient } from './deploy-to-bucket'
 import { buildAllActions, buildWeb } from './finder-builder'
 import * as openwhisk from 'openwhisk'
 import * as path from 'path'
-import { getCredentialsForNamespace, getCredentials, Persister } from './login';
+import { getCredentialsForNamespace, getCredentials, Persister } from './credentials';
 import { makeIncluder } from './includer';
 import { inBrowser } from '../NimBaseCommand'
 import * as makeDebug from 'debug'

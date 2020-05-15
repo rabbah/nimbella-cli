@@ -23,9 +23,10 @@
 export { initializeAPI, deployProject, readPrepareAndBuild, readAndPrepare, deploy, readProject, buildProject, prepareToDeploy,
     wipeNamespace, wipePackage } from './api'
 export { DeployStructure, DeployResponse, DeploySuccess, OWOptions, Credentials, CredentialRow, Flags, PackageSpec, ActionSpec,
-    CredentialHostMap, CredentialNSMap, DeployerAnnotation, VersionMap } from './deploy-struct'
-export { doLogin, doAdminLogin, addCredentialAndSave, getCredentials, getCredentialList, getCredentialsForNamespace, forgetNamespace, switchNamespace,
-    Persister, fileSystemPersister, browserPersister } from './login'
+    CredentialHostMap, CredentialNSMap, DeployerAnnotation, VersionMap, Feedback, DefaultFeedback } from './deploy-struct'
+export { doLogin, doAdminLogin } from './login'
+export { addCredentialAndSave, getCredentials, getCredentialList, getCredentialsForNamespace, forgetNamespace, switchNamespace,
+    Persister, fileSystemPersister, browserPersister, addGithubAccount, addCommanderData } from './credentials'
 export { computeBucketStorageName, computeBucketDomainName, cleanBucket } from './deploy-to-bucket'
 export { extFromRuntime } from './util'
-export { GithubDef, isGithubRef, parseGithubRef, fetchProject, addGithubAccount } from './github'
+export { GithubDef, isGithubRef, parseGithubRef, fetchProject } from './github'

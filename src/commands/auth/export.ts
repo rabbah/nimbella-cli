@@ -20,7 +20,7 @@
 
 import { NimBaseCommand, NimLogger, authPersister, parseAPIHost } from '../../NimBaseCommand'
 import { flags } from '@oclif/command'
-import { getCredentials, getCredentialsForNamespace } from '../../deployer/login'
+import { getCredentials, getCredentialsForNamespace } from '../../deployer/credentials'
 import { disambiguateNamespace } from '../project/deploy'
 import { getCredentialsToken } from '../../oauth'
 

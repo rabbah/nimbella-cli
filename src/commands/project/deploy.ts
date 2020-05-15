@@ -22,7 +22,7 @@ import { flags } from '@oclif/command'
 import { NimBaseCommand, NimLogger, NimFeedback, authPersister, parseAPIHost, inBrowser } from '../../NimBaseCommand'
 import { readAndPrepare, buildProject, deploy } from '../../deployer/api'
 import { Flags, OWOptions, DeployResponse, Credentials } from '../../deployer/deploy-struct'
-import { getCredentialList, getCredentialsForNamespace } from '../../deployer/login'
+import { getCredentialList, getCredentialsForNamespace } from '../../deployer/credentials'
 import { computeBucketDomainName } from '../../deployer/deploy-to-bucket'
 import { isGithubRef } from '../../deployer/github';
 import * as path from 'path'

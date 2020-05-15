@@ -20,7 +20,8 @@
 
 import { flags } from '@oclif/command'
 import { NimBaseCommand, NimLogger, parseAPIHost, authPersister, inBrowser } from '../../NimBaseCommand'
-import { doLogin, doAdminLogin, doInteractiveLogin, addCredentialAndSave } from '../../deployer/login'
+import { doLogin, doAdminLogin, doInteractiveLogin } from '../../deployer/login'
+import { addCredentialAndSave } from '../../deployer/credentials'
 import { doOAuthFlow, isFullCredentials } from '../../oauth'
 import { prompt } from '../../ui'
 import { Credentials } from '../../deployer/deploy-struct'

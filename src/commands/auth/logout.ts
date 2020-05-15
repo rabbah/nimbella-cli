@@ -20,7 +20,7 @@
 
 import { flags } from '@oclif/command'
 import { NimBaseCommand, NimLogger, NimFeedback, parseAPIHost, authPersister } from '../../NimBaseCommand'
-import { getCredentials, forgetNamespace } from '../../deployer/login'
+import { getCredentials, forgetNamespace } from '../../deployer/credentials'
 import { disambiguateNamespace } from '../project/deploy'
 import { prompt } from '../../ui'
 
