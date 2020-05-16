@@ -694,6 +694,9 @@ export function substituteFromEnvAndFiles(input: string, envPath: string, projec
             warn = warn || nextSym.terminator !== ')'
             subst = getDictionarySubstitution(envar, props, badVars)
         } else if (envar.startsWith('<')) {
+            if (nextSym.terminator === ')') {
+                throw new Error('Invalid substitution: $(' + envar + ')')
+            }
             const fileSubst = path.join(projectPath, envar.slice(1))
             subst = getSubstituteFromFile(fileSubst)
         } else {
@@ -722,9 +725,15 @@ export function substituteFromEnvAndFiles(input: string, envPath: string, projec
 function findNextSymbol(input: string): { index: number, terminator: string } {
     const nextBrace = input.indexOf('${')
     const nextParen = input.indexOf('$(')
-    if (nextBrace > nextParen) {
-        return { index: nextBrace, terminator: '}' }
-    } else if (nextParen >= 0) {
+    const haveBrace = nextBrace >= 0
+    const haveParen = nextParen >= 0
+    if (haveBrace) {
+        if (haveParen) {
+            return nextBrace < nextParen ? { index: nextBrace, terminator: '}' } : { index: nextParen, terminator: ')' }
+        } else {
+            return { index: nextBrace, terminator: '}' }
+        }
+    } else if (haveParen) {
         return { index: nextParen, terminator: ')' }
     } else {
         return { index: -1, terminator: '' }
