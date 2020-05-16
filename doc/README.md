@@ -305,7 +305,7 @@ To transfer your credentials to the workbench running in a browser that is not t
 
 ## Nimbella namespaces
 
-You must have permission to use a specific namespace on the Nimbella platform In order to deploy a nim project and use many other nim capabilities.  A Nimbella namespace comes with resources such as object store buckets for web content and database instances, which are managed as part of the namespace.
+You must have permission to use a specific namespace on the Nimbella platform In order to deploy a nim project and use many other nim capabilities.  A Nimbella namespace comes with storage resources which are managed as part of the namespace.
 
 This section contains information about how to create a Nimbella namespace, view the credential store, and perform other tasks involving namespaces.
 
@@ -340,7 +340,7 @@ This will connect the tool to your account (it may or may not ask for identifica
 
 A typical namespace is provisioned with the following:
 
-*   Two storage buckets: one for web content and one accessible to actions for use as a virtual file system
+*   A web content area and an object storage area.  These are always provided as a pair and summarized as 'Storage' when presented in a list.
 *   A [Redis](https://redis.io) instance for storing key-value pairs
 *   A DNS domain name for web content
 *   A set of OpenWhisk resources
@@ -1516,7 +1516,7 @@ Substitution occurs as follows:
 File substitution is typically used to set environment, parameters or annotations on an action or package or to set the top-level parameters, such as the following:
 
 ```
-environment: $(<.environment)
+environment: ${<.environment}
 parameters: ${<.parameters}
 annotations: ${<.annotations}
 ```
