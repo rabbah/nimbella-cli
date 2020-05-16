@@ -25,16 +25,21 @@
 // List of plural commands to be replaced by singular equivalents before being delegated to aio runtime plugin
 const pluralCommands = ['actions', 'activations', 'packages', 'routes', 'rules', 'triggers', 'objects', 'projects']
 
-const topicAliases = {'key-value':'kv', 'workbench':'wb', 'namespace':'ns'}
+// Aliases that don't follow the plurals model.  Plugins doesn't because we get the name from a plugin and don't control it directly
+const topicAliases = {'key-value':'kv', 'workbench':'wb', 'namespace':'ns', 'plugins':'plugin'}
+
 
 // A screening function called at top level (before the real oclif dispatching begins).  Does various fixups.
 export async function run() {
+    // Get info from package.jsoh
+    const pj = require('../package.json')
+    const topics = Object.keys(pj.oclif.topics)
     // Compute user agent
-    const userAgent = 'nimbella-cli/' + require('../package.json').version
+    const userAgent = 'nimbella-cli/' + pj.version
     // Initialize the API environment
     initializeAPI(userAgent)
-    // Split an initial colon-separated token if found
-    decolonize()
+    // Split an initial colon-separated topic:command token if found
+    decolonize(topics)
     // Apply simple "plurals" fix
     const cmd = process.argv[2]
     if (pluralCommands.includes(cmd)) {
@@ -48,20 +53,24 @@ export async function run() {
         process.argv[2] = alias[0]
     }
     // Insert a colon between the first two tokens (may have been split earlier or not)
-    colonize()
+    colonize(topics)
     // Run the command
     await require('@oclif/command').run()
 }
 
-// Split the first token on a colon if present
-function decolonize() {
+// Split the first non-flag token on a colon if present and if the leading part is a topic
+function decolonize(topics: string[]) {
     let argvbase = process.argv.slice(0, 2)
     const oldargv = process.argv.slice(2)
     const cmdTokens: string[] = []
     for (const arg of oldargv) {
         if (cmdTokens.length < 2 && !isFlag(arg)) {
             const parts = arg.split(':')
-            cmdTokens.push(...parts)
+            if (topics.includes(parts[0])) {
+                cmdTokens.push(...parts)
+            } else {
+                cmdTokens.push(arg)
+            }
         } else {
             cmdTokens.push(arg)
         }
@@ -74,18 +83,20 @@ function isFlag(token: string): boolean {
     return token.startsWith('-')
 }
 
-// Heuristically combine the first two consecutive non-flag arguments in process.argv using a colon separator,
-// starting at index position 2.  This will be useful to the extent that the topic space has a limited depth
-// (there are no commands requiring more than one colon separator).  This is true at present and can be
-// easily adjusted in the future).  TODO there is a flaw here: it screws up top level commands that take arguments.
-// Currently, we have none.
-function colonize() {
+// Heuristically combine the first two consecutive non-flag non-help arguments in process.argv using a colon separator,
+// starting at index position 2, iff the first such argument is a known topic.  This will be useful to the extent
+// that the topic space has a limited depth (there are no commands requiring more than one colon separator).
+// This is true at present and can be easily adjusted in the future).
+function colonize(topics: string[]) {
     const args = process.argv
     let index = 2
-    while (index < args.length && isFlag(args[index])) {
+    while (index < args.length && (isFlag(args[index]) || args[index] === 'help')) {
         index++
     }
-    if (index > args.length - 2 || isFlag(args[index + 1])) {
+    if (index > args.length - 2 || isFlag(args[index + 1]) || args[index] === 'help') {
+        return
+    }
+    if (!topics.includes(args[index])) {
         return
     }
     const combined = args[index] + ':' + args[index + 1]
