@@ -63,7 +63,7 @@ export default class WebContentGet extends NimBaseCommand {
         else {
             client.file(webContentName).download(function (err, contents) {
                 if (err) {
-                    loader.stop(`couldn't print content, use flag '-s' to save as file`)
+                    loader.stop(`couldn't print content`)
                     errorHandler(err, logger, webContentName);
                 }
                 else {

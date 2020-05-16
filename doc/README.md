@@ -166,13 +166,16 @@ ARGUMENTS
   PROJECT  project path in the file system
 
 OPTIONS
-  -v, --verbose        Greater detail in error messages
-  --[no-]clean         clean the namespace before every deploy
-  --config             generate template config file
-  --help               Show help
-  --language=language  language for the sample (implies --sample)
-  --sample             start off with hello world (default language javascript)
-  --target=target      target namespace for the project
+  -c, --clientCode                           Generates client code
+  -i, --id=id                                API specs id/name/path
+  -k, --key=key                              Key to access the source API
+  -l, --language=go|js|ts|py|java|swift|php  [default: js] Language for the project (creates sample project unless source is specified)
+  -o, --overwrite                            Overwrites the existing nimbella project directory if it exists
+  -s, --source=postman|openapi               API specs source
+  -u, --updateSource                         Sync updated API specs back to source
+  -v, --verbose                              Greater detail in error messages
+  --config                                   Generate template config file
+  --help                                     Show help
 ```
 
 See the [Example: Create and deploy a project with a single action](#example-create-and-deploy-a-project-with-a-single-action) for an example of using the project create command.
@@ -453,7 +456,7 @@ In the simplest implementation of a project, each action corresponds to a single
 **To create and deploy a project to print Hello World (simplest form):**
 
 ```
-> nim project create example1 --sample
+> nim project create example1
 > nim project deploy example1
 Deploying project '/path/to/example1'
   to namespace '...'
@@ -467,7 +470,7 @@ Deployed actions:
   "greeting": "Hello stranger!"
 }
 ```
-So, what just happened?  As a result, of `nim project create` with the `--sample` flag, `nim` generated a project and added a sample to it called `hello.js`.  Specifically, in your current directory, it created
+So, what just happened?  As a result, of `nim project create`, `nim` generated a project and added a sample to it called `hello.js`.  Specifically, in your current directory, it created
 
 ```
 example1/packages/default/hello.js
@@ -1160,7 +1163,7 @@ packages:
 Adding a sample
 
 ```
-> nim project create example6 --config --sample
+> nim project create example6 --config
 ```
 
 gives you a _project.yml_ that also covers the sample action with more default values.

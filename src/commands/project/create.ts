@@ -35,7 +35,7 @@ export default class ProjectCreate extends NimBaseCommand {
         id: flags.string({ char: 'i', description: 'API specs id/name/path' }),
         key: flags.string({ char: 'k', dependsOn: ['source'], description: 'Key to access the source API' }),
         language: flags.string({
-            char: 'l', description: 'Language for the project (implies sample unless source is specified)', default: 'js',
+            char: 'l', description: 'Language for the project (creates sample project unless source is specified)', default: 'js',
             options: ['go', 'js', 'ts', 'py', 'java', 'swift', 'php']
         }),
         overwrite: flags.boolean({ char: 'o', description: 'Overwrites the existing nimbella project directory if it exists', }),
