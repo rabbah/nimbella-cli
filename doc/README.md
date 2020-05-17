@@ -287,10 +287,12 @@ Once you are in the workbench, all `nim` subcommands are available except for th
 ```
 action create
 action update
-objects create
-objects get
+object create
+object get
 project create
 project watch
+web create
+web get
 workbench login
 workbench run
 ```
