@@ -183,7 +183,7 @@ export async function cleanBucket(client: Bucket, spec: BucketSpec, owOptions: O
 export async function restore404Page(client: Bucket, owOptions: OWOptions): Promise<string> {
     let our404: Buffer
     if (inBrowser) {
-        our404 = require('../../404.html')
+        our404 = require('../../404.html').default
     } else {
         const file404 = require.resolve('../../404.html')
         our404 = fs.readFileSync(file404)
