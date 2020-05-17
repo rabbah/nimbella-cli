@@ -1,5 +1,15 @@
 # Nimbella CLI (and Workbench) Change History
 
+## Changes in release 1.1.0
+
+- add subcommands `nim web [create | get | delete | clean ]`
+- improvements to `project create`
+- improvement to `help` and "not found" behavior
+- fix bug in `namespace clean that caused `404.html` to have wrong content type
+- removed some confusing internal-use commands from top menu
+- `activation list` with no arguments defaults to `--last`
+- fix bug and also documentation error for symbolic substitution in `project.yml`
+
 ## Changes in release 1.0.3
 
 - `project deploy` once again working in the workbench (GitHub only)
