@@ -34,6 +34,8 @@ export default class AuthLogout extends NimBaseCommand {
 
   static args = [{name: 'namespace', description: 'the namespace you are dropping', required: false}]
 
+  static aliases = ['logout']
+
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
     let host = parseAPIHost(flags.apihost)
     if (host && args.namespace === undefined) {
