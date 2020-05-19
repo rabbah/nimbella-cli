@@ -163,7 +163,10 @@ async function processIncludeFileItems(items: string[], dirPath: string, reader:
             continue
         }
         debug('processing include item %s', item)
-        const oldPath = path.isAbsolute(item) ? item : joinAndNormalize(dirPath, item)
+        let oldPath = path.isAbsolute(item) ? item : joinAndNormalize(dirPath, item)
+        if (oldPath.endsWith('/') || oldPath.endsWith('\\')) {
+            oldPath = oldPath.slice(0, -1)
+        }
         // TODO note that if the path actually is absolute it won't work when deploying from github
         // The little hack here keeps it working for the local case.
         debug("Calculated oldPath '%s'", oldPath)
