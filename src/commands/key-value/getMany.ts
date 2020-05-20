@@ -28,14 +28,14 @@ export default class GetMany extends NimBaseCommand {
     static description = 'Gets values for given Keys'
 
     static flags = {
-        apihost: flags.string({ description: 'the API host of the namespace to list keys from' }),
+        apihost: flags.string({ description: 'API host of the namespace to list keys from' }),
         ...NimBaseCommand.flags
     }
 
     static args = [
-        { name: 'keyPrefix', description: 'the key for which value is to be retrieved' },
-        { name: 'startIndex', description: 'the index to start at' },
-        { name: 'count', description: 'the count to run to from start' }
+        { name: 'keyPrefix', description: 'The key for which value is to be retrieved' },
+        { name: 'startIndex', description: 'The index to start at' },
+        { name: 'count', description: 'The count to run to from start' }
     ];
 
     static aliases = ['kv:getMany', 'kv:getmany']

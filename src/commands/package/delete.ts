@@ -40,10 +40,10 @@ export default class PackageDelete extends NimBaseCommand {
   static args = AioCommand.args
 
   static flags = {
-    recursive: flags.boolean({ description: 'delete the contained actions', char: 'r' }),
+    recursive: flags.boolean({ description: 'Delete the contained actions', char: 'r' }),
     // For some reason, aio's 'project delete' does not incorporate host and auth as is the usual practice with other commands
-    apihost: flags.string({ description: 'whisk API host' }),
-    auth: flags.string({ char: 'u', description: 'whisk auth' }),
+    apihost: flags.string({ description: 'Whisk API host' }),
+    auth: flags.string({ char: 'u', description: 'Whisk auth' }),
    ...AioCommand.flags
   }
 

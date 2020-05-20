@@ -26,7 +26,7 @@ import { getCredentialsToken } from '../../oauth'
 
 // Command to open the workbench from the CLI or switch between preview and production workbench for the purpose of transferring credentials
 export default class WorkbenchLogin extends NimBaseCommand {
-  static description = "open the Nimbella Workbench, logging in with current credentials"
+  static description = "Open the Nimbella Workbench, logging in with current credentials"
 
   static flags = WorkbenchRun.default.flags
 

@@ -32,7 +32,7 @@ export default class AuthExport extends NimBaseCommand {
     ...NimBaseCommand.flags
   }
 
-  static args = [ { name: 'namespace', description: 'the namespace to export (omit for current namespace)', required: false } ]
+  static args = [ { name: 'namespace', description: 'The namespace to export (omit for current namespace)', required: false } ]
 
 
 

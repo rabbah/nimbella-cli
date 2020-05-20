@@ -25,13 +25,13 @@ import { queryKVStore } from '../../storage/key-value'
 const queryCommand = 'redis/del'
 
 export default class DeleteKey extends NimBaseCommand {
-    static description = 'Removes the specified keys and returns number of keys that were removed. A key is ignored if it does not exist.'
+    static description = 'Removes the specified keys and returns number of keys that were removed. A key is ignored if it does not exist'
     static flags = {
-        apihost: flags.string({ description: 'the API host of the namespace' }),
+        apihost: flags.string({ description: 'API host of the namespace' }),
         ...NimBaseCommand.flags
     }
 
-    static args = [{ name: 'key', description: 'the key to be deleted', required: true }]
+    static args = [{ name: 'key', description: 'The key to be deleted', required: true }]
 
     static aliases = ['kv:del', 'kv:delete']
 

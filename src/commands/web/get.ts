@@ -31,16 +31,16 @@ export default class WebContentGet extends NimBaseCommand {
     static description = 'Gets Content from the Web Storage'
 
     static flags = {
-        apihost: flags.string({ description: 'the API host of the namespace to get web content from' }),
-        save: flags.boolean({ char: 's', description: 'saves content on file system' }),
-        saveAs: flags.string({ description: 'saves content on file system with the given name' }),
+        apihost: flags.string({ description: 'API host of the namespace to get web content from' }),
+        save: flags.boolean({ char: 's', description: 'Saves content on file system' }),
+        saveAs: flags.string({ description: 'Saves content on file system with the given name' }),
         ...NimBaseCommand.flags
     }
 
     static args = [
-        { name: 'webContentName', description: 'the web content to get', required: true },
-        { name: 'destination', description: 'the location to write at', required: true, default: './' },
-        { name: 'namespace', description: 'the namespace to get content from (current namespace if omitted)', required: false }
+        { name: 'webContentName', description: 'The web content to get', required: true },
+        { name: 'destination', description: 'The location to write at', required: true, default: './' },
+        { name: 'namespace', description: 'The namespace to get content from (current namespace if omitted)', required: false }
     ]
 
     async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {

@@ -31,8 +31,8 @@ export class ProjectDeploy extends NimBaseCommand {
   static description = 'Deploy Nimbella projects'
 
   static flags = {
-    target: flags.string({ description: 'the target namespace'}),
-    env: flags.string({ description: 'path to environment file' }),
+    target: flags.string({ description: 'The target namespace'}),
+    env: flags.string({ description: 'Path to environment file' }),
     apihost: flags.string({ description: 'API host to use' }),
     auth: flags.string({ description: 'OpenWhisk auth token to use' }),
     insecure: flags.boolean({ description: 'Ignore SSL Certificates', default: false }),
@@ -40,14 +40,14 @@ export class ProjectDeploy extends NimBaseCommand {
     'verbose-zip': flags.boolean({ description: 'Display start/end of zipping phase for each action'}),
     production: flags.boolean({ hidden: true }),
     yarn: flags.boolean({ description: 'Use yarn instead of npm for node builds' }),
-    'web-local': flags.string({ description: 'a local directory to receive web deploy, instead of uploading'}),
-    include: flags.string({ description: 'project portions to include' }),
-    exclude: flags.string({ description: 'project portions to exclude' }),
+    'web-local': flags.string({ description: 'A local directory to receive web deploy, instead of uploading'}),
+    include: flags.string({ description: 'Project portions to include' }),
+    exclude: flags.string({ description: 'Project portions to exclude' }),
     incremental: flags.boolean({ description: 'Deploy only changes since last deploy' }),
     ...NimBaseCommand.flags
   }
 
-  static args = [ { name: 'projects', description: 'one or more paths to projects'} ]
+  static args = [ { name: 'projects', description: 'One or more paths to projects'} ]
   static strict = false
 
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {

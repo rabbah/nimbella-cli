@@ -32,13 +32,13 @@ export default class NamespaceClean extends NimBaseCommand {
 
      static flags = {
         justwhisk: flags.boolean({ description: 'Remove only OpenWhisk entities, leaving other content'}),
-        force: flags.boolean({ description: 'just do it, omitting confirmatory prompt'}),
-        apihost: flags.string({ description: 'the API host of the namespace to be cleaned'}),
-        auth: flags.string({char: 'u', description: 'the API key for the namespace to be cleaned'}),
+        force: flags.boolean({ description: 'Just do it, omitting confirmatory prompt'}),
+        apihost: flags.string({ description: 'The API host of the namespace to be cleaned'}),
+        auth: flags.string({char: 'u', description: 'The API key for the namespace to be cleaned'}),
         ...NimBaseCommand.flags
      }
 
-     static args = [{name: 'namespace', description: 'the namespace to clean (current namespace if omitted)', required: false}]
+     static args = [{name: 'namespace', description: 'The namespace to clean (current namespace if omitted)', required: false}]
 
     async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
         let namespace = args.namespace

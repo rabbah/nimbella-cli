@@ -37,7 +37,7 @@ export default class AuthLogin extends NimBaseCommand {
     ...NimBaseCommand.flags
   }
 
-  static args = [{name: 'token', description: 'string provided by Nimbella Corp', required: false}]
+  static args = [{name: 'token', description: 'String provided by Nimbella Corp', required: false}]
 
   static aliases = ['login']
 

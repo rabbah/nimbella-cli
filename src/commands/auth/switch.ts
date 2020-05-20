@@ -31,7 +31,7 @@ export default class AuthSwitch extends NimBaseCommand {
     ...NimBaseCommand.flags
   }
 
-  static args = [{name: 'namespace', description: 'the namespace you are switching to', required: true}]
+  static args = [{name: 'namespace', description: 'The namespace you are switching to', required: true}]
 
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
     const host = parseAPIHost(flags.apihost)

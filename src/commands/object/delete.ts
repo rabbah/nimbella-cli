@@ -28,13 +28,13 @@ export default class ObjectDelete extends NimBaseCommand {
     static description = 'Deletes Object from the Object Store'
 
     static flags = {
-        apihost: flags.string({ description: 'the API host of the namespace to delete object from' }),
+        apihost: flags.string({ description: 'API host of the namespace to delete object from' }),
         ...NimBaseCommand.flags
     }
 
     static args = [
-        { name: 'objectName', description: 'the object to be deleted', required: true },
-        { name: 'namespace', description: 'the namespace to delete object from (current namespace if omitted)', required: false }
+        { name: 'objectName', description: 'The object to be deleted', required: true },
+        { name: 'namespace', description: 'The namespace to delete object from (current namespace if omitted)', required: false }
     ]
 
     async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {

@@ -35,15 +35,15 @@ export default class ActionCreate extends NimBaseCommand {
   static flags = Object.assign({}, AioCommand.flags, {
     timeout: flags.integer({
      char: 't',
-      description: 'the timeout LIMIT in milliseconds after which the action is terminated'
+      description: 'Timeout LIMIT in milliseconds after which the Action is terminated'
     }),
     memory: flags.integer({
       char: 'm',
-      description: 'the maximum memory LIMIT in MB for the action'
+      description: 'Maximum memory LIMIT in MB for the Action'
     }),
     logsize: flags.integer({
       char: 'l',
-      description: 'the maximum log size LIMIT in KB for the action'
+      description: 'Maximum log size LIMIT in KB for the Action'
     })
   })
 

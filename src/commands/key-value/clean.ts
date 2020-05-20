@@ -28,8 +28,8 @@ export default class Clean extends NimBaseCommand {
   static description = 'Clears the Key Value Store, be cautious!';
 
   static flags = {
-    apihost: flags.string({ description: 'the API host of the namespace' }),
-    force: flags.boolean({ char: 'f', description: 'just do it, omitting confirmatory prompt' }),
+    apihost: flags.string({ description: 'API host of the namespace' }),
+    force: flags.boolean({ char: 'f', description: 'Just do it, omitting confirmatory prompt' }),
     ...NimBaseCommand.flags
   }
 

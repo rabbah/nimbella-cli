@@ -28,11 +28,11 @@ export default class Ttl extends NimBaseCommand {
     static description = 'Get ttl value for a Key';
 
     static flags = {
-        apihost: flags.string({ description: 'the API host of the namespace to list keys from' }),
+        apihost: flags.string({ description: 'API host of the namespace to list keys from' }),
         ...NimBaseCommand.flags
     }
 
-    static args = [{ name: 'key', description: 'the key for which ttl value is to be retrieved', required: true}];
+    static args = [{ name: 'key', description: 'The key for which ttl value is to be retrieved', required: true}];
 
     static aliases = ['kv:ttl'];
 

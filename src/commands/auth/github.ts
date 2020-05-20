@@ -27,17 +27,17 @@ import { prompt } from '../../ui'
 let cli
 
 export default class AuthGithub extends NimBaseCommand {
-  static description = 'manage github accounts'
+  static description = 'Manage github accounts'
 
   static flags = {
-    add: flags.boolean({ char: 'a', description: 'add a second or subsequent github account interactively' }),
-    delete: flags.string({ char: 'd', description: 'forget a previously added github account' }),
-    initial: flags.boolean({ char: 'i', description: "add an initial github account interactively" }),
-    list: flags.boolean({ char: 'l', description: 'list previously added github accounts'}),
-    show: flags.string({ description: 'show the access token currently associated with a username' }),
-    switch: flags.string({ char: 's', description: 'switch to using a particular previously added github account' }),
-    token: flags.string({ description: 'the github token when adding an account manually' }),
-    username: flags.string({ description: 'the github username when adding an account manually' }),
+    add: flags.boolean({ char: 'a', description: 'Add a second or subsequent github account interactively' }),
+    delete: flags.string({ char: 'd', description: 'Forget a previously added github account' }),
+    initial: flags.boolean({ char: 'i', description: "Add an initial github account interactively" }),
+    list: flags.boolean({ char: 'l', description: 'List previously added github accounts'}),
+    show: flags.string({ description: 'Show the access token currently associated with a username' }),
+    switch: flags.string({ char: 's', description: 'Switch to using a particular previously added github account' }),
+    token: flags.string({ description: 'The github token when adding an account manually' }),
+    username: flags.string({ description: 'The github username when adding an account manually' }),
     ...NimBaseCommand.flags
   }
 

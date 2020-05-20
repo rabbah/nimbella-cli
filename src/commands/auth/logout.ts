@@ -32,7 +32,7 @@ export default class AuthLogout extends NimBaseCommand {
     ...NimBaseCommand.flags
   }
 
-  static args = [{name: 'namespace', description: 'the namespace you are dropping', required: false}]
+  static args = [{name: 'namespace', description: 'The namespace you are dropping', required: false}]
 
   static aliases = ['logout']
 

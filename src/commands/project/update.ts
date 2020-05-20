@@ -31,7 +31,7 @@ export default class ProjectUpdate extends NimBaseCommand {
   }
 
   static args = ProjectCreate.args
-
+  // For now:
   static hidden = true
 
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {

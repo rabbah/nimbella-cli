@@ -30,13 +30,13 @@ export default class WebContentCreate extends NimBaseCommand {
     static description = 'Adds Content to the Web Storage'
 
     static flags = {
-        apihost: flags.string({ description: 'the API host of the namespace to add content to' }),
+        apihost: flags.string({ description: 'API host of the namespace to add content to' }),
         ...NimBaseCommand.flags
     }
 
     static args = [
-        { name: 'webContentPath', description: 'path to the content to be added', required: true },
-        { name: 'namespace', description: 'the namespace to add content to (current namespace if omitted)', required: false }
+        { name: 'webContentPath', description: 'Path to the content to be added', required: true },
+        { name: 'namespace', description: 'The namespace to add content to (current namespace if omitted)', required: false }
     ]
 
     static aliases = ['web:add'];

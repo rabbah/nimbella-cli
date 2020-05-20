@@ -23,7 +23,7 @@ import { open } from '../ui'
 const PUBLIC_DOC = 'https://nimbella.io/downloads/nim/nim.html'
 
 export default class Doc extends NimBaseCommand {
-  static description = "display the full documentation of this CLI"
+  static description = "Display the full documentation of this CLI"
 
   static flags = { ...NimBaseCommand.flags }
 

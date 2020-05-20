@@ -32,5 +32,5 @@ export default class TriggerFire extends NimBaseCommand {
   static flags = AioCommand.flags
 
   // Exception to usual pattern
-  static description = 'Fire a trigger'
+  static description = 'Fire a Trigger'
 }

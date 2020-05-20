@@ -28,14 +28,14 @@ export default class WebList extends NimBaseCommand {
     static description = 'Lists Web Content'
 
     static flags = {
-        apihost: flags.string({ description: 'the API host of the namespace to list web content from' }),
-        long: flags.boolean({ char: 'l', description: 'displays additional file info such as last update, owner and md5hash' }),
+        apihost: flags.string({ description: 'API host of the namespace to list web content from' }),
+        long: flags.boolean({ char: 'l', description: 'Displays additional file info such as last update, owner and md5hash' }),
         ...NimBaseCommand.flags
     }
 
     static args = [
-        { name: 'prefix', description: 'prefix to match the content against', required: false, default: '' },
-        { name: 'namespace', description: 'the namespace to list web content from (current namespace if omitted)', required: false }
+        { name: 'prefix', description: 'Prefix to match the content against', required: false, default: '' },
+        { name: 'namespace', description: 'The namespace to list web content from (current namespace if omitted)', required: false }
     ]
 
     async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {

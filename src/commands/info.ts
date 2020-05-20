@@ -25,7 +25,7 @@ import { wskRequest, RuntimeTable } from '../deployer/util'
 import { getCredentials } from '../deployer/credentials'
 
 export default class Info extends NimBaseCommand {
-  static description = "show information about this version of 'nim'"
+  static description = "Show information about this version of 'nim'"
 
   static flags = {
     license: flags.boolean({ description: 'Display the license', hidden: inBrowser }),

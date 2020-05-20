@@ -28,15 +28,15 @@ export default class SetMany extends NimBaseCommand {
     static description = 'Set Value for a Key'
 
     static flags = {
-        apihost: flags.string({ description: 'the API host of the namespace to list keys from' }),
+        apihost: flags.string({ description: 'API host of the namespace to list keys from' }),
         ...NimBaseCommand.flags
     }
 
     static args = [
-        { name: 'keyPrefix', description: 'the key to be set at' },
-        { name: 'valuePrefix', description: 'the value to be set' },
-        { name: 'startIndex', description: 'the index to start at' },
-        { name: 'count', description: 'the count to run to from start'}
+        { name: 'keyPrefix', description: 'The key to be set at' },
+        { name: 'valuePrefix', description: 'The value to be set' },
+        { name: 'startIndex', description: 'The index to start at' },
+        { name: 'count', description: 'The count to run to from start'}
     ];
 
     static aliases = ['kv:setMany', 'kv:setmany']

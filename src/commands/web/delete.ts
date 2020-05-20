@@ -28,13 +28,13 @@ export default class WebContentDelete extends NimBaseCommand {
     static description = 'Deletes Content from the Web Storage'
 
     static flags = {
-        apihost: flags.string({ description: 'the API host of the namespace to delete web content from' }),
+        apihost: flags.string({ description: 'API host of the namespace to delete web content from' }),
         ...NimBaseCommand.flags
     }
 
     static args = [
-        { name: 'webContentName', description: 'the web content to be deleted', required: true },
-        { name: 'namespace', description: 'the namespace to delete content from (current namespace if omitted)', required: false }
+        { name: 'webContentName', description: 'The web content to be deleted', required: true },
+        { name: 'namespace', description: 'The namespace to delete content from (current namespace if omitted)', required: false }
     ]
 
     async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {

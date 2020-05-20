@@ -28,13 +28,13 @@ export default class Expire extends NimBaseCommand {
     static description = 'Sets the specified ttl value for the specified key'
 
     static flags = {
-        apihost: flags.string({ description: 'the API host of the namespace' }),
+        apihost: flags.string({ description: 'API host of the namespace' }),
         ...NimBaseCommand.flags
     }
 
     static args = [
-        { name: 'key', description: 'the key to be added at', required: true },
-        { name: 'ttl', description: 'the ttl value to be set', required: true }
+        { name: 'key', description: 'The key to be added at', required: true },
+        { name: 'ttl', description: 'The ttl value to be set', required: true }
     ];
 
     static aliases = ['kv:expire'];

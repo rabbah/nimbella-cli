@@ -32,5 +32,5 @@ export default class TriggerList extends NimBaseCommand {
   static flags = AioCommand.flags
 
   // Exception to usual pattern
-  static description = 'Lists all of your triggers'
+  static description = 'Lists all of your Triggers'
 }

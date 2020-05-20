@@ -32,5 +32,5 @@ export default class TriggerGet extends NimBaseCommand {
   static flags = AioCommand.flags
 
   // Exception to usual pattern
-  static description = 'Get a trigger'
+  static description = 'Get a Trigger'
 }

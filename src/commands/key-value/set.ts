@@ -28,13 +28,13 @@ export default class Set extends NimBaseCommand {
     static description = 'Sets the specified value at the specified key'
 
     static flags = {
-        apihost: flags.string({ description: 'the API host of the namespace' }),
+        apihost: flags.string({ description: 'API host of the namespace' }),
         ...NimBaseCommand.flags
     }
 
     static args = [
-        { name: 'key', description: 'the key to be added at', required: true },
-        { name: 'value', description: 'the value to be added', required: true }
+        { name: 'key', description: 'The key to be added at', required: true },
+        { name: 'value', description: 'The value to be added', required: true }
     ];
 
     static aliases = ['kv:set', 'kv:add'];

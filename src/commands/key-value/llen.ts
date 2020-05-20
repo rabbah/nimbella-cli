@@ -30,11 +30,11 @@ export default class LLen extends NimBaseCommand {
  An error is returned when the value stored at key is not a list.'
 
     static flags = {
-        apihost: flags.string({ description: 'the API host of the namespace' }),
+        apihost: flags.string({ description: 'API host of the namespace' }),
         ...NimBaseCommand.flags
     }
 
-    static args = [{ name: 'key', description: 'the key to be queried for length', required: true}];
+    static args = [{ name: 'key', description: 'The key to be queried for length', required: true}];
 
     static aliases = ['kv:llen']
 

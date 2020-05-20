@@ -279,7 +279,7 @@ function wbReentry(): string {
   return `${protocol}//${host}${pathname}`
 }
 
-// Do an interactive token flow, either to establish an Nimella account or to add a github account.
+// Do an interactive token flow, either to establish an Nimbella account or to add a github account.
 // The behavior in the browser is quite different from the CLI.  In a CLI, this function returns a
 // Promise, which, when resolved, provides the information needed to store the credentials.
 // In a browser, it just returns a Promise<true> which can be discarded; the return flow with the
