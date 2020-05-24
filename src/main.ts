@@ -20,42 +20,40 @@
  * from Nimbella Corp.
  */
 
- import { initializeAPI } from './deployer/api'
-
-// List of plural commands to be replaced by singular equivalents before being delegated to aio runtime plugin
-const pluralCommands = ['actions', 'activations', 'packages', 'routes', 'rules', 'triggers', 'objects', 'projects']
-
-// Aliases that don't follow the plurals model.  Plugins doesn't because we get the name from a plugin and don't control it directly
-const topicAliases = {'key-value':'kv', 'workbench':'wb', 'namespace':'ns', 'plugins':'plugin'}
-
+import { initializeAPI } from './deployer/api'
+import { Topic } from '@oclif/config'
 
 // A screening function called at top level (before the real oclif dispatching begins).  Does various fixups.
 export async function run() {
-    // Get info from package.jsoh
+    // Get info from package.json
     const pj = require('../package.json')
-    const topics = Object.keys(pj.oclif.topics)
+    const topicNames = Object.keys(pj.oclif.topics)
     // Compute user agent
     const userAgent = 'nimbella-cli/' + pj.version
     // Initialize the API environment
     initializeAPI(userAgent)
+    // Apply topic aliases (should come before decolonize because we want the topic from the command line to no longer be an alias)
+    applyTopicAliases(pj.oclif.topics)
     // Split an initial colon-separated topic:command token if found
-    decolonize(topics)
-    // Apply simple "plurals" fix
-    const cmd = process.argv[2]
-    if (pluralCommands.includes(cmd)) {
-        process.argv[2] = cmd.slice(0, -1)
-    }
-    // Apply alias fix till https://github.com/oclif/oclif/issues/237
-    const alias = Object.keys(topicAliases).filter((key) => {
-        return topicAliases[key] === cmd
-    })
-    if (alias.length) {
-        process.argv[2] = alias[0]
-    }
+    decolonize(topicNames)
     // Insert a colon between the first two tokens (may have been split earlier or not)
-    colonize(topics)
+    colonize(topicNames)
     // Run the command
     await require('@oclif/command').run()
+}
+
+// Apply topic aliases.  The semantics are consistent with (open issue) https://github.com/oclif/oclif/issues/237 but we
+// process the information here instead of inside oclif/config.   The argument is the entry array of the topics
+// member of package.json.
+function applyTopicAliases(topics: Topic) {
+    const possibleAlias = process.argv[2]
+    for (const topic in topics) {
+        const def = topics[topic]
+        if (def.aliases && def.aliases.includes(possibleAlias)) {
+            process.argv[2] = topic
+            return
+        }
+    }
 }
 
 // Split the first non-flag token on a colon if present and if the leading part is a topic

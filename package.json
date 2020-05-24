@@ -114,43 +114,79 @@
         "hidden": true
       },
       "workbench": {
-        "description": "open Nimbella workbench with login or command"
+        "description": "open Nimbella workbench with login or command",
+        "aliases": [
+          "wb"
+        ]
       },
       "project": {
-        "description": "manage and deploy Nimbella projects"
+        "description": "manage and deploy Nimbella projects",
+        "aliases": [
+          "projects"
+        ]
       },
       "action": {
-        "description": "work with actions"
+        "description": "work with actions",
+        "aliases": [
+          "actions"
+        ]
       },
       "activation": {
-        "description": "work with activations"
+        "description": "work with activations",
+        "aliases": [
+          "activations"
+        ]
       },
       "namespace": {
-        "description": "work with namespaces"
+        "description": "work with namespaces",
+        "aliases": [
+          "ns"
+        ]
       },
       "package": {
-        "description": "work with packages"
+        "description": "work with packages",
+        "aliases": [
+          "packages"
+        ]
       },
       "route": {
-        "description": "work with routes"
+        "description": "work with routes",
+        "aliases": [
+          "routes"
+        ]
       },
       "rule": {
-        "description": "work with rules"
+        "description": "work with rules",
+        "aliases": [
+          "rules"
+        ]
       },
       "trigger": {
-        "description": "work with triggers"
+        "description": "work with triggers",
+        "aliases": [
+          "triggers"
+        ]
       },
       "web": {
         "description": "work with web contents"
       },
       "key-value": {
-        "description": "work with key-value store"
+        "description": "work with key-value store",
+        "aliases": [
+          "kv"
+        ]
       },
       "object": {
-        "description": "work with objects store"
+        "description": "work with objects store",
+        "aliases": [
+          "objects"
+        ]
       },
       "plugins": {
-        "description": "manage optional API specification sources"
+        "description": "manage optional API specification sources",
+        "aliases": [
+          "plugin"
+        ]
       }
     }
   },
