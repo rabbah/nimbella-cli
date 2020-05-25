@@ -22,15 +22,18 @@ import { Bucket } from '@google-cloud/storage'
 import { flags } from '@oclif/command'
 import { authPersister, NimBaseCommand, NimLogger } from '../../NimBaseCommand'
 import { getObjectStorageClient } from '../../storage/clients'
-import { existsSync } from 'fs';
-import { join } from 'path';
+import { existsSync } from 'fs'
+import { join, basename } from 'path'
 import { spinner } from '../../ui'
+import { errorHandler } from '../../storage/util'
 
 export default class ObjectGet extends NimBaseCommand {
     static description = 'Gets Object from the Object Store'
 
     static flags = {
         apihost: flags.string({ description: 'API host of the namespace to get object from' }),
+        save: flags.boolean({ char: 's', description: 'Saves object on file system' }),
+        saveAs: flags.string({ description: 'Saves object on file system with the given name' }),
         ...NimBaseCommand.flags
     }
 
@@ -43,16 +46,32 @@ export default class ObjectGet extends NimBaseCommand {
     async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
         const { client } = await getObjectStorageClient(args, flags, authPersister);
         if (!client) logger.handleError(`Couldn't get to the object store, ensure it's enabled for the ${args.namespace || 'current'} namespace`);
-        await this.downloadFile(args.objectName, args.destination, client, logger).catch((err: Error) => logger.handleError('', err));
+        await this.downloadFile(args.objectName, args.destination, client, logger, flags.saveAs, flags.save).catch((err: Error) => logger.handleError('', err));
     }
 
-    async downloadFile(objectName: string, destination: string, client: Bucket, logger: NimLogger) {
+    async downloadFile(objectName: string, destination: string, client: Bucket, logger: NimLogger, saveAs: string, save: boolean = false) {
         if (!existsSync(destination)) {
             logger.log(`${destination} doesn't exist`)
             return
         }
         const loader = await spinner();
         loader.start(`getting ${objectName}`, 'downloading', { stdout: true })
-        await client.file(objectName).download({ destination: join(destination, objectName) }).then(_ => { loader.stop('done') });
+        if (save || saveAs) {
+            const fileName = basename(objectName)
+            await client.file(objectName).download({ destination: join(destination, (saveAs ? saveAs : fileName)) }).then(_ => loader.stop('done'));
+        }
+        else {
+            client.file(objectName).download(function (err, contents) {
+                if (err) {
+                    loader.stop(`couldn't print content`)
+                    errorHandler(err, logger, objectName);
+                }
+                else {
+                    loader.stop()
+                    logger.log('\n')
+                    logger.log(String.fromCharCode.apply(null, contents))
+                }
+            });
+        }
     }
 }
