@@ -22,6 +22,7 @@
 
 import { initializeAPI } from './deployer/api'
 import { Topic } from '@oclif/config'
+import { CLIError } from '@oclif/errors'
 
 // A screening function called at top level (before the real oclif dispatching begins).  Does various fixups.
 export async function run() {
@@ -38,8 +39,15 @@ export async function run() {
     decolonize(topicNames)
     // Insert a colon between the first two tokens (may have been split earlier or not)
     colonize(topicNames)
-    // Run the command
-    await require('@oclif/command').run()
+    // Run the command while cleaning up errors that have leaked from the oclif mechanism
+    try {
+        await require('@oclif/command').run()
+    } catch (err) {
+        if (err.message && !err.oclif) {
+            err = new CLIError(err.message, { exit: 1 })
+        }
+        throw err
+    }
 }
 
 // Apply topic aliases.  The semantics are consistent with (open issue) https://github.com/oclif/oclif/issues/237 but we
