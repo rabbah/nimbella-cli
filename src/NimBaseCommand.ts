@@ -252,6 +252,7 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
 
 // Improves an error message based on analyzing the accompanying Error object (based on similar code in RuntimeBaseCommand)
 function improveErrorMsg(msg: string, err?: any): string {
+    debug('msg: %s, err: %O', msg, err)
     const getStatusCode = (code) => `${code} ${STATUS_CODES[code] || ''}`.trim()
 
     if (err) {
@@ -267,9 +268,10 @@ function improveErrorMsg(msg: string, err?: any): string {
       }
 
       if ((pretty || '').toString().trim()) {
-        msg = `${msg}: ${pretty}`
+        msg = msg ? `${msg}: ${pretty}` : pretty
       }
     }
+    debug('improved msg: %s', msg)
     return msg
 }
 
