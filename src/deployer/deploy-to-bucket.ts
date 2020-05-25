@@ -108,12 +108,8 @@ export async function deployToBucket(resource: WebResource, client: Bucket, spec
     // directly.  We use an assistive action to acquire the signed URL.
     let phaseTracker: string[] = []
     try {
-        await doUpload(owOptions, destination, data, phaseTracker)
+        await doUpload(owOptions, client, destination, data, metadata, phaseTracker)
         debug('save operation for %s was successful', resource.simpleName)
-        phaseTracker[0] = 'setting metadata'
-        const remoteFile = client.file(destination)
-        await remoteFile.setMetadata(metadata)
-        debug('metadata saving operation for %s was successful', resource.simpleName)
     } catch (err) {
         debug('an error occured: %O', err)
         return wrapError(err, `web resource '${resource.simpleName}' (${phaseTracker[0]})`)
@@ -127,23 +123,33 @@ export async function deployToBucket(resource: WebResource, client: Bucket, spec
 }
 
 // Subroutine to upload some data to a destination
-async function doUpload(owOptions: OWOptions, destination: string, data: Buffer, phaseTracker: string[]) {
-    phaseTracker[0] = 'getting signed URL'
-    const owClient = openwhisk(owOptions)
-    const urlResponse = await owClient.actions.invoke({
-        name: '/nimbella/websupport/getSignedUrl',
-        params: { fileName: destination },
-        blocking: true,
-        result: true
-    })
-    phaseTracker[0] = 'putting data to signed URL'
-    const url = urlResponse.url
-    if (!url) {
-        throw new Error(`Response from getSignedUrl was not a URL: ${urlResponse}`)
-    }
-    const putres = await axios.put(url, data)
-    if (putres.status !== 200) {
-        throw new Error(`Bad response [$putres.status}] from storage server`)
+async function doUpload(owOptions: OWOptions, client: Bucket, destination: string, data: Buffer, metadata: any, phaseTracker: string[]) {
+    if (inBrowser) {
+        // Some google storage client functions misbehave in a browser.  In that environment, we use an action to obtain a signed URL
+        // and PUT to the result.  The client call to upload directly will fail, as will the client code to obtain the signed URL directly.
+        phaseTracker[0] = 'getting signed URL'
+        const owClient = openwhisk(owOptions)
+        const urlResponse = await owClient.actions.invoke({
+            name: '/nimbella/websupport/getSignedUrl',
+            params: { fileName: destination },
+            blocking: true,
+            result: true
+        })
+        phaseTracker[0] = 'putting data to signed URL'
+        const url = urlResponse.url
+        if (!url) {
+            throw new Error(`Response from getSignedUrl was not a URL: ${urlResponse}`)
+        }
+        const putres = await axios.put(url, data)
+        if (putres.status !== 200) {
+            throw new Error(`Bad response [$putres.status}] from storage server`)
+        }
+    } else {
+        // In the CLI the straightforward google client functions work fine and are more efficient.  Also, we don't want to count
+        // a bunch of extra action invokes against the user since we may have a rate limit on those.
+        phaseTracker[0] = 'uploading file'
+        const remoteFile = client.file(destination)
+        await remoteFile.save(data, { metadata } )
     }
 }
 
@@ -190,11 +196,7 @@ export async function restore404Page(client: Bucket, owOptions: OWOptions): Prom
     }
     let phaseTracker: string[] = []
     try {
-        await doUpload(owOptions, '404.html', our404, phaseTracker)
-        phaseTracker[0] = 'setting metadata'
-        const remote404 = client.file('404.html')
-        const metadata = { contentType: 'text/html' }
-        await remote404.setMetadata(metadata)
+        await doUpload(owOptions, client, '404.html', our404, { contentType: 'text/html' }, phaseTracker)
         return ''
     } catch (err) {
         debug(`while ${phaseTracker[0]}, got error ${err}`)
