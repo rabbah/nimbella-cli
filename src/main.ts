@@ -21,23 +21,23 @@
  */
 
 import { initializeAPI } from './deployer/api'
-import { Topic } from '@oclif/config'
 import { CLIError } from '@oclif/errors'
 
 // A screening function called at top level (before the real oclif dispatching begins).  Does various fixups.
 export async function run() {
-    // Get info from package.json
+    // Get topics info from package.json
     const pj = require('../package.json')
-    const topicNames = Object.keys(pj.oclif.topics)
+    const topics = pj.oclif.topics
+    const topicNames = Object.keys(topics)
     // Compute user agent
     const userAgent = 'nimbella-cli/' + pj.version
     // Initialize the API environment
     initializeAPI(userAgent)
-    // Apply topic aliases (should come before decolonize because we want the topic from the command line to no longer be an alias)
-    applyTopicAliases(pj.oclif.topics)
-    // Split an initial colon-separated topic:command token if found
-    decolonize(topicNames)
-    // Insert a colon between the first two tokens (may have been split earlier or not)
+    // Split an initial colon-separated topic:command token if found.  As the topic portion could be an alias, we look for that case also
+    decolonize(topics)
+    // Apply topic aliases (should come before colonize because colonize will only glue topics, not aliases)
+    applyTopicAliases(topics)
+    // Insert a colon between the first two tokens if the first token matches a topic
     colonize(topicNames)
     // Run the command while cleaning up errors that have leaked from the oclif mechanism
     try {
@@ -53,7 +53,7 @@ export async function run() {
 // Apply topic aliases.  The semantics are consistent with (open issue) https://github.com/oclif/oclif/issues/237 but we
 // process the information here instead of inside oclif/config.   The argument is the entry array of the topics
 // member of package.json.
-function applyTopicAliases(topics: Topic) {
+function applyTopicAliases(topics: any) {
     const possibleAlias = process.argv[2]
     for (const topic in topics) {
         const def = topics[topic]
@@ -64,15 +64,15 @@ function applyTopicAliases(topics: Topic) {
     }
 }
 
-// Split the first non-flag token on a colon if present and if the leading part is a topic
-function decolonize(topics: string[]) {
+// Split the first non-flag token on a colon if present and if the leading part is a topic or alias
+function decolonize(topics: any) {
     let argvbase = process.argv.slice(0, 2)
     const oldargv = process.argv.slice(2)
     const cmdTokens: string[] = []
     for (const arg of oldargv) {
         if (cmdTokens.length < 2 && !isFlag(arg)) {
             const parts = arg.split(':')
-            if (topics.includes(parts[0])) {
+            if (isTopicOrAlias(parts[0], topics)) {
                 cmdTokens.push(...parts)
             } else {
                 cmdTokens.push(arg)
@@ -82,6 +82,20 @@ function decolonize(topics: string[]) {
         }
     }
     process.argv = argvbase.concat(cmdTokens)
+}
+
+// Check whether a token matches a topic or alias
+function isTopicOrAlias(token: string, topics: any): boolean {
+    for (const topic in topics) {
+        if (token == topic) {
+            return true
+        }
+        const def = topics[topic]
+        if (def.aliases && def.aliases.includes(token)) {
+            return true
+        }
+    }
+    return false
 }
 
 // Check whether a token is a flag
