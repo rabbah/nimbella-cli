@@ -218,15 +218,8 @@ async function identifyActionFiles(action: ActionSpec, incremental: boolean, ver
         })
     }
     return getIgnores(action.file, reader).then(ignore => {
-        const absolute = path.isAbsolute(action.file)
         return promiseFilesAndFilterFiles(action.file, reader).then((items: string[]) => {
-            if (absolute) {
-                items = items.map(item => path.relative(action.file, item))
-            }
-            items = ignore.filter(items)
-            if (absolute) {
-                items = items.map(item => path.join(action.file, item))
-            }
+            items = applyIgnores(action.file, items, ignore)
             if (items.length == 0) {
                 return Promise.reject(new Error(`Action '${action.name}' has no included files`))
             } else if (items.length == 1) {
@@ -240,6 +233,23 @@ async function identifyActionFiles(action: ActionSpec, incremental: boolean, ver
             }
         })
     })
+}
+
+// Utility for applying the ignore filter.  Sensitive to the limitations of the 'ignore' npm package.
+function applyIgnores(basePath: string, items: string[], ignore: Ignore) {
+    // If the basepath is already absolute, relativize in hopes that that all paths will be internal.
+    // TODO this is not a panacea: we need to pin down our assumptions about how ignore is supposed to work.
+    const absolute = path.isAbsolute(basePath)
+    if (absolute) {
+        items = items.map(item => path.relative(basePath, item))
+    }
+    // Do the filtering
+    items = ignore.filter(items)
+    // Restore absolute paths
+    if (absolute) {
+        items = items.map(item => path.join(basePath, item))
+    }
+    return items
 }
 
 // Utility for reading .include, .source, or .build
@@ -398,15 +408,8 @@ async function identifyWebFiles(filepath: string, reader: ProjectReader): Promis
     // Otherwise, we take the contents modulo the ignores
     return getIgnores(filepath, reader).then(ignore => {
         debug('processing .ignore and/or ignore rules')
-        const absolute = path.isAbsolute(filepath)
         return promiseFilesAndFilterFiles(filepath, reader).then((items: string[]) => {
-            if (absolute) {
-                items = items.map(item => path.relative(filepath, item))
-            }
-            items = ignore.filter(items)
-            if (absolute) {
-                items = items.map(item => path.join(filepath, item))
-            }
+            items = applyIgnores(filepath, items, ignore)
             debug(`Converting ${items.length} items to resources`)
             return convertToResources(items, filepath.length + 1)
         })
