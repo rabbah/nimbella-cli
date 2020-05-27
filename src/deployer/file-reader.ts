@@ -29,6 +29,7 @@ const debug = makeDebug('nim:deployer:file-reader')
 let fs_readdir: (dir: fs.PathLike, options: { withFileTypes: boolean }) => Promise<fs.Dirent[]>
 let fs_readfile: (file: fs.PathLike) => Promise<any>
 let fs_lstat: (path: fs.PathLike) => Promise<any>
+let fs_realpath: (path: fs.PathLike) => Promise<any>
 
 // The file system implementation of ProjectReader
 // The file system implementation accepts absolute paths and relative paths landing anywhere in the filesystem.
@@ -40,6 +41,7 @@ export function makeFileReader(basepath: string): ProjectReader {
     fs_readdir = promisify(fs.readdir)
     fs_readfile = promisify(fs.readFile)
     fs_lstat = promisify(fs.lstat)
+    fs_realpath = promisify(fs.realpath)
     return new FileProjectReader(basepath)
 }
 
@@ -58,18 +60,32 @@ class FileProjectReader implements ProjectReader {
     }
 
     // File system implementation of readdir.
-    readdir(path: string): Promise<PathKind[]> {
+    async readdir(path: string): Promise<PathKind[]> {
         debug("request to read directory '%s'", path)
         path = Path.resolve(this.basepath, path)
+        path = await fs_realpath(path)
         debug("resolved to directory '%s", path)
-        return fs_readdir(path, { withFileTypes: true }).then((entries: fs.Dirent[]) => entries.map(entry => {
-            return  { name: entry.name, isDirectory: entry.isDirectory(), isFile: entry.isFile(), mode: 0o666 }
-        }))
+        const entries = await fs_readdir(path, { withFileTypes: true })
+        const results = entries.map(async entry => {
+            let isFile: boolean, isDirectory: boolean
+            if (entry.isSymbolicLink()) {
+                const fullName = await fs_realpath(Path.resolve(path, entry.name))
+                const stat = await fs_lstat(fullName)
+                isFile = stat.isFile()
+                isDirectory = stat.isDirectory()
+            } else {
+                isFile = entry.isFile()
+                isDirectory = entry.isDirectory()
+            }
+            return { name: entry.name, isDirectory, isFile, mode: 0o666 }
+        })
+        return Promise.all(results)
     }
 
     // File system implementation of readFileContents
-    readFileContents(path: string): Promise<Buffer> {
+    async readFileContents(path: string): Promise<Buffer> {
         path = Path.resolve(this.basepath, path)
+        path = await fs_realpath(path)
         return fs_readfile(path)
     }
 
