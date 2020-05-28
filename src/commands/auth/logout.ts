@@ -59,10 +59,9 @@ export default class AuthLogout extends NimBaseCommand {
       const ans = await prompt(`Type 'yes' to logout '${creds.namespace}' namespace on API host '${creds.ow.apihost}'`)
       if (ans !== 'yes') {
         logger.log('Doing nothing.')
-        return;
+        return
       } else {
-        host = creds.ow.apihost
-        args.namespace = creds.namespace
+        return await this.doLogout(creds.namespace, creds.ow.apihost, logger)
       }
     }
 
