@@ -25,5 +25,5 @@ SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 cd $SELFDIR
 pushd ../../../main
-nimadmin namespace create test --user demos --bucket
+nimadmin namespace create test --user demos --bucket --redis
 popd
