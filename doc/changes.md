@@ -1,5 +1,17 @@
 # Nimbella CLI (and Workbench) Change History
 
+## Changes in release 1.2.0
+
+- fix handling of command and topic aliases in the workbench (they are now equivalent to the CLI)
+- `logon` and `logout` are now aliases for `auth login` and `auth logout`
+- improved output from commands that list entities
+- on `action create` the action name may be omitted if it can be inferred from the file name
+- `web get` and `object get` behavior is more equivalent to each other
+- some formatting improvements to error reporting
+- fix problems when a tool (like `npm` or `react`) generates an included directory containing symlinks
+    - this does not imply general support for symlinks as a way to assemble projects; that is still unsupported
+- `logout` accepts lists of namespaces and an `--all` flag
+
 ## Changes in release 1.1.0
 
 - add subcommands `nim web [create | get | delete | clean ]`
