@@ -202,8 +202,11 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
       argTemplates = []
     }
     const args = {} as any
-    for (let i = 0; i < argv.length; i++) {
-      args[argTemplates[i].name] = argv[i]
+    for (let i = 0; i < argTemplates.length; i++) {
+      const arg = argv[i]
+      if (arg) {
+        args[argTemplates[i].name] = arg
+      }
     }
     // Make a capture logger and run the command
     const logger = new CaptureLogger()
