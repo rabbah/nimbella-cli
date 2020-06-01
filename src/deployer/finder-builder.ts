@@ -714,18 +714,28 @@ function makeNpmPackageAppearBuilt(filepath: string) {
 }
 
 // The builder for npm|yarn install --production
+// A package.json must be present since this builder wouldn't have been invoked otherwise.
+// This doesn't mean that npm|yarn install will succeed, just that, if it fails it is for some other reason
 function npmBuilder(filepath: string, displayPath: string, flags: Flags, feedback: Feedback): Promise<any> {
     const cmd = flags.yarn ? 'yarn' : 'npm'
+    const args = buildScriptExists(filepath) ? [ 'install', '--production', '&&', cmd, 'run', 'build' ] : [ 'install', '--production' ]
+    const infoMsg = [ cmd, ...args ].join(' ')
     if (flags.incremental && npmPackageAppearsBuilt(filepath)) {
         if (flags.verboseBuild) {
             feedback.progress(`Skipping '${cmd} install' in ${filepath} because one was run previously`)
         }
         return Promise.resolve(true)
     }
-    // A package.json must be present since this builder wouldn't have been invoked otherwise.
-    // This doesn't mean that npm|yarn install will succeed, just that, if it fails it is for some other reason
-    return build(cmd, [ 'install', '--production' ], filepath, displayPath, `'${cmd} install --production'`, `${cmd} install`,
-        flags.verboseBuild, feedback).then(() => makeNpmPackageAppearBuilt(filepath))
+    return build(cmd, args, filepath, displayPath, infoMsg, `${cmd} install`, flags.verboseBuild, feedback).then(
+        () => makeNpmPackageAppearBuilt(filepath))
+}
+
+// Test whether the `package.json` of a filepath (known to exist) contains a 'build' script.
+// We can assume that the local file system is usable.
+function buildScriptExists(filepath: string): boolean {
+    const contents = fs.readFileSync(path.join(filepath, 'package.json'))
+    const pj = JSON.parse(String(contents))
+    return pj.scripts && pj.scripts.build
 }
 
 // Get the Ignore object for screening files.  This always has the fixed entries for .ignore itself, .build, build.sh, and .build.cmd
