@@ -34,6 +34,7 @@ export default class WebContentGet extends NimBaseCommand {
         apihost: flags.string({ description: 'API host of the namespace to get web content from' }),
         save: flags.boolean({ char: 's', description: 'Saves content on file system' }),
         saveAs: flags.string({ description: 'Saves content on file system with the given name' }),
+        url: flags.boolean({ char: 'r', description: 'Get web content url' }),
         ...NimBaseCommand.flags
     }
 
@@ -44,8 +45,20 @@ export default class WebContentGet extends NimBaseCommand {
     ]
 
     async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
-        const { client } = await getWebStorageClient(args, flags, authPersister);
+        const { client, creds  } = await getWebStorageClient(args, flags, authPersister)
         if (!client) logger.handleError(`Couldn't get to the web storage, ensure it's enabled for the ${args.namespace || 'current'} namespace`);
+        if (flags.url) {
+            try {
+                // check if file exists, otherwise catch error and report non-availability through errorHandler
+                const [meta] = await client.file(args.webContentName).getMetadata()
+                const url = new URL(creds.ow.apihost)
+                logger.log(`https://${creds.namespace}-${url.hostname}/${meta.name}`)
+                return
+            } catch (e) {
+                errorHandler(e, logger, args.webContentName)
+            }
+        }
+        else
         await this.downloadFile(args.webContentName, args.destination, client, logger, flags.saveAs, flags.save).catch((err: Error) => logger.handleError('', err));
     }
 

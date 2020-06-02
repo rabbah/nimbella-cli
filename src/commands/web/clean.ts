@@ -48,9 +48,9 @@ export default class WebContentClean extends NimBaseCommand {
                 return;
             }
         }
-        const { client, ow } = await getWebStorageClient(args, flags, authPersister);
+        const { client, creds } = await getWebStorageClient(args, flags, authPersister);
         if (!client) logger.handleError(`Couldn't get to the web storage, ensure it's enabled for the ${args.namespace || 'current'} namespace`);
-        await this.cleanup(client, ow, logger).catch((err: Error) => logger.handleError('', err));
+        await this.cleanup(client, creds.ow, logger).catch((err: Error) => logger.handleError('', err));
     }
 
     async cleanup(client: Bucket, ow: OWOptions, logger: NimLogger) {
