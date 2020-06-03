@@ -55,7 +55,7 @@ export default class AuthList extends NimBaseCommand {
             } else {
               ns = ns.slice(0, NS_LEN - 3) + '...'
             }
-            const check = row.current ? '\u2713 ' : '  '
+            const check = row.current ? (process && 'win32' === process.platform ? '\u221A ' : '\u2713 ') : '  '
             const curr = row.current ? YES : NO
             const stor = row.storage ? YES : NO
             const redis = row.redis ? YES : row.redis === false ? NO : MAYBE
