@@ -49,7 +49,8 @@ else
 	 popd
 fi
 
-for i in MultiSubstitute SplitParams IncludeExclude WebCache SharedBuild Filtering WebInclude Ignoring EmptyReduce Incremental Environment Errors Unweb ValidateRuntime ConfigTypes LoginAuth EmptyZip; do
+# Ownership should come after LoginAuth so that the credential entry it needs exists
+for i in MultiSubstitute SplitParams IncludeExclude WebCache SharedBuild Filtering WebInclude Ignoring EmptyReduce Incremental Environment Errors Unweb ValidateRuntime ConfigTypes LoginAuth Ownership EmptyZip; do
    runTest $i
 done
 if [ "$1" == "--ongcp" ]; then

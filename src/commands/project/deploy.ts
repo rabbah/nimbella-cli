@@ -19,10 +19,10 @@
  */
 
 import { flags } from '@oclif/command'
-import { NimBaseCommand, NimLogger, NimFeedback, authPersister, parseAPIHost, inBrowser } from '../../NimBaseCommand'
+import { NimBaseCommand, NimLogger, NimFeedback, authPersister, parseAPIHost, inBrowser, disambiguateNamespace } from '../../NimBaseCommand'
 import { readAndPrepare, buildProject, deploy } from '../../deployer/api'
 import { Flags, OWOptions, DeployResponse, Credentials } from '../../deployer/deploy-struct'
-import { getCredentialList, getCredentialsForNamespace } from '../../deployer/credentials'
+import { getCredentialsForNamespace } from '../../deployer/credentials'
 import { computeBucketDomainName } from '../../deployer/deploy-to-bucket'
 import { isGithubRef } from '../../deployer/github';
 import * as path from 'path'
@@ -38,7 +38,7 @@ export class ProjectDeploy extends NimBaseCommand {
     insecure: flags.boolean({ description: 'Ignore SSL Certificates', default: false }),
     'verbose-build': flags.boolean({ description: 'Display build details' }),
     'verbose-zip': flags.boolean({ description: 'Display start/end of zipping phase for each action'}),
-    production: flags.boolean({ hidden: true }),
+    production: flags.boolean({ description: 'Deploy to the production namespace instead of the test one' }),
     yarn: flags.boolean({ description: 'Use yarn instead of npm for node builds' }),
     'web-local': flags.string({ description: 'A local directory to receive web deploy, instead of uploading'}),
     include: flags.string({ description: 'Project portions to include' }),
@@ -130,31 +130,6 @@ export async function doDeploy(project: string, cmdFlags: Flags, creds: Credenti
   }
   const result: DeployResponse = await deploy(todeploy)
   return displayResult(result, watching, cmdFlags.webLocal, logger)
-}
-
-// Disambiguate a namespace name when the user ends the name with a '-' character
-// If the namespace does not end with '-' just return it
-// If the match is unique up to the apihost, return the unique match (possibly still ambiguous if apihost not provided)
-// If there is no match, return the provided string sans '-'
-// If the match is not unique up to the apihost, throw error
-export async function disambiguateNamespace(namespace: string, apihost: string|undefined): Promise<string> {
-    if (namespace.endsWith('-')) {
-      const allCreds = await getCredentialList(authPersister)
-      namespace = namespace.slice(0, -1)
-      let matches = allCreds.filter(cred => cred.namespace.startsWith(namespace))
-      if (apihost) {
-        matches = matches.filter(match => match.apihost === apihost)
-      }
-      if (matches.length > 0) {
-        if (matches.every(cred => cred.namespace === matches[0].namespace)) {
-          return matches[0].namespace
-        } else {
-          throw new Error(`Prefix '${namespace}' matches multiple namespaces`)
-        }
-      }
-    }
-    // No match or no '-' to begin with
-    return namespace
 }
 
 // Display the deployment "header" (what we are about to deploy)

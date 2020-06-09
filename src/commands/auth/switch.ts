@@ -19,9 +19,8 @@
  */
 
 import { flags } from '@oclif/command'
-import { NimBaseCommand, NimLogger, parseAPIHost, authPersister } from '../../NimBaseCommand'
+import { NimBaseCommand, NimLogger, parseAPIHost, authPersister, disambiguateNamespace } from '../../NimBaseCommand'
 import { switchNamespace } from '../../deployer/credentials'
-import { disambiguateNamespace } from '../project/deploy'
 
 export default class AuthSwitch extends NimBaseCommand {
   static description = 'Switch to a different Nimbella namespace'

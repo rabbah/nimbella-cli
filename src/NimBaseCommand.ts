@@ -38,7 +38,7 @@ import { IArg } from '@oclif/parser/lib/args'
 import { RuntimeBaseCommand } from '@adobe/aio-cli-plugin-runtime'
 import { format } from 'util'
 import { STATUS_CODES } from 'http'
-import { fileSystemPersister, browserPersister } from './deployer/credentials'
+import { fileSystemPersister, browserPersister, getCredentialList } from './deployer/credentials'
 import { Feedback } from './deployer/deploy-struct'
 
 import * as createDebug  from 'debug'
@@ -276,6 +276,31 @@ function improveErrorMsg(msg: string, err?: any): string {
     }
     debug('improved msg: %s', msg)
     return msg
+}
+
+// Disambiguate a namespace name when the user ends the name with a '-' character
+// If the namespace does not end with '-' just return it
+// If the match is unique up to the apihost, return the unique match (possibly still ambiguous if apihost not provided)
+// If there is no match, return the provided string sans '-'
+// If the match is not unique up to the apihost, throw error
+export async function disambiguateNamespace(namespace: string, apihost: string|undefined): Promise<string> {
+    if (namespace.endsWith('-')) {
+      const allCreds = await getCredentialList(authPersister)
+      namespace = namespace.slice(0, -1)
+      let matches = allCreds.filter(cred => cred.namespace.startsWith(namespace))
+      if (apihost) {
+        matches = matches.filter(match => match.apihost === apihost)
+      }
+      if (matches.length > 0) {
+        if (matches.every(cred => cred.namespace === matches[0].namespace)) {
+          return matches[0].namespace
+        } else {
+          throw new Error(`Prefix '${namespace}' matches multiple namespaces`)
+        }
+      }
+    }
+    // No match or no '-' to begin with
+    return namespace
 }
 
 // Utility to parse the value of an --apihost flag, permitting certain abbreviations

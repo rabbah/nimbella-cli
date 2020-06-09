@@ -126,7 +126,7 @@ export class DefaultFeedback implements Feedback {
 export  interface DeployStructure {
     web?: WebResource[]              // Resources found in the web directory
     packages?: PackageSpec[]         // The packages found in the package directory
-    targetNamespace?: string         // The namespace to which we are deploying (from config)
+    targetNamespace?: string | Ownership  // The namespace to which we are deploying.  An 'Ownership' implies ownership by the project
     cleanNamespace?: boolean         // Clears entire namespace prior to deploying
     bucket?:  BucketSpec             // Information guiding deployment of web resources into an s3 (or s3-like) object store bucket
     actionWrapPackage?: string       // The name of a package into which web resources will be action-wrapped.
@@ -146,6 +146,13 @@ export  interface DeployStructure {
     versions?: VersionEntry          // The VersionEntry for credentials.namespace on the selected API host if available
     feedback?: Feedback              // The object to use for immediate communication to the user (e.g. for warnings and progress reports)
     error?: Error                    // Records an error in reading, preparing, or building; the structure should not be used
+}
+
+// Structure declaring ownership of the targetNamespace by this project.  Ownership is recorded only locally (in the credential store)
+export interface Ownership {
+    // Individually optional but at least one must be specified
+    test?: string
+    production?: string
 }
 
 // The specification of information guiding bucket deployment of web resources if that feature is to be employed
@@ -240,6 +247,8 @@ export interface CredentialEntry {
     api_key: string
     storageKey: CredentialStorageEntry
     redis: boolean
+    project?: string
+    production?: boolean
     commander?: object
 }
 
@@ -256,6 +265,8 @@ export interface Credentials {
     ow: OWOptions
     storageKey: CredentialStorageEntry|undefined
     redis: boolean
+    project?: string
+    production?: boolean
     commander?: object
 }
 
@@ -265,6 +276,8 @@ export interface CredentialRow {
     current: boolean
     storage: boolean
     redis: boolean
+    project?: string
+    production?: boolean
     apihost: string
 }
 

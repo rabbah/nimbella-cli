@@ -18,10 +18,9 @@
  * from Nimbella Corp.
  */
 
-import { NimBaseCommand, NimLogger, authPersister, parseAPIHost } from '../../NimBaseCommand'
+import { NimBaseCommand, NimLogger, authPersister, parseAPIHost, disambiguateNamespace } from '../../NimBaseCommand'
 import { flags } from '@oclif/command'
 import { getCredentials, getCredentialsForNamespace } from '../../deployer/credentials'
-import { disambiguateNamespace } from '../project/deploy'
 import { getCredentialsToken } from '../../oauth'
 
 export default class AuthExport extends NimBaseCommand {

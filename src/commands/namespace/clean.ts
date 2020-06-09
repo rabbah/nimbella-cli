@@ -19,7 +19,7 @@
  */
 
 import { flags } from '@oclif/command'
-import { NimBaseCommand, NimLogger, authPersister, parseAPIHost } from '../../NimBaseCommand'
+import { NimBaseCommand, NimLogger, authPersister, parseAPIHost, disambiguateNamespace } from '../../NimBaseCommand'
 import { getCredentialsForNamespace, getCredentials } from '../../deployer/credentials'
 import { wipeNamespace } from '../../deployer/api'
 import { computeBucketStorageName, cleanBucket } from '../../deployer/deploy-to-bucket'
@@ -46,6 +46,8 @@ export default class NamespaceClean extends NimBaseCommand {
         if (!namespace) {
             creds = await getCredentials(authPersister).catch(err => logger.handleError('', err))
             namespace = creds.namespace
+        } else {
+            namespace = await disambiguateNamespace(namespace, flags.apihost)
         }
         if (!flags.force) {
             const ow = flags.justwhisk ? " openwhisk" : ""

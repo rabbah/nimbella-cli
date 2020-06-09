@@ -154,8 +154,8 @@ export function validateDeployConfig(arg: any): string {
             }
             break
         case 'targetNamespace': {
-            if (!(typeof(arg[item]) == 'string')) {
-                return `${item} must be a string`
+            if (!(typeof(arg[item]) === 'string') && !isValidOwnership(arg[item])) {
+                return `${item} must be a string or a dictionary containing 'test' and/or 'production' members`
             }
             break
         }
@@ -217,6 +217,11 @@ export function validateDeployConfig(arg: any): string {
 // Test whether an item is a dictionary.  In practice this means its basic type is object and it isn't an array or null.
 function isDictionary(item: any) {
     return typeof item === 'object' && !Array.isArray(item) && item != null
+}
+
+// Test whether an item is an Ownership.  This means it's a dictionary and has 'production' and/or 'test' string members
+function isValidOwnership(item: any): boolean {
+    return isDictionary(item) && (typeof item.production === 'string' || typeof item.test === 'string')
 }
 
 // Validator for BucketSpec
@@ -827,6 +832,27 @@ export function mapActions(actions: ActionSpec[]): ActionMap {
         ans[action.name] = action
     }
     return ans
+}
+
+// Get the best available name for a project for recording.  If project is either in github or in cloned repo
+// the name should reflect the github coordinates and not include incidental aspects of the github URL.
+// If the project is just in the file system we use its absolute path (best we have)
+export async function getBestProjectName(project: DeployStructure): Promise<string> {
+    const annot = await getDeployerAnnotation(project.filePath, project.githubPath)
+    if (annot.repository) {
+        let repo = annot.repository
+        if (repo.includes(':')) {
+            repo = repo.split(':')[1]
+        }
+        if (repo.endsWith('.git')) {
+            repo = repo.slice(0, -4)
+        }
+        while (repo.startsWith('/')) {
+            repo = repo.slice(1)
+        }
+        return repo + '/' + annot.projectPath
+    }
+    return annot.projectPath
 }
 
 // Calculate the 'deployer' annotation for inclusion in package and action annotations.  This won't change

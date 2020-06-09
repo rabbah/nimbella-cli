@@ -24,12 +24,12 @@ import { cleanOrLoadVersions, doDeploy, actionWrap, cleanPackage } from './deplo
 import { DeployStructure, DeployResponse, PackageSpec, OWOptions, WebResource, Credentials, Flags, Includer, Feedback, DefaultFeedback } from './deploy-struct'
 import { readTopLevel, buildStructureParts, assembleInitialStructure } from './project-reader'
 import { isTargetNamespaceValid, wrapError, wipe, saveUsFromOurselves, writeProjectStatus, getTargetNamespace,
-    needsBuilding, errorStructure } from './util'
+    needsBuilding, errorStructure, getBestProjectName } from './util'
 import { openBucketClient } from './deploy-to-bucket'
 import { buildAllActions, buildWeb } from './finder-builder'
 import * as openwhisk from 'openwhisk'
 import * as path from 'path'
-import { getCredentialsForNamespace, getCredentials, Persister } from './credentials';
+import { getCredentialsForNamespace, getCredentials, Persister, recordNamespaceOwnership } from './credentials';
 import { makeIncluder } from './includer';
 import { inBrowser } from '../NimBaseCommand'
 import * as makeDebug from 'debug'
@@ -168,10 +168,33 @@ export async function prepareToDeploy(inputSpec: DeployStructure, owOptions: OWO
         flags: Flags): Promise<DeployStructure> {
     debug("Starting prepare with spec: %O", inputSpec)
     // 1.  Acquire credentials if not already present
+    let isTest = false
+    let isProduction = false
     if (!credentials) {
-        if (inputSpec.targetNamespace) {
+        let namespace: string
+        if (typeof inputSpec.targetNamespace === 'string') {
+            namespace = inputSpec.targetNamespace
+        } else if (inputSpec.targetNamespace) {
+            const { test, production } = inputSpec.targetNamespace // previously validated
+            if (flags.production) {
+                if (production) {
+                    namespace = production
+                    isProduction = true
+                } else {
+                    return errorStructure(new Error('The production flag was specified but there is no production namespace'))
+                }
+            } else {
+                if (test) {
+                    namespace = test
+                    isTest = true
+                } else {
+                    return errorStructure(new Error('The production flag was not specified and there is no test namespace'))
+                }
+            }
+        }
+        if (namespace) {
             // The config specified a target namespace so attempt to use it.
-            credentials = await getCredentialsForNamespace(inputSpec.targetNamespace, owOptions.apihost, persister)
+            credentials = await getCredentialsForNamespace(namespace, owOptions.apihost, persister)
         } else {
             // There is no target namespace so get credentials for the current one
             let badCredentials: Error
@@ -186,6 +209,25 @@ export async function prepareToDeploy(inputSpec: DeployStructure, owOptions: OWO
     }
     debug('owOptions: %O', owOptions)
     debug('credentials.ow: %O', credentials.ow)
+    // We have valid credentials but now we must check that we are allowed to deploy to the namespace according to the ownership rules.
+    if (credentials.project) {
+        if (credentials.project != path.resolve(inputSpec.filePath)) {
+            return errorStructure(new Error(`Deployment to namespace '${credentials.namespace}' must be from project '${credentials.project}'`))
+        }
+        if (isTest && credentials.production) {
+            return errorStructure(new Error(
+                `Namespace '${credentials.namespace}' is a production namespace but 'project.yml' declares it as a test namespace`))
+        }
+        if (isProduction && !credentials.production) {
+            return errorStructure(new Error(
+                `Namespace '${credentials.namespace}' is a test namespace but 'project.yml' declares it as a production namespace`))
+        }
+    }
+    // Record ownership if it is declared.  At this point we know it is legal and non-conflicting.
+    if (isTest || isProduction) {
+        recordNamespaceOwnership(await getBestProjectName(inputSpec), credentials.namespace, credentials.ow.apihost, isProduction, persister)
+    }
+    // Merge and save credentials information
     const wskoptions = Object.assign({}, credentials.ow, owOptions || {})
     debug('wskoptions" %O', wskoptions)
     inputSpec.credentials = credentials

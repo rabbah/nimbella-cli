@@ -149,8 +149,8 @@ export async function getCredentials(persister: Persister): Promise<Credentials>
         throw new Error("You do not have a current namespace.  Use 'nim auth login' to create a new one or 'nim auth switch' to use an existing one")
     }
     const entry = store.credentials[store.currentHost][store.currentNamespace]
-    const { storageKey, api_key, redis, commander } = entry
-    return { namespace: store.currentNamespace, ow: { apihost: store.currentHost, api_key }, storageKey, redis, commander }
+    const { storageKey, api_key, redis, project, production, commander } = entry
+    return { namespace: store.currentNamespace, ow: { apihost: store.currentHost, api_key }, storageKey, redis, project, production, commander }
 }
 
 // Convenience function to load, add, save a new credential.  Includes check for whether an entry would be replaced.
@@ -168,20 +168,47 @@ export async function addCredentialAndSave(apihost: string, auth: string, storag
     })
 }
 
-// Provide contents of the CredentialStore in a summary style suitable for listing and tabular presentation
-export async function getCredentialList(persister: Persister): Promise<CredentialRow[]> {
+// Record namespace ownership in the credential store
+export async function recordNamespaceOwnership(project: string, namespace: string, apihost: string, production: boolean,
+        persister: Persister): Promise<boolean> {
     const store = await persister.loadCredentialStore()
-    let result: CredentialRow[] = []
+    if (!apihost) {
+        const fullCreds = getUniqueCredentials(namespace, undefined, store)
+        apihost = fullCreds.ow.apihost
+    }
+    const hostEntry = store.credentials[apihost]
+    if (hostEntry && hostEntry[namespace]) {
+        hostEntry[namespace].project = project
+        hostEntry[namespace].production = production
+    } else {
+        return false
+    }
+    persister.saveCredentialStore(store)
+    return true
+}
+
+// Provide contents of the CredentialStore in a dictionary style suitable for listing and tabular presentation
+export async function getCredentialDict(persister: Persister): Promise<{[host: string]: CredentialRow[]}> {
+    const store = await persister.loadCredentialStore()
+    let result: {[host: string]: CredentialRow[]} = {}
     for (const apihost in store.credentials) {
+        let rows: CredentialRow[] = []
         for (const namespace in store.credentials[apihost]) {
             const current = apihost == store.currentHost && namespace == store.currentNamespace
             const storage = !!store.credentials[apihost][namespace].storageKey
-            const redis = store.credentials[apihost][namespace].redis
-            result.push({namespace, current, storage, apihost, redis })
+            const { redis, project, production } = store.credentials[apihost][namespace]
+            rows.push({namespace, current, storage, apihost, redis, project, production })
+            rows = rows.sort((a,b) => a.namespace.localeCompare(b.namespace))
         }
+        result[apihost] = rows
     }
-    result = result.sort((a,b) => a.namespace.localeCompare(b.namespace))
     return result
+}
+
+// Flat (single array) version of getCredentialDict
+export async function getCredentialList(persister: Persister): Promise<CredentialRow[]> {
+    const dict = await getCredentialDict(persister)
+    return Object.values(dict).reduce((acc, val) => acc.concat(val), []);
 }
 
 // Get the namespace associated with an auth on a specific host
@@ -314,9 +341,9 @@ function getUniqueCredentials(namespace: string, apihost: string|undefined, stor
             throw new Error(`The namespace '${namespace}' exists on more than one API host.  An '--apihost' argument is required`)
         }
     }
-    const { storageKey, api_key, redis, commander } = credentialEntry
+    const { storageKey, api_key, redis, project, production, commander } = credentialEntry
     debug('have authkey: %s', api_key)
-    return { namespace, ow: { apihost: newHost, api_key }, storageKey, redis, commander }
+    return { namespace, ow: { apihost: newHost, api_key }, storageKey, redis, project, production, commander }
 }
 
 // Turn a raw storage string into the form used internally.

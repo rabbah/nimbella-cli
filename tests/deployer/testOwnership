@@ -1,0 +1,45 @@
+#
+# Nimbella CONFIDENTIAL
+# ---------------------
+#
+#   2018 - present Nimbella Corp
+#   All Rights Reserved.
+#
+# NOTICE:
+#
+# All information contained herein is, and remains the property of
+# Nimbella Corp and its suppliers, if any.  The intellectual and technical
+# concepts contained herein are proprietary to Nimbella Corp and its
+# suppliers and may be covered by U.S. and Foreign Patents, patents
+# in process, and are protected by trade secret or copyright law.
+#
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Nimbella Corp.
+#
+ 
+# Test the feature that allows projects to own namespaces
+
+SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+cd $SELFDIR
+
+# Deploy the ownership project twice, once for test, once for production
+set -e
+nim project deploy ownership
+nim project deploy ownership --production
+
+# Test that an attempt to deploy the violator project fails
+set +e
+RESULT=$(nim project deploy violator 2>&1)
+if [[ "$RESULT" != *"must be from project"* ]]; then
+	 echo "Violating deployment should have failed but didn't"
+	 exit 1
+fi
+set -e
+
+# Clear the ownership from the two projects in question and retest violator to see that it succeeds
+nim ns free wb- dt-
+nim project deploy violator
+
+echo "Test succeeded"
