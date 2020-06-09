@@ -355,17 +355,19 @@ After you’ve created a namespace, you can view it and information about it in 
 
 ```
 > nim auth list
-Namespace            Current Storage  Redis API Host
-<your namespace>       yes     yes     yes  https://...
+  Namespace            Current Storage   Redis Production Project
+✓ <your namespace>       yes     yes      yes     no      <any>
 ```
 
+As a new user, your credential store has only one entry, but, if you or your team acquires more namespaces, there can be multiple entries.
 Here’s more information about the table displayed in the response:
 
-*   The **Current** column displays `yes` when there is just one namespace. The Nimbella deployer will deploy this namespace in the absence of other directives.
-*   The **Storage** column indicates whether the namespace has provision for web content storage as discussed in [Adding static web content](adding-static-web-content). There is also a second object storage bucket available for general use, not connected to the web.
+*   The **Current** column displays `yes` for exactly one namespace.
+    - The Nimbella deployer will deploy this namespace in the absence of other directives.
+    - This entry is also marked by a check mark for added emphasis
+*   The **Storage** column indicates whether the namespace has provision for web content storage as discussed in [Adding static web content](#adding-static-web-content). There is also a second object storage bucket available for general use, not connected to the web.
 *   The **Redis** column indicates whether the namespace has a Redis key-value storage instance available for use by actions.
-*   Usually, a Nimbella developer has just one **API Host** and all namespaces use the same one. To add more API hosts, see the section on [Multiple API Hosts](#working-with-other-openwhisk-hosts).
-
+*   The **Production** and **Project** columns become meaningful as you begin to define Nimbella [projects](#about-projects) and wish to [tie namespaces to projects](#tieing-namespaces-to-projects).
 
 ### Create and manage multiple namespaces
 
@@ -374,14 +376,13 @@ There are a number of reasons why it can be useful to have multiple namespaces. 
 **To create additional namespaces:**
 
 1.  [Contact Nimbella Support](https://nimbella.com/contact).
-2.  Identify yourself as an existing developer and provide the email you used for signing up initially.
-3.  Wait for your login token via email.
-4.  Use the auth login command as described in [Create a Nimbella Namespace](#create-a-nimbella-namespace). The additional namespace is added to your credential store.
+2.  Identify yourself as an existing developer and provide the email or github account you used for signing up initially.
+3.  Wait for an email to arrive containing instructions for adding the additional namespace to your credential store.
 
 **To view all of your namespaces:**
 
 Follow the procedure to [view your credential store](#view-the-credential-store).
-A newly added namespace is automatically set as current, indicated by a **yes** in the **Current** column.
+A newly added namespace is automatically set as current, indicated by a checkmark and a **yes** in the **Current** column.
 
 #### Switch between namespaces
 
@@ -391,19 +392,33 @@ If you have more than one namespace, you can switch between them without needing
 nim auth switch <namespace>
 ```
 
-This changes the target namespace for future project deployments.
+This changes the target namespace for future project deployments.  Most namespace names are long and tedious to type, so we provide an abbreviation capability.
+
+```
+nim auth switch dt-
+```
+
+will switch to a namespace uniquely identified by the characters `dt` followed by other characters.
 
 #### Manage multiple namespaces
 
-The easiest way to manage multiple namespaces is to maintain the rule that each project is tied to its own namespace. To do this, add the following top-level directive to a _project.yml_ configuration file for each project:
+The easiest way to manage multiple namespaces is to maintain the rule that each namespace is tied to a project and each project is tied to one or two namespaces. To do this, add the following top-level directive to a _project.yml_ configuration file for each project:
 
 ```
 targetNamespace: <namespace>
 ```
 
-For more information about using _project.yml_ files to configure more complex projects, see [Adding Project Configuration](#adding-project-configuration).
+or
 
-There are more complex development scenarios, such as the case in which a single project may deploy to different namespaces, for example, a test namespace and a production namespace. This case can be managed by using the `--target` directive of the `project deploy` command:
+```
+targetNamespace:
+  test: <namespace1>
+  production: <namespace2>
+```
+
+A more complete explanation of how `targetNamespace` affects project deployment is provided in [Tieing namespaces to projects](#tieing-namespaces-to-projects).
+
+There are more complex development scenarios, in which you would not want to correlate projects and namespaces so strongly.  For those cases, we also provide the `--target` directive of the `project deploy` command:
 
 ```
 nim project deploy <projectPath>... --target <namespace>
@@ -413,24 +428,18 @@ nim project deploy <projectPath>... --target <namespace>
 
 *   If your project has a _project.yml_ configuration file with a `targetNamespace` directive and also uses the `--target` option in a `project deploy` command, the latter takes precedence.
 
-For more information about using _project.yml_ files to configure more complex projects, see [Adding Project Configuration](#adding-project-configuration).
-
-If you need the deployment of a project to have different characteristics depending on the target namespace, such as parameters that might differ between test and production, you can use [symbolic substitution](#symbolic-substitution), for example:
-
-```
-targetNamespace: ${NAMESPACE}
-```
-
-Provide the value of `NAMESPACE` in an environment file along with other substitutions.
+*   For more information about using _project.yml_ files to configure more complex projects, see [Adding Project Configuration](#adding-project-configuration).
 
 ---
 
 
 ## Overview of Nimbella projects, actions, and deployment
 
-A Nimbella _project_ is a logical grouping of static web content and _actions_. An action is a function or program encoded in a programming language supported by the Nimbella Cloud (e.g., JavaScript, PHP, Python, Java,  Go, or Swift). An action usually produces some output in response to an event. For example, an action can be used to convert an image to text, update a stock portfolio, or generate a QR code. Actions are usually grouped into _packages_, but you can create them without a package qualifier if you wish.
+A Nimbella _project_ is a logical grouping of static web content and _actions_. An action is a function or program written in a programming language supported by the Nimbella Cloud (e.g., JavaScript, TypeScript, PHP, Python, Java,  Go, or Swift). An action usually produces some output in response to an event. For example, an action can be used to convert an image to text, update a stock portfolio, or generate a QR code. Actions are usually grouped into _packages_, but you can create them without a package qualifier if you wish.
 
 Projects are _deployed_ as a unit into your Nimbella Cloud namespace to make them visible to your end-users to the extent that you wish. Your namespace can have any number of projects that you want. An application can have any number of projects to achieve its full functionality. This modular approach also lets you share projects across apps and namespaces.
+
+On the other hand, `nim` provides some special support for the model where namespaces are tied to specific projects, which have the sole right to deploy to them.  It is possible to tie two namespaces to each project, one for testing, one for production.  The support for this model is described in [tieing namespaces to projects](#tieing-namespaces-to-projects).
 
 Projects can contain actions, or actions plus static web content, or actions plus web content plus build steps. The following sections show you how to go from simple to complex:
 
@@ -467,7 +476,7 @@ Deployment status recorded in 'example1/.nimbella'
 
 Deployed actions:
   - hello
-> nim action invoke hello -r
+> nim action invoke hello
 {
   "greeting": "Hello stranger!"
 }
@@ -487,7 +496,7 @@ As a result of `nim project deploy`, the project was deployed to your namespace 
 example1/.nimbella/...
 ```
 
-The `nim action invoke` step invoked the just-deployed action.  The `-r` flag caused `nim` to wait for a result and display it.
+The `nim action invoke` step invoked the just-deployed action.
 
 THe `nim project create` command has some other features that will come up in other examples.  But, `nim project create` is only a convenience.
 
@@ -530,7 +539,7 @@ Deployed actions:
 (5)  Invoke the deployed action.
 
 ```
-> nim action invoke demo/hello -r
+> nim action invoke demo/hello
 {
   "msg": "Hello World"
 }
@@ -545,7 +554,7 @@ Here’s a diagram of the project structure that was created in this procedure.
 
 *   The `project deploy` command activates the deployer, which names the action automatically based on the source code file (`hello`), prepended by the package qualifier (`demo`).
 *   If you want an action to have a simple name (no package qualification), put it in a package directory called _default_. In that case, no package qualifier is prepended. See [Project Directory Structure](#project-directory-structure).  When `nim` generates a sample in `nim project create` it uses this feature.
-*   The correct runtime for the source code file is determined according to the file suffix. See [Nimbella Deployer Supported Runtimes for Actions](#nimbella-deployer-supported-runtimes-for-actions) for a list of supported runtimes.
+*   The correct runtime for the source code file is determined according to the file suffix.  The command `nim info --runtimes` will list the supported runtimes.  At this time, the list does not include file suffixes.  See [Nimbella Deployer Supported Runtimes for Actions](#nimbella-deployer-supported-runtimes-for-actions) for a list that includes suffixes.
 *   Project configuration occurs automatically when it can, but see [Adding Project Configuration](#adding-project-configuration) for complex projects.
 
 **Next steps:**
@@ -752,7 +761,6 @@ The Nimbella deployer determines the kind of runtime required for the action fro
 *   Swift suffix _.swift_
 *   PHP for suffix _.php_
 *   Go for suffix _.go_
-
 
 ### Deploying projects incrementally
 
@@ -1135,6 +1143,43 @@ The _package.json_ case also employs a heuristic and won’t be perfectly accura
 
 ---
 
+## Tieing Namespaces To Projects
+
+There is no _required_ mapping between projects and namespaces.  However, you will want to decide on the mapping you want and how to enforce that mapping within a team.
+
+The Nimbella CLI provides some enforcement assistance for one commonly occuring use case, which is one in which
+
+- each namespace belongs to a project
+- a project can deploy to one or two namespaces (one for testing and one for production).
+
+You impose this rule by creating a `project.yml` file in the root of an "owning" project.  This file can contain quite a bit of information, as outlined in [Adding project configuration](#adding-project-configuration).  For present purposes it needs to contain at least
+
+```
+targetNamespace:
+  test: <namespace1>
+  production: <namespace2>
+```
+
+Either `test` or `production` can be omitted.  When you deploy the project
+
+- if you do not specify `--production`, it deploys to the `test` namespace, if any
+- if you specify `--production`, it deploys to the `production` namespace, if any.
+
+Once you have deployed the project to a namespace, it will record its ownership of the namespace in the credential store.  It also records the role of the namespace (test or production).  Once this happens, other projects will not be able to deploy to it.  You can observe the results in `nim auth list`.
+
+```
+  Namespace            Current Storage   Redis Production Project
+  johndoeg-5skkrmhfzyo     no     yes     yes      no     mygithub/myrepo/myproject
+  johndoeg-grinjpsjnuh     no     yes     yes     yes     mygithub/myrepo/myproject
+```
+
+Be aware that this enforcement is purely local.  In teams, consistent enforcement requires committing the project so that every team member uses the same `project.yml`.  The ownership must be re-established (by deploying the project) when switching machines or when a new team member first begins working in the project.
+
+The way the project name is recorded depends on whether the project is inside a github repo or repo clone.  If this case is detected, the project name is recorded in a way that will be consistent across all the different ways of referring to the project, even if the location of the clone were to move or you use the "deploy from github" capability.  However, if the project is not source controlled in github, its full path on the local file system is recorded.
+
+Ownership may be removed from namespaces by using `nim namespace free <namespace>`.   This may be needed when you have changed the ownership information in projects or moved projects within the file system or repository.
+
+---
 
 ## Adding project configuration
 
@@ -1153,29 +1198,6 @@ The structure of the information in the _project.yml_ file should follow the str
 ```
 
 The resulting project will have a _project.yml_ with all default values.
-
-```
-targetNamespace: ''
-cleanNamespace: false
-bucket: {}
-parameters: {}
-packages:
-  - name: default
-    shared: false
-    clean: false
-    environment: []
-    parameters: []
-    annotations: []
-    actions: []
-```
-
-Adding a sample
-
-```
-> nim project create example6 --config
-```
-
-gives you a _project.yml_ that also covers the sample action with more default values.
 
 ```
 targetNamespace: ''
@@ -1365,7 +1387,13 @@ There are also some useful global members of the configuration.
 
 ##### targetNamespace
 
-Selects the namespace to which the project will be deployed. This option is unnecessary unless you have multiple namespaces (discussed under [Managing Multiple Namespaces](#create-and-manage-multiple-namespaces)).  It can be set initially in a new project using the `--target` flag on `nim project create`.
+Establishes project ownership of namespaces for 'test' and 'production' use, as described in [Tieing Namespaces to Projects](#tieing-namespaces-to-projects).  The simpler form
+
+```
+targetNamespace: <myNamespace>
+```
+
+is also accepted for compatibility with earlier releases of `nim`.  It causes deployment to go by default to a given namespace but does not establish ownership.
 
 ##### cleanNamespace
 
