@@ -1,5 +1,16 @@
 # Nimbella CLI (and Workbench) Change History
 
+## Changes in release 1.3.0
+
+- it is now possible to tie namespaces to projects
+- builds triggered by `package.json` will run a `build` script (if present) after install
+- commands that take an indefinite number of arguments now work correctly in the workbench
+- add --url option to `web get`
+- fixed bug in save/revert in the workbench editor
+- fixed command-not-recognized when the first thing issued in the workbench is a topic alias
+- fixed checkmark appearance in windows for `auth list`
+- timeouts now appear in `activation list`
+
 ## Changes in release 1.2.0
 
 - fix handling of command and topic aliases in the workbench (they are now equivalent to the CLI)
