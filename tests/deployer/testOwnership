@@ -21,11 +21,19 @@
 # Test the feature that allows projects to own namespaces
 
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
 cd $SELFDIR
+set -e
+
+# Ensure access to the needed namespaces
+pushd ../../../main
+PROJECT=$(jq -r .current < config/nimconfig.json)
+bin/nimadmin project set nimgcp
+echo yes | bin/nimadmin user set wbtest@nimbella.com
+echo yes | bin/nimadmin user set dtest@nimbella.com
+bin/nimadmin project set $PROJECT
+popd
 
 # Deploy the ownership project twice, once for test, once for production
-set -e
 nim project deploy ownership
 nim project deploy ownership --production
 
