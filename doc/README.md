@@ -1040,13 +1040,15 @@ The _web_ directory and any directory that represents an action can be built aut
 ```
 npm install --production
 yarn install --production
-npm install --production && npm run build
-yarn install --production && yarn run build
+npm install && npm run build
+yarn install && yarn run build
 ```
 
 One of the `npm` commands is used by default but you can cause `yarn` to be used instead by using the flag `--yarn` on the `nim project deploy` command.  One of the former two commands is used if `package.json` does not contain a `build` script.  The presence of a `build` script in `package.json` causes one of the latter two commands to be used.
 
 The `build.*` triggers take precedence over the `package.json` trigger.  If a script is found, only the script is executed.  Of course, the script can always employ `npm` or `yarn` commands as needed.
+
+Because the interpretation of the `package.json` trigger depends on what is in `package.json`, when a build script is found in `package.json`, the "dev dependencies" are included in `node_modules` and when there is no such script, those dependencies are not included.  This behavior corresponds to the most common expected use cases.  If it does not correspond to your needs, you can use a `build.sh` and or `build.cmd` to trigger the build and include the exact sequence of commands in that script that you will need.
 
 **Tip:** `build.sh` and `build.cmd` are automatically ignored and do not have to be listed in `.ignore`. However, `package.json` is not automatically ignored in this way.
 

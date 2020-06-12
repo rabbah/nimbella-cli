@@ -713,12 +713,12 @@ function makeNpmPackageAppearBuilt(filepath: string) {
     if (fs.existsSync(nodeModules)) touch(nodeModules)
 }
 
-// The builder for npm|yarn install --production
+// The builder for npm|yarn install --production or npm|yarn install && npm|yarn run build
 // A package.json must be present since this builder wouldn't have been invoked otherwise.
 // This doesn't mean that npm|yarn install will succeed, just that, if it fails it is for some other reason
 function npmBuilder(filepath: string, displayPath: string, flags: Flags, feedback: Feedback): Promise<any> {
     const cmd = flags.yarn ? 'yarn' : 'npm'
-    const args = buildScriptExists(filepath) ? [ 'install', '--production', '&&', cmd, 'run', 'build' ] : [ 'install', '--production' ]
+    const args = buildScriptExists(filepath) ? [ 'install', '&&', cmd, 'run', 'build' ] : [ 'install', '--production' ]
     const infoMsg = [ cmd, ...args ].join(' ')
     if (flags.incremental && npmPackageAppearsBuilt(filepath)) {
         if (flags.verboseBuild) {
