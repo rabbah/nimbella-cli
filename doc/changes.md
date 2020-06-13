@@ -1,5 +1,9 @@
 # Nimbella CLI (and Workbench) Change History
 
+## Changes in release 1.3.1
+
+- When running a `build` script in `package.json`, the preceding install now includes dev dependencies.  The feature as implemented in  `1.3.0` was not useful for its intended purpose.
+
 ## Changes in release 1.3.0
 
 - it is now possible to tie namespaces to projects
