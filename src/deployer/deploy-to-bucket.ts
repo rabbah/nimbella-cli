@@ -144,7 +144,12 @@ async function doUpload(owOptions: OWOptions, client: Bucket, destination: strin
         if (putres.status !== 200) {
             throw new Error(`Bad response [$putres.status}] from storage server`)
         }
-    } else {
+        debug('signed URL put operation for %s was successful', destination)
+        phaseTracker[0] = 'setting metadata'
+        const remoteFile = client.file(destination)
+        await remoteFile.setMetadata(metadata)
+        debug('metadata saving operation for %s was successful', destination)
+     } else {
         // In the CLI the straightforward google client functions work fine and are more efficient.  Also, we don't want to count
         // a bunch of extra action invokes against the user since we may have a rate limit on those.
         phaseTracker[0] = 'uploading file'
