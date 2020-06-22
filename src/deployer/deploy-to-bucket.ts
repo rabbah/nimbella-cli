@@ -111,7 +111,7 @@ export async function deployToBucket(resource: WebResource, client: Bucket, spec
         await doUpload(owOptions, client, destination, data, metadata, phaseTracker)
         debug('save operation for %s was successful', resource.simpleName)
     } catch (err) {
-        debug('an error occured: %O', err)
+        debug('an error occurred: %O', err)
         return wrapError(err, `web resource '${resource.simpleName}' (${phaseTracker[0]})`)
     }
     const item = `https://${client.name}/${destination}`
