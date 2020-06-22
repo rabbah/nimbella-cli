@@ -1,5 +1,9 @@
 # Nimbella CLI (and Workbench) Change History
 
+## Chnges in release 1.3.2
+
+- fixed bug in 'deploy from github' when initiated from workbench (web content  did not get an appropriate content type)
+
 ## Changes in release 1.3.1
 
 - When running a `build` script in `package.json`, the preceding install now includes dev dependencies.  The feature as implemented in  `1.3.0` was not useful for its intended purpose.
