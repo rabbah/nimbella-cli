@@ -103,7 +103,7 @@
         "host": "https://apigcp.nimbella.io/downloads/nim"
       },
       "node": {
-        "version": "13.12.0"
+        "version": "14.4.0"
       }
     },
     "topics": {
