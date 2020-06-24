@@ -22,7 +22,7 @@
 ## Changes in release 1.2.0
 
 - fix handling of command and topic aliases in the workbench (they are now equivalent to the CLI)
-- `logon` and `logout` are now aliases for `auth login` and `auth logout`
+- `login` and `logout` are now aliases for `auth login` and `auth logout`
 - improved output from commands that list entities
 - on `action create` the action name may be omitted if it can be inferred from the file name
 - `web get` and `object get` behavior is more equivalent to each other
@@ -36,7 +36,7 @@
 - add subcommands `nim web [create | get | delete | clean ]`
 - improvements to `project create`
 - improvement to `help` and "not found" behavior
-- fix bug in `namespace clean that caused `404.html` to have wrong content type
+- fix bug in `namespace clean` that caused `404.html` to have wrong content type
 - removed some confusing internal-use commands from top menu
 - `activation list` with no arguments defaults to `--last`
 - fix bug and also documentation error for symbolic substitution in `project.yml`
