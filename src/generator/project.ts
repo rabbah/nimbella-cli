@@ -44,7 +44,7 @@ export async function createOrUpdateProject(updating: boolean, args: any, flags:
                         // resolved).
                         logger.handleError('Current restriction: project update does not work if there are symbolic substitutions in the configuration')
                     }
-                    projectConfig = yaml.safeLoad(configContents)
+                    projectConfig = yaml.safeLoad(configContents) as DeployStructure
                 }
                 if (kind && !fs.existsSync(defaultPackage)) {
                     fs.mkdirSync(defaultPackage, { recursive: true })
