@@ -84,7 +84,7 @@ function watch(project: string, cmdFlags: Flags, creds: Credentials|undefined, o
     const watch = () => {
         // logger.log("Opening new watcher")
         watcher = chokidar.watch(project, { ignoreInitial: true, followSymlinks: false })
-        watcher.on('all', async (_, filename) => await fireDeploy(project, filename, cmdFlags, creds, owOptions, logger, reset, watch))
+        watcher.on('all', async (event, filename) => await fireDeploy(project, filename, cmdFlags, creds, owOptions, logger, reset, watch, event))
     }
     watch()
 }
@@ -93,7 +93,11 @@ function watch(project: string, cmdFlags: Flags, creds: Credentials|undefined, o
 // TODO this logic was crafted for fs.watch().  There might be a better way to suspend chokidar.
 // Displays an informative message before deploying.
 async function fireDeploy(project: string, filename: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions,
-        logger: NimLogger, reset: ()=>void, watch: ()=>void) {
+        logger: NimLogger, reset: ()=>void, watch: ()=>void, event: string) {
+    if (event === 'addDir') {
+        // Don't fire on directory add ... it never represents a complete change.
+        return
+    }
     if (excluded(filename)) {
         return
     }
