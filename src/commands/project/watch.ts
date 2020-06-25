@@ -22,6 +22,7 @@ import { NimBaseCommand, NimLogger, inBrowser } from '../../NimBaseCommand'
 import { ProjectDeploy, processCredentials, doDeploy } from './deploy'
 import { Flags, Credentials, OWOptions } from '../../deployer/deploy-struct'
 import * as fs from 'fs'
+import * as chokidar from 'chokidar'
 import * as path from 'path'
 import { isGithubRef } from '../../deployer';
 
@@ -73,7 +74,7 @@ function watch(project: string, cmdFlags: Flags, creds: Credentials|undefined, o
         logger.handleError(msg, new Error(msg))
     }
     logger.log(`Watching '${project}' [use Control-C to terminate]`)
-    let watcher: fs.FSWatcher|undefined = undefined
+    let watcher: chokidar.FSWatcher = undefined
     const reset = () => {
         if (watcher) {
             // logger.log("Closing watcher")
@@ -82,13 +83,14 @@ function watch(project: string, cmdFlags: Flags, creds: Credentials|undefined, o
     }
     const watch = () => {
         // logger.log("Opening new watcher")
-        watcher = fs.watch(project, { recursive: true, persistent: true}, async (_, filename) =>
-            await fireDeploy(project, filename, cmdFlags, creds, owOptions, logger, reset, watch))
+        watcher = chokidar.watch(project, { ignoreInitial: true, followSymlinks: false })
+        watcher.on('all', async (_, filename) => await fireDeploy(project, filename, cmdFlags, creds, owOptions, logger, reset, watch))
     }
     watch()
 }
 
 // Fire a deploy cycle.  Suspends the watcher so that mods made to the project by the deployer won't cause a spurious re-trigger.
+// TODO this logic was crafted for fs.watch().  There might be a better way to suspend chokidar.
 // Displays an informative message before deploying.
 async function fireDeploy(project: string, filename: string, cmdFlags: Flags, creds: Credentials|undefined, owOptions: OWOptions,
         logger: NimLogger, reset: ()=>void, watch: ()=>void) {
@@ -110,7 +112,7 @@ async function fireDeploy(project: string, filename: string, cmdFlags: Flags, cr
 
 // Decide if a file name should be excluded from consideration when firing a deploy.
 // TODO Someday this might be based on a list of patterns but the number of rules right now are small enough to
-// not bother with that.
+// not bother with that.   Note that chokidar has an ignore feature using wildcards that we might switch to.
 function excluded(filename: string): boolean {
     return filename.split('/').includes('.nimbella')
         || filename.endsWith('~')
