@@ -37,19 +37,25 @@ sleep 5
 
 # Touch a file to trigger a build
 touch watched/packages/default/hello.js
+sleep 5
 
-# Sleep a while to give output a chance to occur
+# Make a directory, which should not trigger another build
+mkdir watched/packages/default/hello2
+sleep 5
+
+# Add a file to the new directory (will trigger a second build)
+touch watched/packages/default/hello2/index.js
+sleep 5
+
+# Add an .include file (third build)
+echo "index.js" > watched/packages/default/hello2/.include
 sleep 5
 
 # Kill the watcher
 kill $PID
 
 # Check the result
-TOCHECK=$(cat watcher.output)
-if [[ "$TOCHECK" != *"Deploying 'watched' due to change"* ]]; then
-	 echo "It does not appear that the watcher fired. Output:"
-   echo "$TOCHECK"
-   exit 1
-fi
+echo "Comparing watcher log to expected contents"
+diff -ub expected.watcher.output watcher.output
 
 echo "Test succeeded"

@@ -1,0 +1,23 @@
+Watching 'watched' [use Control-C to terminate]
+
+Deploying 'watched' due to change in 'watched/packages/default/hello.js'
+Deployment status recorded in 'watched/.nimbella'
+
+Deployed actions:
+  - hello
+Deployment complete.  Resuming watch.
+
+
+Deploying 'watched' due to change in 'watched/packages/default/hello2/index.js'
+
+Deployed actions:
+  - hello2
+Skipped 1 unchanged actions
+Deployment complete.  Resuming watch.
+
+
+Deploying 'watched' due to change in 'watched/packages/default/hello2/.include'
+
+Skipped 2 unchanged actions
+Deployment complete.  Resuming watch.
+
