@@ -33,7 +33,6 @@ header h1 { margin-bottom: 0; line-height: 1; color: #122A2E; }
 nav, main {
   padding: 1rem;
   box-sizing: border-box;
-  padding-bottom: 80vh;
 }
 
 nav {
@@ -60,6 +59,7 @@ nav {
 
 nav > ul {
   margin-top: 0;
+  padding-bottom: 80vh;
 }
 
 nav > ul > li {
