@@ -19,7 +19,7 @@
 # from Nimbella Corp.
 #
 #
-# This script runs makeAioPacks.sh surrounded by checks for consistency and commits the result
+# This script updates package.json and aio.hash to reflect the latest commit in aio
 
 set -e
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -40,18 +40,12 @@ if [ "$BR" != "dev" ]; then
 		exit 1
 fi
 
-# Run the aio pack build
-./makeAioPacks.sh
-
 # Record, then retrieve, the aio hash
 ./aioUpToDate.sh record
 HASH=$(cat aio.hash)
-TARBALL_NAME="adobe-aio-cli-plugin-runtime-$HASH.tgz"
-
-# Upload the tarball
-gsutil cp adobe-aio-cli-plugin-runtime.tgz gs://nimaio-apigcp-nimbella-io/$TARBALL_NAME
+# TODO aio-cli-plugin-runtime will soon move from nimbella-corp to nimbella (it is already public)
+REF="nimbella-corp/aio-cli-plugin-runtime#$HASH"
 
 # Edit package.json so that the correct dependency is declared there
-URL="https://nimaio-apigcp.nimbella.io/$TARBALL_NAME"
-jq -r '.dependencies."@adobe/aio-cli-plugin-runtime" = "'$URL'"' < package.json > tmp.json
+jq -r '.dependencies."@adobe/aio-cli-plugin-runtime" = "'$REF'"' < package.json > tmp.json
 mv tmp.json package.json

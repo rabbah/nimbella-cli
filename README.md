@@ -93,12 +93,6 @@ For this, you do need the `aio-cli-plugin-runtime` repo to be a sibling of this 
   - Checkout its `dev` branch rather than `master` (scripts will check this)
   - It need not be pre-built (scripts will build it)
 
-Build it with
-
-```
-./makeAioPacks.sh
-```
-in this repo.  The result should be a tarball in the root of this repo.
 
 Prior to testing, issue
 
@@ -106,7 +100,7 @@ Prior to testing, issue
 ./testaio.sh
 ```
 
-This changes `package.json` so that the local tarball is used for the `aio` dependency, rather than the deployed version that is normally used.
+This changes `package.json` so that a local relative file system reference is used for the `aio` dependency, rather than the github reference that is normally used.
 
 Once this has been done, use the normal build procedure for testing.
 
@@ -120,10 +114,10 @@ This restores `package.json` from a backup.
 
 ### Committing a new (tested) version of the Adobe I/O dependency
 
-- First _commit_ the change in `aio-cli-plugin-runtime` (it need not be pushed yet)
+- First _commit_ the change in `aio-cli-plugin-runtime` and _push_ that commit to the remote repo.  This enables github references to the commit.
 - Then, in this repo, run `./commitAioPacks.sh`
 - Then, in this repo, commit `aio.hash` and `package.json`, which will have changed as a result
-- Push both repos at will
+- Push this repo.
 
 ### Stable Versions
 
@@ -137,7 +131,7 @@ Building a stable version requires `aio-cli-plugin-runtime` (for checking; it is
 5. The script will attempt to sign the MacOS installer and submit it to Apple for notarization.
    * If that fails, you may be able to restart at that point by directly calling the sub-script `signAndNotarize.sh`
    * If the sign and submit process succeeds, you will still have to wait for an email from Apple telling you whether notarization was successful.
-6. Once notarization has succeeded, check that the MacOS installer is fully acceptable by issuing `./build.sh --check-stable`
+6. Once notarization has succeeded, check that the MacOS installer is fully acceptable by switching to this repo (`nimbella-cli`, not `main`) and issuing `./build.sh --check-stable`
 
 The script will check that you did the first three steps and will also check that the repos are in synch with each other.  The new stable version will be in `workbench/stable`
 

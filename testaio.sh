@@ -33,7 +33,6 @@ fi
 
 # Orient
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-STABLEDIR=$SELFDIR/../workbench/stable
 cd $SELFDIR
 
 # Sort out existence of a saved copy of package.json and whether or not reset is requested
@@ -55,5 +54,5 @@ elif [ -n "$RESET" ]; then
 else
 		# Correct non-reset execution
 		cp package.json saved-package.json
-		jq -r '.dependencies."@adobe/aio-cli-plugin-runtime" = "file:adobe-aio-cli-plugin-runtime.tgz"' < saved-package.json > package.json
+		jq -r '.dependencies."@adobe/aio-cli-plugin-runtime" = "../aio-cli-plugin-runtime"' < saved-package.json > package.json
 fi
