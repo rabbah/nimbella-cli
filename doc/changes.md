@@ -1,6 +1,10 @@
 # Nimbella CLI (and Workbench) Change History
 
-## Chnges in release 1.3.2
+## Changes in release 1.4
+
+- added 'nim object url'
+
+## Changes in release 1.3.2
 
 - fixed bug in 'deploy from github' when initiated from workbench (web content  did not get an appropriate content type)
 
