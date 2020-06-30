@@ -69,7 +69,7 @@
   "files": [
     "/bin",
     "/lib",
-    "/patches",
+    "/patches/@oclif+plugin-plugins+*.patch",
     "/oclif.manifest.json",
     "/LICENSE",
     "/license.html",
