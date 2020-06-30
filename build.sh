@@ -116,7 +116,7 @@ cp $SELFDIR/../main/deploy/embed/404_html.html 404.html
 # Failures of this step are terminal when building a stable version but are
 # considered "warnings" otherwise.
 rm -fr node_modules
-npm install --production
+npm install --production --no-optional
 if [ -z "$STABLE" ]; then
 	set +e
 fi
@@ -142,7 +142,7 @@ pandoc -o license.html -f markdown-smart -s -H ./doc/tracker.html --html-q-tags 
 pandoc -o thirdparty-licenses.html -f markdown_strict -t html < thirdparty-licenses.md
 
 # Full install
-npm install
+npm install --no-optional
 
 # Build and pack
 npx tsc
