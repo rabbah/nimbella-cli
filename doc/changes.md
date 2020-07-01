@@ -3,6 +3,10 @@
 ## Changes in release 1.4
 
 - added 'nim object url'
+- fixed activation summary view in workbench
+- fixed clipping at the bottom of the table of contents of 'nim doc (and changed title)'
+- fixed behavior of 'nim project watch' on linux
+- fixed display of some characters on windows in 'nim [ action | activation ] list'
 
 ## Changes in release 1.3.2
 
