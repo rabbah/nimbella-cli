@@ -14,7 +14,7 @@
   "author": "Joshua Auerbach",
   "license": "SEE LICENSE IN 'LICENSE' or 'license.html'",
   "dependencies": {
-    "@adobe/aio-cli-plugin-runtime": "nimbella-corp/aio-cli-plugin-runtime#e54611990d19fc9278f2cb298e7351d6692d88a8",
+    "@adobe/aio-cli-plugin-runtime": "nimbella-corp/aio-cli-plugin-runtime#d0ee8daa9ca381f0ce0abfc1df79073975a3f263",
     "@adobe/aio-lib-core-config": "^1.0.15",
     "@google-cloud/storage": "^3.2.1",
     "@oclif/command": "^1",
