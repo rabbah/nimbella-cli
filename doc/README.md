@@ -1206,13 +1206,14 @@ targetNamespace: ''
 cleanNamespace: false
 bucket: {}
 parameters: {}
+environment: {}
 packages:
   - name: default
     shared: false
     clean: false
-    environment: []
-    parameters: []
-    annotations: []
+    environment: {}
+    parameters: {}
+    annotations: {}
     actions:
       - name: hello
         clean: false
@@ -1410,6 +1411,9 @@ May be `true` or `false` (default). It causes the entire namespace to be cleared
 
 A nested map providing parameters to place on every package in the project. This option generalizes the feature by which parameters on packages are distributed to the contained actions. Placing parameters at the top level causes them to be indirectly inherited by every action in the project.
 
+##### environment
+
+A nested map providing parameters to place on every package in the project such that the parameters go into the environment of actions of the package.  This option generalizes the feature by which environment on packages are distributed to the contained actions. Placing environment at the top level causes them to be indirectly inherited by every action in the project.
 
 ### Project configuration for web content
 

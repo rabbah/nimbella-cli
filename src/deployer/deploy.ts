@@ -74,7 +74,7 @@ export function doDeploy(todeploy: DeployStructure): Promise<DeployResponse> {
             todeploy.flags.incremental ? todeploy.versions : undefined, webLocal, todeploy.reader, todeploy.credentials.ow))
     return getDeployerAnnotation(todeploy.filePath, todeploy.githubPath).then(deployerAnnot => {
         const actionPromises = todeploy.packages.map(pkg => deployPackage(pkg, todeploy.owClient, deployerAnnot, todeploy.parameters,
-            todeploy.cleanNamespace, todeploy.flags.incremental ? todeploy.versions : undefined, todeploy.reader))
+            todeploy.environment, todeploy.cleanNamespace, todeploy.flags.incremental ? todeploy.versions : undefined, todeploy.reader))
         const strays = straysToResponse(todeploy.strays)
         return Promise.all(webPromises.concat(actionPromises)).then(responses => {
             responses.push(strays)
@@ -177,7 +177,8 @@ function main() {
 
 // Deploy a package, then deploy everything in it (currently just actions)
 export async function deployPackage(pkg: PackageSpec, wsk: openwhisk.Client, deployerAnnot: DeployerAnnotation,
-        projectParams: openwhisk.Dict, namespaceIsClean: boolean, versions: VersionEntry, reader: ProjectReader): Promise<DeployResponse> {
+        projectParams: openwhisk.Dict, projectEnv: openwhisk.Dict, namespaceIsClean: boolean, versions: VersionEntry,
+        reader: ProjectReader): Promise<DeployResponse> {
     if (pkg.name == 'default') {
         return Promise.all(pkg.actions.map(action => deployAction(action, wsk, "", deployerAnnot, namespaceIsClean, versions, reader)))
             .then(combineResponses)
@@ -202,7 +203,8 @@ export async function deployPackage(pkg: PackageSpec, wsk: openwhisk.Client, dep
         const annotDict = Object.assign({}, oldAnnots, pkg.annotations, { deployer })
         const annotations = keyVal(annotDict)
         const mergedParams = Object.assign({}, projectParams, pkg.parameters)
-        const params = encodeParameters(mergedParams, pkg.environment)
+        const mergedEnv = Object.assign({}, projectEnv, pkg.environment)
+        const params = encodeParameters(mergedParams, mergedEnv)
         const owPkg: openwhisk.Package = { parameters: params, annotations, publish: pkg.shared }
         await wsk.packages.update({name: pkg.name, package: owPkg}).then(result => {
             const packageVersions = {}

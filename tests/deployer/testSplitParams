@@ -20,13 +20,7 @@
 
 # This tests the feature whereby an 'environment' clause of project.yml
 # translates to 'parameters' with init=true
-
-function testResult() {
-  if [ "$1" != "doghouse" ] || [ "$2" != "null" ] || [ "$3" != "special" ] || [ "$4" != "birdhouse" ] || [ "$5" != "true" ]; then
-	  echo "Results were not as expected"
-		exit 1
-  fi
-}
+# It also tests the ability to place environment and parameters on a package or the project as a whole
 
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -34,24 +28,44 @@ cd $SELFDIR
 set -e
 
 nim project deploy splitParams
-RESULT=$(nim action get authorize | jq -r '.parameters')
-echo $RESULT
+rm -f parameters
+nim action get user/authorize | jq '.parameters' > parameters
 
-ONE=$(echo "$RESULT" | jq -r .[0])
-ONE_KEY=$(echo "$ONE" | jq -r .key)
-ONE_VALUE=$(echo "$ONE" | jq -r .value)
-ONE_INIT=$(echo "$ONE" | jq -r .init)
-TWO=$(echo "$RESULT" | jq -r .[1])
-TWO_KEY=$(echo "$TWO" | jq -r .key)
-TWO_VALUE=$(echo "$TWO" | jq -r .value)
-TWO_INIT=$(echo "$TWO" | jq -r .init)
+T=$(cat parameters | jq 'map(select(.key == "e1"))[0]')
+VALUE=$(echo "$T" | jq -r .value)
+test "$VALUE" != "eone" && echo "e1.value is not 'eone'" && exit 1  
+INIT=$(echo "$T" | jq -r .init)
+test "$INIT" != "true" && echo "e1.init is not true" && exit 1  
 
-if [ "$ONE_KEY" == "regular" ]; then
-  testResult $ONE_VALUE $ONE_INIT $TWO_KEY $TWO_VALUE $TWO_INIT
-elif [ "TWO_KEY" == "regular" ]; then
-  testResult $TWO_VALUE $TWO_INIT $ONE_KEY $ONE_VALUE $ONE_INIT
-else
-  echo "Results were not as expected"
-	exit 1
-fi
+T=$(cat parameters | jq 'map(select(.key == "p1"))[0]')
+VALUE=$(echo "$T" | jq -r .value)
+test "$VALUE" != "pone" && echo "p1.value is not 'pone'" && exit 1  
+INIT=$(echo "$T" | jq -r .init)
+test "$INIT" != "null" && echo "p1.init is not null" && exit 1  
+
+T=$(cat parameters | jq 'map(select(.key == "e2"))[0]')
+VALUE=$(echo "$T" | jq -r .value)
+test "$VALUE" != "etwo" && echo "e2.value is not 'etwo'" && exit 1  
+INIT=$(echo "$T" | jq -r .init)
+test "$INIT" != "true" && echo "e2.init is not true" && exit 1  
+
+T=$(cat parameters | jq 'map(select(.key == "p2"))[0]')
+VALUE=$(echo "$T" | jq -r .value)
+test "$VALUE" != "ptwo" && echo "p2.value is not 'ptwo'" && exit 1  
+INIT=$(echo "$T" | jq -r .init)
+test "$INIT" != "null" && echo "p2.init is not null" && exit 1  
+
+T=$(cat parameters | jq 'map(select(.key == "e3"))[0]')
+VALUE=$(echo "$T" | jq -r .value)
+test "$VALUE" != "ethree" && echo "e3.value is not 'ethree'" && exit 1  
+INIT=$(echo "$T" | jq -r .init)
+test "$INIT" != "true" && echo "e3.init is not true" && exit 1  
+
+T=$(cat parameters | jq 'map(select(.key == "p3"))[0]')
+VALUE=$(echo "$T" | jq -r .value)
+test "$VALUE" != "pthree" && echo "p3.value is not 'pthree'" && exit 1  
+INIT=$(echo "$T" | jq -r .init)
+test "$INIT" != "null" && echo "p3.init is not null" && exit 1  
+
+rm -f parameters
 echo "Test Succeeded"

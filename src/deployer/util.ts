@@ -198,9 +198,10 @@ export function validateDeployConfig(arg: any): string {
             }
             break
         }
-        case 'parameters': {
+        case 'parameters':
+        case 'environment': {
             if (!isDictionary(arg[item])) {
-                return `parameters member must be a dictionary`
+                return `${item} member must be a dictionary`
             }
             break
         }

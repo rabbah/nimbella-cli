@@ -131,6 +131,7 @@ export  interface DeployStructure {
     bucket?:  BucketSpec             // Information guiding deployment of web resources into an s3 (or s3-like) object store bucket
     actionWrapPackage?: string       // The name of a package into which web resources will be action-wrapped.
     parameters?: Dict                // Parameters to apply to all packages in the project
+    environment?: Dict               // Environment to apply to all packages in the project
     // The following fields are not permitted in project.yml but are filled in internally
     credentials?: Credentials         // The full credentials for the deployment (consistent with targetNamespace if one was specified)
     flags? : Flags                   // options typically specified on the command line

@@ -30,5 +30,6 @@ tests/deployer/watcher.output
 tests/deployer/unweb/project.yml
 tests/deployer/webCache/project.yml
 tests/deployer/configTypes/project.yml
+tests/deployer/parameters
 /oclif.manifest.json
 /bin/nim
