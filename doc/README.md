@@ -1409,11 +1409,15 @@ May be `true` or `false` (default). It causes the entire namespace to be cleared
 
 ##### parameters
 
-A nested map providing parameters to place on every package in the project. This option generalizes the feature by which parameters on packages are distributed to the contained actions. Placing parameters at the top level causes them to be indirectly inherited by every action in the project.
+A nested map providing parameters to place on every "real" package in the project (those capable of accepting parameters).  The parameters are then distributed by the backend to all the actions that are contained in those packages.
+
+**Note:** The "default" package is not a package in the backend but simply contains the actions that are not in any package.  It is not legal to specify `parameters` for it and thus `parameters` at top level do not distribute to it.
 
 ##### environment
 
-A nested map providing parameters to place on every package in the project such that the parameters go into the environment of actions of the package.  This option generalizes the feature by which environment on packages are distributed to the contained actions. Placing environment at the top level causes them to be indirectly inherited by every action in the project.
+A nested map providing parameters to place on every "real" package in the project such that the parameters go into the environment of actions of the packages.
+
+**Note:** See note under `parameters`.
 
 ### Project configuration for web content
 
