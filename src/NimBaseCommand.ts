@@ -146,8 +146,6 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
     debug('runAio with rawArgv: %O, argv: %O, args: %O, flags: %O', rawArgv, argv, args, flags)
     fixAioCredentials(logger)
     const cmd = new aioClass(rawArgv, {})
-    cmd.handleError = this.handleError.bind(cmd)
-    debug('handleError intercepted')
     if (flags.verbose) {
       debug('verbose flag intercepted')
       flags.verbose = false
@@ -156,6 +154,8 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
     if (inBrowser) {
       cmd.log = logger.log.bind(logger)
       cmd.exit = logger.exit.bind(logger)
+      cmd.handleError = logger.handleError.bind(logger)
+      debug('handleError intercepted in browser mode')
       cmd.parsed = { argv, args, flags }
       const capture = logger as CaptureLogger
       cmd.logJSON = this.logJSON(capture)
@@ -164,6 +164,8 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
       debug('browser intercepts installed')
       await cmd.run()
     } else
+      cmd.handleError = this.handleError.bind(cmd)
+      debug('handleError intercepted in CLI mode')
       await cmd.run(rawArgv)
   }
 
