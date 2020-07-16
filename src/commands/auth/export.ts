@@ -21,24 +21,30 @@ export default class AuthExport extends NimBaseCommand {
 
   static flags = {
     apihost: flags.string({ description: 'API host serving the namespace'}),
+    'non-expiring': flags.boolean({ description: 'Generate non-expiring token (for functional ids and integrations)' }),
     ...NimBaseCommand.flags
   }
 
   static args = [ { name: 'namespace', description: 'The namespace to export (omit for current namespace)', required: false } ]
 
-
-
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
     const host = parseAPIHost(flags.apihost)
+    const nonExpiring = flags['non-expiring']
+
     let namespace: string
     if (args.namespace) {
         namespace = await disambiguateNamespace(args.namespace, host).catch(err => logger.handleError('', err))
     }
+
     const creds = await (namespace ? getCredentialsForNamespace(namespace, host, authPersister) :
         getCredentials(authPersister)).catch(err => logger.handleError('', err))
-    const token = await getCredentialsToken(creds.ow, logger)
+    const token = await getCredentialsToken(creds.ow, logger, nonExpiring)
     logger.log(`The following token encodes credentials for namespace '${creds.namespace}' on host '${creds.ow.apihost}'`)
-    logger.log('It may be used with `nim auth login` within the next five minutes')
+    if (nonExpiring) {
+      logger.log('It may be used with `nim auth login` and does not expire.')
+    } else {
+      logger.log('It may be used with `nim auth login` within the next five minutes.')
+    }
     logger.log(token)
   }
 }

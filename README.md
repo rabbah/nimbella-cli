@@ -140,3 +140,11 @@ The script will check that you did the first three steps and will also check tha
 `nim`
 
 To get started.
+
+### Running without `tsc` build (for local development only)
+
+The following command is handy for quick testing of new features.
+It will run the CLI without compiling typescript code explicitly.
+
+First run `npm install` then you can run the CLI as follows.
+`./node_modules/.bin/ts-node bin/run`

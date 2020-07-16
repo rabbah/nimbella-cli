@@ -379,9 +379,9 @@ export async function doOAuthFlow(logger: NimLogger, githubOnly: boolean, apihos
 }
 
 // Invoke the tokenizer given low level OW credentials (auth and apihost), getting back a bearer token to full credentials
-export async function getCredentialsToken(ow: OWOptions, logger: NimLogger): Promise<string> {
+export async function getCredentialsToken(ow: OWOptions, logger: NimLogger, nonExpiring: boolean = false): Promise<string> {
     debug('getCredentialsToken with input %O', ow)
-    const url = getAPIUrl(NAMESPACE, ow.apihost) + TOKENIZER
+    const url = getAPIUrl(NAMESPACE, ow.apihost) + TOKENIZER + (nonExpiring === true ? '?ttl=login' : '')
     let response
     try {
       response = await wskRequest(url, ow.api_key)
