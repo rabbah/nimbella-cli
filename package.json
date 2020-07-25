@@ -12,7 +12,7 @@
   },
   "keywords": [],
   "author": "Joshua Auerbach",
-  "license": "SEE LICENSE IN 'LICENSE' or 'license.html'",
+  "license": "Apache-2.0",
   "dependencies": {
     "@adobe/aio-cli-plugin-runtime": "nimbella-corp/aio-cli-plugin-runtime#389dac2382dabd8e9425696f33a07a241472024c",
     "@adobe/aio-lib-core-config": "^1.0.15",
