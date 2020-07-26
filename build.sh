@@ -137,7 +137,7 @@ cp doc/change-header /tmp/changes.md
 tail -n +2 < doc/changes.md >> /tmp/changes.md
 pandoc -o changes.html -f markdown -s -t html < /tmp/changes.md
 cp doc/license-header /tmp/license.md
-tail -n +2 < LICENSE >> /tmp/license.md
+tail -n +4 < LICENSE >> /tmp/license.md
 pandoc -o license.html -f markdown-smart -s -H ./doc/tracker.html --html-q-tags -t html < /tmp/license.md
 pandoc -o thirdparty-licenses.html -f markdown_strict -t html < thirdparty-licenses.md
 
