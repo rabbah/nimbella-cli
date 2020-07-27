@@ -365,6 +365,7 @@ export function getBuildForWeb(filepath: string, reader: ProjectReader): Promise
 // Build the web directory
 export function buildWeb(build: string, sharedBuilds: BuildTable, filepath: string, displayPath: string,
         flags: Flags, reader: ProjectReader, feedback: Feedback): Promise<WebResource[]> {
+    debug('Performing Web build')
     let scriptPath
     switch (build) {
         case 'build.sh':
@@ -710,14 +711,25 @@ function makeNpmPackageAppearBuilt(filepath: string) {
 // A package.json must be present since this builder wouldn't have been invoked otherwise.
 // This doesn't mean that npm|yarn install will succeed, just that, if it fails it is for some other reason
 function npmBuilder(filepath: string, displayPath: string, flags: Flags, feedback: Feedback): Promise<any> {
+    debug('Performing npm build for %s', filepath)
     const cmd = flags.yarn ? 'yarn' : 'npm'
-    const args = buildScriptExists(filepath) ? [ 'install', '&&', cmd, 'run', 'build' ] : [ 'install', '--production' ]
+    const npmRunBuild = buildScriptExists(filepath)
+    const args = npmRunBuild ? [ 'install', '&&', cmd, 'run', 'build' ] : [ 'install', '--production' ]
     const infoMsg = [ cmd, ...args ].join(' ')
-    if (flags.incremental && npmPackageAppearsBuilt(filepath)) {
-        if (flags.verboseBuild) {
-            feedback.progress(`Skipping '${cmd} install' in ${filepath} because one was run previously`)
+    if (flags.incremental) {
+        debug('Detected incremental build')
+        const pkgBuilt = npmPackageAppearsBuilt(filepath)
+        const scriptBuilt = scriptAppearsBuilt(filepath)
+        const shouldSkip = npmRunBuild ? pkgBuilt && scriptBuilt : pkgBuilt
+        debug(`npmRunBuild=${!!npmRunBuild}, npmPackageAppearsBuilt=${pkgBuilt}, scriptAppearsBuilt=${scriptBuilt}, shouldSkip=${shouldSkip}`)
+        if (shouldSkip) {
+            if (flags.verboseBuild) {
+                feedback.progress(`Skipping '${infoMsg}' in ${filepath} because the previous build is still valid`)
+            }
+            return Promise.resolve(true)
         }
-        return Promise.resolve(true)
+    } else {
+        debug('Build was not incremental')
     }
     return build(cmd, args, filepath, displayPath, infoMsg, `${cmd} install`, flags.verboseBuild, feedback).then(
         () => makeNpmPackageAppearBuilt(filepath))

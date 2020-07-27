@@ -1123,12 +1123,12 @@ If the directory is in the _built_ state, incremental deployment proceeds to dec
 
 Build state is determined as follows:
 
-If the build is triggered by _package.json_, the directory is considered _built_ if and only if:
+If the build is triggered by `package.json`, and `package.json` does not contain a `build` script, the directory is considered _built_ if and only if:
 
 *   It contains a _package-lock.json_ (if run with `npm`) or _yarn.lock_ (if run with `yarn`) and a _node\_modules_ directory, both of which are newer than the _package.json_.
 If both _package-lock.json_ and _yarn.lock_ are present, the newer of the two is used in this determination.
 
-If the build employs a script, then the directory is considered _built_ if and only if:
+If the build employs a script, including the case where `package.json` includes a `build` script, then the directory is considered _built_ if and only if:
 
 *   The directory containing the script also contains a file called `.built`.
 
@@ -1141,7 +1141,7 @@ If you have problems with an incremental build, you always have the remedy of ru
 
 **Note:** The use of this convention of using the `.built` marker is optional. If the script does not create a `.built` marker, it always runs, which is fine if the script does dependency analysis and rebuilds only what it needs to.
 
-The _package.json_ case also employs a heuristic and won’t be perfectly accurate if the _package.json_ contains scripts that run as part of the install step. However, it works well in simple cases. Again, you always have the fallback of running a full deploy.
+The _package.json_ case also employs a heuristic and we can't guarantee perfect accuracy. However, it works well in simple cases. Again, you always have the fallback of running a full deploy.
 
 ---
 
