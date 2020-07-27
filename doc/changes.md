@@ -1,5 +1,13 @@
 # Nimbella CLI (and Workbench) Change History
 
+## Changes in release 1.5
+
+- fixed bug in `nim action update` with `--web-secure=true`
+- implemented `environment` as a top-level project parameter
+- fixed bug in `new` command in the workbench
+- fixed workbench bug when clicking on the namespace name in an activation view
+- fixed bug in `--incremental` support when `package.json` contains a `build` script
+
 ## Changes in release 1.4
 
 - added 'nim object url'
