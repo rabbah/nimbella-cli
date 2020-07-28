@@ -101,6 +101,11 @@ export class CaptureLogger implements NimLogger {
     }
 }
 
+// Test if a supplied logger is a CaptureLogger
+function isCaptureLogger(logger: NimLogger): logger is CaptureLogger {
+  return !!logger['captured']
+}
+
 // The base for all our commands, including the ones that delegate to aio.  There are methods designed to be called from the
 // kui repl as well as ones that implement the oclif command model.
 export abstract class NimBaseCommand extends Command  implements NimLogger {
@@ -135,7 +140,10 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
     const bad = argv.find(arg => arg.startsWith('-'))
     if (bad)
       this.handleError(`Unrecognized flag: ${bad}`)
-    await this.runCommand(this.argv, argv, args, flags, this)
+    // Allow for a logger to be passed in when invoked programmatically.  This only has effect on aio commands if the logger is a CaptureLogger
+    const options = this.config['options']
+    const logger = options ? options.logger : undefined
+    await this.runCommand(this.argv, argv, args, flags, logger || this)
   }
 
   // Helper used in the runCommand methods of aio shim classes.  Not used by Nimbella-sourced command classes.
@@ -151,30 +159,29 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
       flags.verbose = false
       verboseError.enabled = true
     }
-    if (inBrowser) {
+    if (isCaptureLogger(logger)) {
       cmd.log = logger.log.bind(logger)
       cmd.exit = logger.exit.bind(logger)
       cmd.handleError = logger.handleError.bind(logger)
-      debug('handleError intercepted in browser mode')
+      debug('aio handleError intercepted in capture mode')
       cmd.parsed = { argv, args, flags }
-      const capture = logger as CaptureLogger
-      cmd.logJSON = this.logJSON(capture)
-      cmd.table = this.saveTable(capture)
-      capture.command = this.command
-      debug('browser intercepts installed')
+      cmd.logJSON = this.logJSON(logger)
+      cmd.table = this.saveTable(logger)
+      logger.command = this.command
+      debug('aio capture intercepts installed')
       await cmd.run()
     } else
       cmd.handleError = this.handleError.bind(cmd)
-      debug('handleError intercepted in CLI mode')
+      debug('handleError intercepted in non-capture mode')
       await cmd.run(rawArgv)
   }
 
-  // Replacement for logJSON function in RuntimeBaseCommand when running in browser
+  // Replacement for logJSON function in RuntimeBaseCommand when running with capture
   logJSON = (logger: CaptureLogger) => (ignored: string, entity: object) => {
     logger.entity = entity
   }
 
-  // Replacement for table function in RuntimeBaseCommand when running in browser
+  // Replacement for table function in RuntimeBaseCommand when running with capture
   // TODO this will not work for namespace get, which produces multiple tables.  Should generalize to a list.
   saveTable = (logger: CaptureLogger) => (data: object[], columns: object, options: object = {}) => {
     debug("Call to saveTable with %O", data)
@@ -340,4 +347,15 @@ export function fixAioCredentials(logger: NimLogger) {
     process.env.AIO_RUNTIME_AUTH = currentAuth
     // Don't pass the namespace to AIO.  It causes some problems with CORS in the beta workbench.
     //process.env.AIO_RUNTIME_NAMESPACE = currentNamespace
+}
+
+// Run a nim command programmatically with output capture
+export async function runNimCommand(command: string, args: string[]): Promise<CaptureLogger> {
+  const cmd = require('./commands/' + command)
+  if (!cmd || !cmd.default) {
+    throw new Error(`'${command}' is not a 'nim' command`)
+  }
+  const logger = new CaptureLogger()
+  await cmd.default.run(args, { root: __dirname, logger })
+  return logger
 }
