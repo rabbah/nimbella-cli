@@ -47,6 +47,9 @@ SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 STABLEDIR=$SELFDIR/../workbench/stable
 cd $SELFDIR
 
+# Check public source and abort on mismatch
+./checkPublic.sh
+
 # Check a signed and notarized stable release installer (for macos)
 if [ -n "$CHECK_STABLE" ]; then
 		spctl -a -vvv --type install dist/macos/nim.pkg
