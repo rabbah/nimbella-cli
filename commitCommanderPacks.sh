@@ -19,32 +19,31 @@
 # from Nimbella Corp.
 #
 #
-# This script updates package.json and aio.hash to reflect the latest commit in aio
+# This script updates package.json and commander.hash to reflect the latest commit in commander-cli
 
 set -e
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SELFDIR
 
-# Check that aio-cli-plugin-runtime is on the dev branch with no uncommitted changes.
-pushd ../aio-cli-plugin-runtime
+# Check that commander-cli is on the master branch with no uncommitted changes.
+pushd ../commander-cli
 DIRTY=$(git status --porcelain)
 BR=$(git symbolic-ref HEAD --short)
-popd
 if [ -n "$DIRTY" ]; then
-		echo "aio-cli-plugin-runtime has uncommitted changes"
+		echo "commander-cli has uncommitted changes"
 		exit 1
 fi
-if [ "$BR" != "dev" ]; then
-		echo "aio-cli-plugin-runtime is not on the 'dev' branch"
+if [ "$BR" != "master" ]; then
+		echo "commander-cli is not on the 'master' branch"
 		exit 1
 fi
+popd
 
-# Record, then retrieve, the aio hash
-./aioUpToDate.sh record
-HASH=$(cat aio.hash)
-# TODO aio-cli-plugin-runtime will soon move from nimbella-corp to nimbella (it is already public)
-REF="nimbella-corp/aio-cli-plugin-runtime#$HASH"
+# Record, then retrieve, the commander hash
+./commanderUpToDate.sh record
+HASH=$(cat commander.hash)
+REF="nimbella/commander-cli#$HASH"
 
 # Edit package.json so that the correct dependency is declared there
-jq -r '.dependencies."@adobe/aio-cli-plugin-runtime" = "'$REF'"' < package.json > tmp.json
+jq -r '.dependencies."commander" = "'$REF'"' < package.json > tmp.json
 mv tmp.json package.json

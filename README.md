@@ -59,12 +59,17 @@ You also need
 ##### For Local Builds
 - **main** should be a sibling and should be up-to-date.  It need not be built.
 
-##### For Stable Builds or when modifying the `aio runtime` dependency
+##### For Stable Builds or when modifying `aio` or `commander-cli` dependencies
+
 You also need
 
 - **aio-cli-plugin-runtime**
 
   * This is a fork of an Adobe open source project.   It should be checked out on the `dev` branch.
+
+- **commander-cli**
+
+  * This is our own repo, maintained by the commander team.  It should be checked out on the `master` branch.
 
 - **workbench**
 
@@ -73,7 +78,7 @@ You also need
 
 ### Routine Building
 
-The following suffices to build the current `nim` using the current version of our Adobe I/O dependency.
+The following suffices to build the current `nim` using the current version of our Adobe I/O and commander dependencies.
 
 ```
 ./build.sh
@@ -112,16 +117,18 @@ When finished with testing, issue
 
 This restores `package.json` from a backup.
 
-### Committing a new (tested) version of the Adobe I/O dependency
+** Note **: although the `commander-cli` dependency bears similarities to the `aio` dependency in other ways, this testing procedure does not apply to it.  Testing there can be done with `nim plugin link <path-to-commander-cli>`.
 
-- First _commit_ the change in `aio-cli-plugin-runtime` and _push_ that commit to the remote repo.  This enables github references to the commit.
-- Then, in this repo, run `./commitAioPacks.sh`
+### Committing a new (tested) version of the Adobe I/O dependency or the commander-cli dependency
+
+- First _commit_ the change in `aio-cli-plugin-runtime` or `commander-cli` respectively and _push_ that commit to the remote repo.  This enables github references to the commit.
+- Then, in this repo, run `./commitAioPacks.sh` or `./commitCommanderPacks.sh`
 - Then, in this repo, commit `aio.hash` and `package.json`, which will have changed as a result
-- Push this repo.
+- (Push this repo when ready).
 
 ### Stable Versions
 
-Building a stable version requires `aio-cli-plugin-runtime` (for checking; it is not rebuilt).   It also requires the `workbench` repo as a peer because that is where stable versions are kept.
+Building a stable version requires `aio-cli-plugin-runtime` and `commander-cli` to be present (for checking; they are not rebuilt).   It also requires the `workbench` repo as a peer because that is where stable versions are kept.
 
 1. Commit this repo (there can be no uncommitted changes).
 2. Issue `npm version patch`

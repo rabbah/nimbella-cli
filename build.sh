@@ -80,6 +80,14 @@ if [ -n "$STABLE" ]; then
 				echo $UPTODATE
 				exit -1
 		fi
+		UPTODATE=$(./commanderUpToDate.sh)
+		if [ "$UPTODATE" == "false" ]; then
+				echo "Incompatible releases for 'commander-cli' and 'nimbella-cli'.  Bring both repos up to date, then run './commitCommanderPacks.sh' in nimbella-cli."
+				exit -1
+		elif [ "$UPTODATE" != 'true' ]; then
+				echo $UPTODATE
+				exit -1
+		fi
     LAST_VERSION=$(jq -r .nimcli < ../workbench/stable/versions.json)
     NEW_VERSION=$(jq -r .version < package.json)
     if [ "$LAST_VERSION" == "$NEW_VERSION" ]; then
@@ -168,7 +176,7 @@ else
 		ln -sf $SELFDIR/bin/run bin/nim
 fi
 
-# Optionally release as a preview
+# Optionally release as a preview (if $2 is specified it is used as a subfolder, which must exist)
 if [ -n "$PREVIEW" ]; then
 		# Rename READMEs so the customer gets an appropriate one (not our internal one)
 		mv README.md devREADME.md
@@ -179,8 +187,12 @@ if [ -n "$PREVIEW" ]; then
 		# Undo renames
 		git checkout userREADME.md
 		mv devREADME.md README.md
-		# Upload the result
-		PREVIEW_SITE="gs://preview-apigcp-nimbella-io"
+		# Upload the result (being careful to avoid double slashes in names)
+		if [ -n "$2" ]; then
+				PREVIEW_SITE="gs://preview-apigcp-nimbella-io/$2"
+		else
+				PREVIEW_SITE="gs://preview-apigcp-nimbella-io"
+	  fi
 		gsutil -m cp nimbella-cli.tgz doc/*.html doc/*.svg doc/*.css $PREVIEW_SITE
 		echo "$FULLVERSION" | gsutil cp - $PREVIEW_SITE/nim-version.txt
 		gsutil cp changes.html $PREVIEW_SITE/nim-changes.html

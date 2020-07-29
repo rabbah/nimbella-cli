@@ -26,6 +26,7 @@
     "archiver": "^3.0.0",
     "axios": "^0.19.2",
     "chokidar": "^3.4.0",
+    "commander": "nimbella/commander-cli#6c7f38945798f6f97d09c029326993851b1f4e54",
     "debug": "^4.1.1",
     "dotenv": "7.0.0",
     "expand-home-dir": "0.0.3",
@@ -64,7 +65,7 @@
     "typescript": "^3.4.3"
   },
   "engines": {
-    "node": ">=10.0.0"
+    "node": ">=12.0.0"
   },
   "files": [
     "/bin",
@@ -94,7 +95,8 @@
     "plugins": [
       "@oclif/plugin-autocomplete",
       "@oclif/plugin-update",
-      "@oclif/plugin-plugins"
+      "@oclif/plugin-plugins",
+      "commander"
     ],
     "macos": {
       "identifier": "com.nimbella.cli"
