@@ -170,10 +170,11 @@ export abstract class NimBaseCommand extends Command  implements NimLogger {
       logger.command = this.command
       debug('aio capture intercepts installed')
       await cmd.run()
-    } else
+    } else {
       cmd.handleError = this.handleError.bind(cmd)
       debug('handleError intercepted in non-capture mode')
       await cmd.run(rawArgv)
+    }
   }
 
   // Replacement for logJSON function in RuntimeBaseCommand when running with capture
