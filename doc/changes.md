@@ -1,5 +1,11 @@
 # Nimbella CLI (and Workbench) Change History
 
+## Changes in release 1.6
+
+- 'nim commander' is added, providing CLI-level access to Nimbella Commander.
+- fixed bug causing duplicate execution of some commands in the workbench
+- sample text when using the 'new' command is improved
+
 ## Changes in release 1.5
 
 - fixed bug in `nim action update` with `--web-secure=true`
