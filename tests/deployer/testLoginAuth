@@ -23,7 +23,7 @@
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SELFDIR
 
-AUTH=14fb8b90-e978-4a0f-a51d-e5c59ae4cd54:x20RsJ0zs37CsCSRm6c479Vr47la5PZ3WvgjMbt08ldqPvRasCWJ03jvjD5DPvYR
+AUTH=43faf37d-7ec4-474f-aada-f0e18f25fa15:HRbKryA5OP16dBT8nAODZOYZqgkCdO9Vtgx8glV6oNlOhYzHkSIv2U6SzTRboOjJ
 if [ -z "$NIMBELLA_DIR" ]; then
 	 WSKPROPS="$HOME/.nimbella/wskprops"
 else
@@ -37,7 +37,7 @@ if [ ! -f "$WSKPROPS" ]; then
 	 exit 1
 fi
 WSKPROPS=$(cat "$WSKPROPS")
-if [[ "$WSKPROPS" != *"x20RsJ0zs37Cs"* ]]; then
+if [[ "$WSKPROPS" != *"A5OP16dBT8nAODZO"* ]]; then
 	 echo "The wsk properties file does not contain the correct auth"
 	 exit 1
 fi

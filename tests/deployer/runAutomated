@@ -26,7 +26,7 @@ MAINDIR=$SELFDIR/../../../main
 cd $SELFDIR
 
 echo "A failure here is expected sometimes and always harmless:"
-nim auth logout dtestnim-5skkrmhfzyo
+nim auth logout dtestnim-i9jmlbfikan
 set -e
 
 function runTest() {
