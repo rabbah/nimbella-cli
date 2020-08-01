@@ -23,12 +23,12 @@ export async function createOrUpdateProject(updating: boolean, args: any, flags:
     const { target, clean, config } = flags
     const { kind, sampleText } = languageToKindAndSample(flags.language, logger)
     let projectConfig: DeployStructure = config ? configTemplate() : (target || clean) ? {} : undefined
-    const configFile = path.join(args.project, 'project.yml')
-    const defaultPackage = path.join(args.project, 'packages', 'default')
-    if (fs.existsSync(args.project)) {
+    const configFile = path.join(args.name, 'project.yml')
+    const defaultPackage = path.join(args.name, 'packages', 'default')
+    if (fs.existsSync(args.name)) {
         if (updating || flags.overwrite) {
             // TODO this code is not being exercised due to test above.  When it is re-enabled it will require change
-            if (seemsToBeProject(args.project)) {
+            if (seemsToBeProject(args.name)) {
                 if (fs.existsSync(configFile)) {
                     const configContents = String(fs.readFileSync(configFile))
                     if (configContents.includes('${')) {
@@ -43,15 +43,15 @@ export async function createOrUpdateProject(updating: boolean, args: any, flags:
                     fs.mkdirSync(defaultPackage, { recursive: true })
                 }
             } else {
-                logger.handleError(`A directory or file '${args.project}' does not appear to be a project`)
+                logger.handleError(`A directory or file '${args.name}' does not appear to be a project`)
             }
         } else {
-            logger.handleError(`Cannot create project because '${args.project}' already exists in the file system, use '-o' to overwrite`)
+            logger.handleError(`Cannot create project because '${args.name}' already exists in the file system, use '-o' to overwrite`)
         }
     } else {
         // Create the project from scratch
         fs.mkdirSync(defaultPackage, { recursive: true })
-        const web = path.join(args.project, 'web')
+        const web = path.join(args.name, 'web')
         fs.mkdirSync(web)
     }
     // Add material to the project.
@@ -71,7 +71,7 @@ export async function createOrUpdateProject(updating: boolean, args: any, flags:
         const data = yaml.safeDump(projectConfig)
         fs.writeFileSync(configFile, data)
     }
-    logger.log(`project ${updating?'updated':'created'} at ${args.project}`)
+    logger.log(`project ${updating?'updated':'created'} at ${args.name}`)
 }
 
 // Make a more fully populated config (with defaults filled in and comments)

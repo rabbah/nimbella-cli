@@ -31,24 +31,24 @@ export default class ProjectCreate extends NimBaseCommand {
             char: 'l', description: 'Language for the project (creates sample project unless source is specified)', default: 'js',
             options: ['go', 'js', 'ts', 'py', 'java', 'swift', 'php']
         }),
-        overwrite: flags.boolean({ char: 'o', description: 'Overwrites the existing nimbella project directory if it exists', }),
+        overwrite: flags.boolean({ char: 'o', description: 'Overwrites the existing file(s)', }),
         updateSource: flags.boolean({ char: 'u', description: 'Sync updated API specs back to source' }),
         clientCode: flags.boolean({ char: 'c', description: 'Generates client code', default: true }),
 
         ...NimBaseCommand.flags
     }
 
-    static args = [{ name: 'project', description: 'Project path in the file system', required: false }]
+    static args = [{ name: 'name', description: 'Project name', required: false }]
 
     async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
-        if (!args.project && !flags.source) {
+        if (!args.name && !flags.source) {
             this.doHelp()
         }
         if (inBrowser) {
             logger.handleError(`'project create' needs local file access. Use the 'nim' CLI on your local machine`)
         }
         if (flags.source) {
-            const params = [flags.id, flags.key, flags.language];
+            const params = ['-i', flags.id || '', '-k', flags.key || '', '-l', flags.language];
             if (flags.overwrite) { params.push('-o'); }
             if (flags.updateSource) { params.push('-u'); }
             if (flags.clientCode) { params.push('-c'); }

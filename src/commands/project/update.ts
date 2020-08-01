@@ -14,31 +14,47 @@
 import { NimBaseCommand, NimLogger, inBrowser } from '../../NimBaseCommand'
 import { createOrUpdateProject, seemsToBeProject } from '../../generator/project'
 import { default as ProjectCreate } from './create';
+import { flags } from '@oclif/command';
 
+const confPlugin = 'apispecgen'
 export default class ProjectUpdate extends NimBaseCommand {
   static description = 'Update a Nimbella Project'
 
-  static flags = {
-    ...ProjectCreate.flags,
-    ...NimBaseCommand.flags
-  }
+  static flags = Object.assign(
+    ProjectCreate.flags,
+    {
+      config: flags.boolean({ description: 'Generate config file' })
+    })
 
-  static args = ProjectCreate.args
   // For now:
   static hidden = true
 
   async runCommand(rawArgv: string[], argv: string[], args: any, flags: any, logger: NimLogger) {
-    if (!args.project && !flags.source) {
+    if (!flags.source && !flags.config) {
       this.doHelp()
     }
     if (inBrowser) {
       logger.handleError(`'project update' needs local file access. Use the 'nim' CLI on your local machine`)
     }
-    if (!seemsToBeProject(args.project)) {
-      logger.handleError(`A directory or file '${args.project}' does not appear to be a project`)
+    if (!seemsToBeProject(process.cwd())) {
+      logger.handleError(`Current directory doesn't appear to be a project`)
     }
+
+    if (flags.config) {
+      const pluginCommands = this.config.commands.filter(c => c.pluginName === confPlugin)
+      const params = []
+      if (flags.overwrite) { params.push('-o'); }
+      if (pluginCommands.length) {
+        await pluginCommands[0].load().run([...params])
+      }
+      else {
+        logger.handleError(`the ${confPlugin} plugin is not installed. try 'nim plugins add ${confPlugin}'`);
+      }
+      return
+    }
+
     if (flags.source) {
-      const params = [flags.id, flags.key, flags.language];
+      const params = ['-i', flags.id || '', '-k', flags.key || '', '-l', flags.language, '--update']
       if (flags.overwrite) { params.push('-o'); }
       if (flags.updateSource) { params.push('-u'); }
       if (flags.clientCode) { params.push('-c'); }
