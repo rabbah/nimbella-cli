@@ -19,17 +19,16 @@
 # from Nimbella Corp.
 #
 
-# Checks for the "public" repo and makes sure the src folders match.  Exits non-zero
-# iff the "public" repo is there and has different src.
-# TODO currently the "public" repo is actually private (nim-public-candidate).
-# Once the source is in 'nimbella/nimbella-cli' we will require the public
-# repo to be cloned in the expected place and will copy its src (there will be no src
-# in this repo).  If the public repo is not found, we will clone it for the developer.
+# Checks for the public repo and makes sure the src folders match.  Exits non-zero
+# iff the public repo is there and has different src.
+# TODO we should soon require the public repo to be cloned in the expected place.
+# We can auto-clone it as a convenience (since it's public, that should work using
+# just https).  The src in this repo should then be copied from the public one.
 
 # Orient
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SELFDIR
-PUBLIC_SRC="../nim-public-candidate/src"
+PUBLIC_SRC="../public/nimbella-cli/src"
 
 if [ -d "$PUBLIC_SRC" ]; then
 	 diff -rub src "$PUBLIC_SRC"
