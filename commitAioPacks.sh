@@ -42,8 +42,7 @@ fi
 # Record, then retrieve, the aio hash
 ./aioUpToDate.sh record
 HASH=$(cat aio.hash)
-# TODO aio-cli-plugin-runtime will soon move from nimbella-corp to nimbella (it is already public)
-REF="nimbella-corp/aio-cli-plugin-runtime#$HASH"
+REF="nimbella/aio-cli-plugin-runtime#$HASH"
 
 # Edit package.json so that the correct dependency is declared there
 jq -r '.dependencies."@adobe/aio-cli-plugin-runtime" = "'$REF'"' < package.json > tmp.json
