@@ -26,7 +26,7 @@
     "archiver": "^3.0.0",
     "axios": "^0.19.2",
     "chokidar": "^3.4.0",
-    "commander": "nimbella/commander-cli#fb4af07a9e3644f3615351d78c059adad297dd2b",
+    "commander": "nimbella/commander-cli#f6de7b0846def72df98ea4198e2d60da271ad534",
     "debug": "^4.1.1",
     "dotenv": "7.0.0",
     "expand-home-dir": "0.0.3",
@@ -65,7 +65,7 @@
     "typescript": "^3.4.3"
   },
   "engines": {
-    "node": ">=12.0.0"
+    "node": ">=10.0.0"
   },
   "files": [
     "/bin",
