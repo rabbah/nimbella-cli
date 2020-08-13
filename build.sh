@@ -51,6 +51,8 @@ elif [ "$1" == "--preview" ]; then
 elif [ "$1" == "--stable" ]; then
     STABLE=true
     PKG=true
+		# PREVIEW SITE is always the public one for stable, no second argument
+    PREVIEW_SITE="gs://preview-apigcp-nimbella-io"
     PREVIEW_URL="https://preview-apigcp.nimbella.io"
 elif [ "$1" == "--link" ]; then
     USE_LINK=true
@@ -146,7 +148,9 @@ if [ -n "$PREVIEW" ]; then
     npm install $PREVIEW_URL/nimbella-deployer.tgz
     # Will dirty package.json; clean up at the end
 elif [ -n "$STABLE" ]; then
+    echo gsutil cp deployer/nimbella-deployer*.tgz $PREVIEW_SITE
     gsutil cp deployer/nimbella-deployer*.tgz $PREVIEW_SITE
+    echo gsutil setmeta -h "Cache-Control:no-cache" "$PREVIEW_SITE/nimbella-deployer*.tgz"
     gsutil setmeta -h "Cache-Control:no-cache" "$PREVIEW_SITE/nimbella-deployer*.tgz"
     npm install $PREVIEW_URL/nimbella-deployer-$VERSION.tgz
     # Will dirty package.json; clean up at the end
