@@ -10,6 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "nimbella-cli": "file:../../../nimbella-cli.tgz"
+    "nimbella-deployer": "file:../../../deployer/nimbella-deployer.tgz"
   }
 }

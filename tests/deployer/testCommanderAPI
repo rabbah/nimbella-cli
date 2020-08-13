@@ -24,7 +24,7 @@ SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SELFDIR/commanderAPI
 if [ "$1" != "fast" ]; then
   rm -fr node_modules package-lock.json
-  npm i ../../../nimbella-cli.tgz
+  npm i ../../../deployer/nimbella-deployer.tgz
 fi
 
 function bail() {

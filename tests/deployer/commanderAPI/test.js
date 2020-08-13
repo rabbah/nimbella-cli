@@ -22,7 +22,7 @@
 // Test that we can create an entry in the credential store with a commander segment
 
 const { addCommanderData, addCredentialAndSave, getCredentialsForNamespace, getCredentials,
-    fileSystemPersister, forgetNamespace, DefaultFeedback, switchNamespace } = require('nimbella-cli/lib/deployer')
+    fileSystemPersister, forgetNamespace, DefaultFeedback, switchNamespace } = require('nimbella-deployer')
 
 async function main() {
     try {

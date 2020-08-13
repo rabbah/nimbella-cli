@@ -1,4 +1,4 @@
-# Programmatic use of `nimbella-cli`
+# Programmatic use of Nimbella CLI Features
 
 This document is currently intended for Nimbella-internal teams.  Because we are going to release the `nim` code as open-source, we will probably make a version of this document public.  But it is not public yet.
 
@@ -9,15 +9,60 @@ There are two distinct API categories documented here.
 
 All examples are TypeScript.  Using the API from JavaScript should be mostly a matter of omitting types and using `require` instead of `import`.
 
+## Dependencies and Importing
+
+### When using _just_ the deployer API
+
+If you are using _just_ the deployer API, you should have one of the following dependencies in `package.json`
+
+```
+"nimbella-deployer": "https://preview-apigcp.nimbella.io/nimbella-deployer.tgz"
+```
+or
+
+```
+"nimbella-deployer": "https://preview-apigcp.nimbella.io/nimbella-deployer-<semver>.tgz"
+```
+e.g.
+
+```
+"nimbella-deployer": "https://preview-apigcp.nimbella.io/nimbella-deployer-1.6.1.tgz"
+```
+
+The first form (with no version in path) gives you the latest version, usually pre-release.   The second form refers to specific stable versions of `nimbella-cli` and should be used when the consuming code is itself intended for a public release.
+
+You import functions, objects and types like this.
+
+```
+import { initializeAPI, Flags, deployProject, ... } from 'nimbella-deployer'
+```
+
+### When using the command invocation API _or both APIs_
+
+If you are using the command invocation API, or both APIs, the dependency should be declared like this.
+
+```
+"nimbella-cli": "https://preview-apigcp.nimbella.io/nimbella-cli.tgz"
+```
+(for pre-release) and
+
+```
+"nimbella-cli": "https://apigcp.nimbella.io/downloads/nim/nimbella-cli.tgz"
+```
+(for the current stable release).  There is no way to depend on stable releases other than the current one.
+
+You import the command invocation API like this.
+
+```
+import { runNimCommand, CaptureLogger } from 'nimbella-cli'
+```
+And you import the deployer API like this.
+
+```
+import { initializeAPI, Flags, deployProject, ... } from 'nimbella-cli/deployer'
+```
+
 ## The Command Invocation API
-
-### Importing
-
-You import from the API like this
-
-```
-import { runNimCommand, CaptureLogger } from 'nimbella-cli/lib/NimBaseCommand'
-```
 
 ### Types
 
@@ -56,20 +101,6 @@ The `args` are exactly the arguments you would pass on the command line (includi
 Note that what is returned is a promise.  The result must be thened or awaited to obtain the filled-in `CaptureLogger` with the result.
 
 ## The Deployer API
-
-### Importing
-
-You import from the API like this
-
-```
-import { initializeAPI, Flags, deployProject, ... } from 'nimbella-cli/deployer'
-```
-
-The types, objects, and functions that you _may_ import with some expectation of support are covered in the following sections.
-
-- There are more types and functions importable from `nimbella-cli/deployer` than are documented here.
-- Do not import from deeper in the file structure of the deployer.
-- The types and functions that are not currently documented should be assumed to be non-supported but can be promoted to supported status if a clear need is identified.
 
 ### Types
 
