@@ -1,5 +1,13 @@
 # Nimbella CLI (and Workbench) Change History
 
+## Changes in release 1.6.1
+
+- fixed bug that often caused installs using `npm` or `yarn` to fail
+    - note that we still recommend using an installer, not `npm` or `yarn` when installing globally
+- some internal refactoring, should not be visible
+- returned the minimum `node` version to 10.0
+    -  it had briefly and ill-advisedly been increased to 12.0 in release 1.6.0.
+
 ## Changes in release 1.6
 
 - 'nim commander' is added, providing CLI-level access to Nimbella Commander.
