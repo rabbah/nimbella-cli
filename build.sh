@@ -180,7 +180,10 @@ set -e
 # Build the HTML forms of the documentation, LICENSE, and changes
 cp doc/pandoc-header /tmp/nim.md
 tail -n +2 < doc/README.md >> /tmp/nim.md
-pandoc -o doc/nim.html -f markdown -s --css ./globalStyles.css -H ./doc/tracker.html -t html --toc --toc-depth=5 < /tmp/nim.md
+pandoc -o /tmp/nim.html -f markdown -s --css ./globalStyles.css -H ./doc/header.html -t html --toc --toc-depth=5 < /tmp/nim.md
+sed -e '/doc-toc/a\
+<div id="menuToggle"><input type="checkbox" /><span></span><span></span><span></span>' -e '/<\/nav>/i\
+</div>' < /tmp/nim.html > doc/nim.html
 cp doc/change-header /tmp/changes.md
 tail -n +2 < doc/changes.md >> /tmp/changes.md
 pandoc -o changes.html -f markdown -s -t html < /tmp/changes.md
