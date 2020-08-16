@@ -19,21 +19,40 @@
 # from Nimbella Corp.
 #
 
-# Checks for the public repo and makes sure the src folders match.  Exits non-zero
-# iff the public repo is there and has different src.
-# TODO we should soon require the public repo to be cloned in the expected place.
-# We can auto-clone it as a convenience (since it's public, that should work using
-# just https).  The src in this repo should then be copied from the public one.
+# Check that the public repo is cloned in the expected place.  If it is not
+# there, clone it.  Then check that its githash matches one stored in public.hash.
+# If we can't get that far, abort.
+# Otherwise, replace 'src' and 'deployer/src' on this repo with public ones.
+# For now, some metadata files (e.g. package.json) are maintained in both places and not copied.
 
 # Orient
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PARENT=$(dirname $SELFDIR)
+PUBLIC="$PARENT/public"
+PUBLIC_CLI="$PUBLIC/nimbella-cli"
 cd $SELFDIR
-PUBLIC_SRC="../public/nimbella-cli/src"
 
-if [ -d "$PUBLIC_SRC" ]; then
-	 diff -rub src "$PUBLIC_SRC"
-   if [ $? -ne 0 ]; then
-	 		echo "Public src does not match private src"
-			exit 1
-   fi
+# Ensure presence of public clone
+if [ ! -d "$PUBLIC_CLI" ]; then
+		if [ ! -d $PUBLIC ]; then
+				mkdir "$PUBLIC"
+		fi
+		pushd $PUBLIC
+		git clone https://github.com/nimbella/nimbella-cli.git
+		popd
 fi
+
+# Check whether public repo is at the expected commit
+UPTODATE=$(./publicUpToDate.sh)
+if [ "$UPTODATE" == "false" ]; then
+    echo "Incompatible releases for 'public/nimbella-cli' and 'nimbella-cli'."
+    exit -1
+elif [ "$UPTODATE" != 'true' ]; then
+    echo $UPTODATE
+    exit -1
+fi
+
+# Copy src from public to here
+rm -fr src deployer/src
+cp -r $PUBLIC_CLI/src .
+cp -r $PUBLIC_CLI/deployer/src deployer

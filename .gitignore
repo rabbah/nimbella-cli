@@ -6,7 +6,9 @@ package-lock.json
 .settings/
 .vscode/
 /dist
+/src
 /lib
+/deployer/src
 /deployer/lib
 *-debug.log
 *-error.log

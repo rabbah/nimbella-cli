@@ -70,8 +70,8 @@ SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 STABLEDIR=$SELFDIR/../workbench/stable
 cd $SELFDIR
 
-# Check public source and abort on mismatch
-#./checkPublic.sh
+# Synchronize with public source
+./checkPublic.sh
 
 # Check a signed and notarized stable release installer (for macos)
 if [ -n "$CHECK_STABLE" ]; then
