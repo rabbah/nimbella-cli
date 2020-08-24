@@ -1,5 +1,16 @@
 # Nimbella CLI (and Workbench) Change History
 
+## Changes in release 1.7
+
+- improvements to `nim web create` and `nim object create` and add matching `update` commands.
+- fix bug in error display for `nim key-value` commands that use illegal keys
+- improved formatting of `nim auth list`
+- documentation TOC improvements for mobile devices
+- catch a common user error when deploying web content built with `react` or similar tools
+    - if there is a `node_modules` but no `.include` refuses the deploy.  Typically, the `node_modules` is there for the react tools and is not part of the intended web site
+- better error message when a file listed in `.include` does not exist
+- ignore `binary` setting of `false` in `project.yml` when the result of a build is a zip file.  The build knows best.
+
 ## Changes in release 1.6.1
 
 - fixed bug that often caused installs using `npm` or `yarn` to fail
