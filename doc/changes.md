@@ -10,6 +10,7 @@
     - if there is a `node_modules` but no `.include` refuses the deploy.  Typically, the `node_modules` is there for the react tools and is not part of the intended web site
 - better error message when a file listed in `.include` does not exist
 - ignore `binary` setting of `false` in `project.yml` when the result of a build is a zip file.  The build knows best.
+- enablement for improved postman plugin that includes key management (released separately, coming soon)
 
 ## Changes in release 1.6.1
 
