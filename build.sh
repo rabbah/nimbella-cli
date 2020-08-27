@@ -289,8 +289,9 @@ if [ -n "$STABLE" ]; then
     popd
     # Move to stable
     mv nim-cli.tgz $STABLEDIR
-    cd $STABLEDIR/..
+    pushd $STABLEDIR/..
     ./setStableVersions.sh
+		popd
     echo "The new stable version is built and ready.  Wait for an email from Apple stating that the notarization succeeded.  Then do"
     echo "   ./build.sh --check-stable"
     echo "to make sure the installer is 'accepted' before committing."
