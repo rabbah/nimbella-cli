@@ -2,15 +2,20 @@
 
 ## Changes in release 1.7
 
-- improvements to `nim web create` and `nim object create` and add matching `update` commands.
+- improvements to `nim [web|object] create` and add `nim [web|object] update`
+- `nim [web|object|key-value] list` use `--namespace` flag, not positional argument
 - fix bug in error display for `nim key-value` commands that use illegal keys
 - improved formatting of `nim auth list`
-- documentation TOC improvements for mobile devices
+- documentation layout improvements for mobile devices
+- workbench menu has entries for `action list` and `activation list` once you are logged in
 - catch a common user error when deploying web content built with `react` or similar tools
-    - if there is a `node_modules` but no `.include` refuses the deploy.  Typically, the `node_modules` is there for the react tools and is not part of the intended web site
+    - for the web, if there is a `node_modules` but no `.include`, deployment is aborted.
+    - Typically, `node_modules` is there for tool and not part of the intended web site
+    - Use `.include` if you really want to include `node_modules`
 - better error message when a file listed in `.include` does not exist
 - ignore `binary` setting of `false` in `project.yml` when the result of a build is a zip file.  The build knows best.
-- enablement for improved postman plugin that includes key management (released separately, coming soon)
+- enable the latest postman plugin, which includes key management
+- commands that operate only on OpenWhisk resources, and that specify both `--apihost` and `--auth`, work even without a current namespace
 
 ## Changes in release 1.6.1
 
