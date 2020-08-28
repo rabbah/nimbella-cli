@@ -16,6 +16,7 @@
 - ignore `binary` setting of `false` in `project.yml` when the result of a build is a zip file.  The build knows best.
 - enable the latest postman plugin, which includes key management
 - commands that operate only on OpenWhisk resources, and that specify both `--apihost` and `--auth`, work even without a current namespace
+- the playground now supports "extended samples" more interesting than the minimal "hello" ones.  One has been added for image resizing.
 
 ## Changes in release 1.6.1
 
