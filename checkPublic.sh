@@ -42,14 +42,16 @@ if [ ! -d "$PUBLIC_CLI" ]; then
 		popd
 fi
 
-# Check whether public repo is at the expected commit
-UPTODATE=$(./publicUpToDate.sh)
-if [ "$UPTODATE" == "false" ]; then
-    echo "Incompatible releases for 'public/nimbella-cli' and 'nimbella-cli'."
-    exit -1
-elif [ "$UPTODATE" != 'true' ]; then
-    echo $UPTODATE
-    exit -1
+# Check whether public repo is at the expected commit unless check is suppressed (for testing)
+if [ -z "$NO_CHECK" ]; then
+		UPTODATE=$(./publicUpToDate.sh)
+		if [ "$UPTODATE" == "false" ]; then
+				echo "Incompatible releases for 'public/nimbella-cli' and 'nimbella-cli'."
+				exit -1
+		elif [ "$UPTODATE" != 'true' ]; then
+				echo $UPTODATE
+				exit -1
+		fi
 fi
 
 # Copy src from public to here
