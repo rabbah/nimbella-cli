@@ -2,9 +2,9 @@
 
 ## Changes in release 1.7
 
-- improvements to `nim [web|object] create` and add `nim [web|object] update`
-- `nim [web|object|key-value] list` use `--namespace` flag, not positional argument
-- fix bug in error display for `nim key-value` commands that use illegal keys
+- improvements to `nim [web|object] create` and addition of  `nim [web|object] update`
+- `nim [web|object|key-value] list` now uses optional `--namespace` flag in lieu of positional argument
+- fixed bug in error display for `nim key-value` commands that use illegal keys
 - improved formatting of `nim auth list`
 - documentation layout improvements for mobile devices
 - workbench menu has entries for `action list` and `activation list` once you are logged in
