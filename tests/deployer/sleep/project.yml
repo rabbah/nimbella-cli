@@ -1,0 +1,6 @@
+packages:
+  - name: default
+    actions:
+      - name: sleep
+        limits:
+          timeout: 80000
