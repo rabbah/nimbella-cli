@@ -48,7 +48,7 @@ REF="nimbella/aio-cli-plugin-runtime#$HASH"
 jq -r '.dependencies."@adobe/aio-cli-plugin-runtime" = "'$REF'"' < package.json > tmp.json
 mv tmp.json package.json
 
-# Replay the same edit in the deployer library because the dependency on aio is there as well
-jq -r '.dependencies."@adobe/aio-cli-plugin-runtime" = "'$REF'"' < deployer/package.json > tmp.json
-mv tmp.json deployer/package.json
+# Replay the same edit in the public repo
+jq -r '.dependencies."@adobe/aio-cli-plugin-runtime" = "'$REF'"' < ../public/nimbella-cli/package.json > tmp.json
+mv tmp.json ../public/nimbella-cli/package.json
 
