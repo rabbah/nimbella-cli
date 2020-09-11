@@ -73,7 +73,7 @@ USAGE
 COMMANDS
   action      work with actions
   activation  work with activations
-  auth        manage Nimbella and Github credentials
+  auth        manage Nimbella and GitHub credentials
   doc         display the full documentation of this CLI
   help        display help for nim
   info        show information about this version of 'nim'
@@ -110,7 +110,7 @@ The `nim auth` subtree has its own set of commands, as follows.
 
 ```
 > nim auth
-manage Nimbella and Github credentials
+manage Nimbella and GitHub credentials
 
 USAGE
   $ nim auth:COMMAND
@@ -118,7 +118,7 @@ USAGE
 COMMANDS
   auth:current  Get current namespace with optional details
   auth:export   Make a token for switching to another machine or web browser
-  auth:github   manage github accounts
+  auth:github   manage GitHub accounts
   auth:list     List all your Nimbella namespaces
   auth:login    Gain access to a Nimbella namespace
   auth:logout   Drop access to a Nimbella namespace
@@ -376,7 +376,7 @@ There are a number of reasons why it can be useful to have multiple namespaces. 
 **To create additional namespaces:**
 
 1.  [Contact Nimbella Support](https://nimbella.com/contact).
-2.  Identify yourself as an existing developer and provide the email or github account you used for signing up initially.
+2.  Identify yourself as an existing developer and provide the email or GitHub account you used for signing up initially.
 3.  Wait for an email to arrive containing instructions for adding the additional namespace to your credential store.
 
 **To view all of your namespaces:**
@@ -858,13 +858,13 @@ The general rule for both `--include` and `--exclude` is a comma-separated list 
 
 If you specify only `--include`, then only the listed project portions are deployed.  If you specify only `--exclude`, then _all but_ the listed project portions are deployed.  If you specify both flags, the deployer first includes only what is listed in `--include` and then excludes from that list.  This allows you to include a package while excluding one or more of its actions.
 
-### Deploying Directly from Github
+### Deploying Directly from GitHub
 
-If you have Nimbella projects in a Github repository, you can deploy directly from github without the need to create a local clone.  If you do have a local clone, you can deploy as needed from the clone or directly from Github.  For example, deploy from the clone to include your local modifications.  Deploy from Github to ignore your local modifications and restore the deployed code to what is in the remote repository.
+If you have Nimbella projects in a GitHub repository, you can deploy directly from GitHub without the need to create a local clone.  If you do have a local clone, you can deploy as needed from the clone or directly from GitHub.  For example, deploy from the clone to include your local modifications.  Deploy from GitHub to ignore your local modifications and restore the deployed code to what is in the remote repository.
 
 The `nim` command does not get involved in keeping your clone in synch with the repository; that is up to you as a developer.
 
-To indicate you want to deploy from github, use a project path that starts with one of the following.
+To indicate you want to deploy from GitHub, use a project path that starts with one of the following.
 
 ```
 github:
@@ -872,41 +872,41 @@ git@github.com:
 https://github.com/
 ```
 
-The deployer supports all three prefix styles to align with developer habits and URLs copied from elsewhere: all three are equivalent and authenticate to github in exactly the same way.
+The deployer supports all three prefix styles to align with developer habits and URLs copied from elsewhere: all three are equivalent and authenticate to GitHub in exactly the same way.
 
-You follow the prefix with the "owner" (Github account), repository, path to the project within the repository (if any), and specific branch or commit (if not `master`).   For example,
+You follow the prefix with the "owner" (GitHub account), repository, path to the project within the repository (if any), and specific branch or commit (if not `master`).   For example,
 
 ```
 nim project deploy github:nimbella/demo-projects/visits
 nim project deploy git@github.com:/my-account/my-repo-with-project/#dev
 ```
 
-The deployer does not use SSL public/private keys or username/password authentication.  It relies on tokens issued for you by Github.  If you obtained your Nimbella account using your Github account for identification, there is _probably_ already a Github token stored as part of your Nimbella credentials (this depends on the details of account provisioning).
+The deployer does not use SSL public/private keys or username/password authentication.  It relies on tokens issued for you by GitHub.  If you obtained your Nimbella account using your GitHub account for identification, there is _probably_ already a GitHub token stored as part of your Nimbella credentials (this depends on the details of account provisioning).
 
-You can check Github accounts for which you have tokens in your Nimbella credential store by issuing
+You can check GitHub accounts for which you have tokens in your Nimbella credential store by issuing
 
 ```
 nim auth github --list
 ```
 
-If you do not have any github account registered then `nim project deploy` will (by default) refuse to deploy from github.  You can override this behavior using (e.g.)
+If you do not have any GitHub account registered then `nim project deploy` will (by default) refuse to deploy from github.  You can override this behavior using (e.g.)
 
 ```
 nim project github:nimbella/demo-projects/visits --anon-github
 ```
 
-However, github imposes severe rate limitations on anonymous access.  Many projects that you will want to deploy will be large enough that you will hit this limit routinely.  Also, you will be unable to deploy from private repos.  So, this option is really for exploring the capability only.   To really use the capability in serious development, you must have a github account.  If you have one (or once you have one) you can add it to your Nimbella credentials using
+However, GitHub imposes severe rate limitations on anonymous access.  Many projects that you will want to deploy will be large enough that you will hit this limit routinely.  Also, you will be unable to deploy from private repos.  So, this option is really for exploring the capability only.   To really use the capability in serious development, you must have a GitHub account.  If you have one (or once you have one) you can add it to your Nimbella credentials using
 
 ```
 nim auth github --initial
 ```
 
-A web page will open for you in your default browser, allowing you to login securely to Github for verification.  At the end of that process, you will have a Github token.
+A web page will open for you in your default browser, allowing you to login securely to GitHub for verification.  At the end of that process, you will have a GitHub token.
 
-At present, deploying from Github has these additional limitations.
+At present, deploying from GitHub has these additional limitations.
 
 - the `--incremental` option is not available.
-- the `project watch` command does not work when deploying from github
+- the `project watch` command does not work when deploying from GitHub
 
 ### Deployer recordkeeping
 
@@ -917,7 +917,7 @@ The deployer creates two types of audit trails:
 
 We’ll describe each type and show how they differ and how they can be used for comparison.
 
-Note that the local audit trail is not available when you deploy from Github.  Even if you have a local clone of the Github repository, the deployer does not know this and does not get involved in Github synchronization.
+Note that the local audit trail is not available when you deploy from GitHub.  Even if you have a local clone of the GitHub repository, the deployer does not know this and does not get involved in GitHub synchronization.
 
 #### Annotations for actions and packages deployed to your namespace
 
@@ -1185,7 +1185,7 @@ Once you have deployed the project to a namespace, it will record its ownership 
 
 Be aware that this enforcement is purely local.  In teams, consistent enforcement requires committing the project so that every team member uses the same `project.yml`.  The ownership must be re-established (by deploying the project) when switching machines or when a new team member first begins working in the project.
 
-The way the project name is recorded depends on whether the project is inside a github repo or repo clone.  If this case is detected, the project name is recorded in a way that will be consistent across all the different ways of referring to the project, even if the location of the clone were to move or you use the "deploy from github" capability.  However, if the project is not source controlled in github, its full path on the local file system is recorded.
+The way the project name is recorded depends on whether the project is inside a GitHub repo or repo clone.  If this case is detected, the project name is recorded in a way that will be consistent across all the different ways of referring to the project, even if the location of the clone were to move or you use the "deploy from GitHub" capability.  However, if the project is not source controlled in GitHub, its full path on the local file system is recorded.
 
 Ownership may be removed from namespaces by using `nim namespace free <namespace>`.   This may be needed when you have changed the ownership information in projects or moved projects within the file system or repository.
 
