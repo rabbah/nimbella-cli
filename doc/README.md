@@ -881,21 +881,29 @@ nim project deploy github:nimbella/demo-projects/visits
 nim project deploy git@github.com:/my-account/my-repo-with-project/#dev
 ```
 
-The deployer does not use SSL public/private keys or username/password authentication.  It relies on tokens issued for you by Github.  If you obtained your Nimbella account using your Github account for identification, there is already a Github token stored as part of your Nimbella credentials and you don't need to do anything more.   Otherwise, you can merge in a Github token using
+The deployer does not use SSL public/private keys or username/password authentication.  It relies on tokens issued for you by Github.  If you obtained your Nimbella account using your Github account for identification, there is _probably_ already a Github token stored as part of your Nimbella credentials (this depends on the details of account provisioning).
 
-```
-nim auth github --initial
-```
-
-A web page will open for you in your default browser, allowing you to login securely to Github for verification.  At the end of that process, you will have a Github token.  You can check Github accounts for which you have tokens in your Nimbella credential store by issuing
+You can check Github accounts for which you have tokens in your Nimbella credential store by issuing
 
 ```
 nim auth github --list
 ```
 
-You may discover that it is possible to deploy _very small_ projects from a public Github repository without having any Github credentials.  This works because Github allows some unauthenticated access.  It is not recommended that you make long-term use of this fact because Github will impose very severe rate limitations which will prevent you from deploying larger projects (and, of course, you will have no access to any private repositories you may own).
+If you do not have any github account registered then `nim project deploy` will (by default) refuse to deploy from github.  You can override this behavior using (e.g.)
 
-At present, deploying from Github has these limitations.
+```
+nim project github:nimbella/demo-projects/visits --anon-github
+```
+
+However, github imposes severe rate limitations on anonymous access.  Many projects that you will want to deploy will be large enough that you will hit this limit routinely.  Also, you will be unable to deploy from private repos.  So, this option is really for exploring the capability only.   To really use the capability in serious development, you must have a github account.  If you have one (or once you have one) you can add it to your Nimbella credentials using
+
+```
+nim auth github --initial
+```
+
+A web page will open for you in your default browser, allowing you to login securely to Github for verification.  At the end of that process, you will have a Github token.
+
+At present, deploying from Github has these additional limitations.
 
 - the `--incremental` option is not available.
 - the `project watch` command does not work when deploying from github
