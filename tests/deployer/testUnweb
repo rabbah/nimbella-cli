@@ -19,6 +19,8 @@
 #
 
 # This tests the artificial project 'unweb' which was created for issue nimbella-cli#15
+# It also, more generally, tests the effect of adding and removing web and webSecure flags.
+# As these are not annotations, they should revert to their default if not specified.
 
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -29,7 +31,7 @@ echo "cleanNamespace: true" > unweb/project.yml
 nim project deploy unweb
 
 # For the second deploy, don't specify clean and set web=false
-echo "packages:" >> unweb/project.yml
+echo "packages:" > unweb/project.yml
 echo "  - name: printer" >> unweb/project.yml
 echo "    actions:" >> unweb/project.yml
 echo "      - name: notify" >> unweb/project.yml
@@ -39,8 +41,37 @@ nim project deploy unweb
 # Get the action back for inspection
 RESULT=$(nim action get printer/notify | jq -r '.annotations[] | select(.key=="web-export") | .value')
 if [ "$RESULT" != "false" ]; then
-	 echo "Unweb test failed"
+	 echo "Unweb test failed: web-export should be false but isn't"
    exit 1
 fi
-echo "Unweb test succeeded"
 
+# Now do a deploy with no clean and also no web flag.  It should revert to true.
+rm unweb/project.yml
+nim project deploy unweb
+RESULT=$(nim action get printer/notify | jq -r '.annotations[] | select(.key=="web-export") | .value')
+if [ "$RESULT" != "true" ]; then
+	 echo "Unweb test failed: web-export should be true but isn't"
+   exit 1
+fi
+
+# Repeat the sequence with webSecure
+echo "packages:" > unweb/project.yml
+echo "  - name: printer" >> unweb/project.yml
+echo "    actions:" >> unweb/project.yml
+echo "      - name: notify" >> unweb/project.yml
+echo "        webSecure: true" >> unweb/project.yml
+nim project deploy unweb
+RESULT=$(nim action get printer/notify | jq -r '.annotations[] | select(.key=="require-whisk-auth") | .value')
+if [ "$RESULT" != "true" ]; then
+	 echo "Unweb test failed: require-whisk-auth should be true but isn't"
+   exit 1
+fi
+rm unweb/project.yml
+nim project deploy unweb
+RESULT=$(nim action get printer/notify | jq -r '.annotations[] | select(.key=="require-whisk-auth") | .value')
+if [ "$RESULT" != "false" ]; then
+	 echo "Unweb test failed: require-whisk-auth should be false but isn't"
+   exit 1
+fi
+
+echo "Unweb test succeeded"
