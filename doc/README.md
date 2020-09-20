@@ -28,7 +28,7 @@ In most cases, we recommend that you use nim as a command to be invoked globally
 *   The CLI is self-contained and has no dependencies on previously installed software.
 *   You get automated update services when new versions are available.
 
-If you don’t want a global installation but rather want to make nim a dependency of some other package, you can install it as a dependency with npm or yarn. See the second procedure.
+If you don’t want a global installation but rather want to make nim a dependency of some other package, _and your node version is at least 10.0_, you can install it as a dependency with npm or yarn. See the second procedure.
 
 ### Install nim globally
 
@@ -45,7 +45,10 @@ The `nim update` command verifies that nim is installed and capable of self-upda
 
 Use this method only to make nim a dependency of some other package. To invoke nim globally, use the previous procedure.
 
-**Note:** When installed as a dependency, the `nim update` command will not work. You have to do a fresh install to get later versions.
+**Notes:**
+
+*   When installed as a dependency, the `nim update` command will not work. You have to do a fresh install to get later versions.
+*   This form of installation requires you to have `node` installed at a minimum version of 10.0.
 
 1. Run either of the following commands, depending on whether you want to use npm or yarn:
   *   For npm: `npm install https://apigcp.nimbella.io/downloads/nim/nimbella-cli.tgz`

@@ -26,6 +26,7 @@
     "archiver": "^3.0.0",
     "axios": "^0.19.2",
     "chalk": "^4.1.0",
+    "check-node-version": "^4.0.3",
     "chokidar": "^3.4.0",
     "commander": "nimbella/commander-cli#251649e19c4797b33d7c583005f58a116ddaf2d2",
     "debug": "^4.1.1",
@@ -195,12 +196,13 @@
     }
   },
   "scripts": {
-    "prepare": "patch-package",
+    "prepare": "npm run version-check && patch-package",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "rm -rf lib && tsc -b && npm run minify && oclif-dev manifest && oclif-dev readme",
     "test": "echo NO TESTS",
     "version": "oclif-dev readme && git add README.md",
-    "minify": "test $NO_MINIFY || for i in `find lib -type f -name \\*.js`; do npx minify $i > minified; mv minified $i; done"
+    "minify": "test $NO_MINIFY || for i in `find lib -type f -name \\*.js`; do npx minify $i > minified; mv minified $i; done",
+    "version-check": "npx check-node-version --node '>= 10.0'"
   },
   "types": "lib/index.d.ts"
 }
