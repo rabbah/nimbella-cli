@@ -57,6 +57,11 @@ You also need
 
 ### Co-requisite repositories
 ##### For Local Builds
+
+- **public/nimbella-cli** should be a sibling.
+  * it should be cloned from `nimbella/nimbella-cli`
+  * if it is not present, the build in this repo will clone it for you but once it is present you must keep it up to date
+  * it need not be built
 - **main** should be a sibling and should be up-to-date.  It need not be built.
 
 ##### For Stable Builds or when modifying `aio` or `commander-cli` dependencies
@@ -78,7 +83,7 @@ You also need
 
 ### Routine Building
 
-The following suffices to build the current `nim` using the current version of our Adobe I/O and commander dependencies.
+The following suffices to build the current `nim` using the current version of our Adobe I/O and commander dependencies and the current public source.
 
 ```
 ./build.sh
@@ -130,15 +135,77 @@ This restores `package.json` from a backup.
 
 Building a stable version requires `aio-cli-plugin-runtime` and `commander-cli` to be present (for checking; they are not rebuilt).   It also requires the `workbench` repo as a peer because that is where stable versions are kept.
 
-1. Commit this repo (there can be no uncommitted changes).
-2. Issue `npm version patch`
-3. Enter your Apple Developer Id and password in the environment variables `APPLE_ID` and `APPLE_PWD`
+###### Decide whether the new stable version is a major, minor or patch release.
+- This choice should be followed consistently for every `npm version` command you issue in the following (there are several).
+- The file `doc/changes.md` should be updated accordingly before you proceed further.  That is a manual process involving looking at what has been committed and what issues have been stacked since the last stable release.
+
+###### In this repo (not the public one)
+
+```
+cd deployer && npm version [ major | minor | patch ]
+```
+
+###### In the root of this repo
+```
+./build.sh --pre-stable
+```
+
+This uploads the new deployer so it can be used by `commander-cli`.
+
+###### In the `commander-cli` repo
+- Change the dependency in `package-json` to reflect the new deployer semver created by in the earlier steps.
+- This must be committed and pushed on `master` before proceeding with the rest of the stable build.
+- If this requires a PR and merge, allow time for that.
+
+###### In the root of this repo
+
+```
+./commitCommanderPacks.sh
+```
+
+This ensures that the latest commander with the updated dependency is included in the stable version build.
+
+###### In `public/nimbella-cli`
+
+```
+cd deployer && npm version [ major | minor | patch ]
+```
+
+###### Commit the previous change
+
+###### In the root `public/nimbella-cli`
+
+```
+npm version [ major | minor | patch ]
+```
+
+This is self-committing due to a lifecycle script and it also makes a tag.
+
+###### In the root of this repo
+
+```
+./publicUpToDate.sh record
+```
+
+This records a new hash for the public repo, which you just changed
+
+###### Commit everything to date in this repo (covers several earlier steps)
+
+###### In the root of this repo
+
+```
+npm version [ major | minor | patch ]
+```
+
+###### The actual build
+
+1. Enter your Apple Developer Id and password in the environment variables `APPLE_ID` and `APPLE_PWD`
    * You can use a keychain reference for the password if you don't want to put it directly in the environment
-4. In the `main` repo issue `./build.sh newstablecli`
-5. The script will attempt to sign the MacOS installer and submit it to Apple for notarization.
+2. In the `main` repo issue `./build.sh newstablecli`
+3. The script will attempt to sign the MacOS installer and submit it to Apple for notarization.
    * If that fails, you may be able to restart at that point by directly calling the sub-script `signAndNotarize.sh`
    * If the sign and submit process succeeds, you will still have to wait for an email from Apple telling you whether notarization was successful.
-6. Once notarization has succeeded, check that the MacOS installer is fully acceptable by switching to this repo (`nimbella-cli`, not `main`) and issuing `./build.sh --check-stable`
+4. Once notarization has succeeded, check that the MacOS installer is fully acceptable by switching to this repo (`nimbella-cli`, not `main`) and issuing `./build.sh --check-stable`
 
 The script will check that you did the first three steps and will also check that the repos are in synch with each other.  The new stable version will be in `workbench/stable`
 

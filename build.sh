@@ -31,6 +31,7 @@
 #    The stable version in 'workbench/stable' is updated, but not committed or uploaded.
 # With --pack, most of the work of --stable is done but nothing is uploaded, 'workbench/stable' is not modified and
 #    Apple notarization is skipped.   Results are left in 'dist'.
+# With --pre-stable, just build and upload the deployer (typically just after version is bumped)
 # With --check-stable, there is no building and the mac installer in 'dist' is checked for successful notarization
 
 set -e
@@ -52,6 +53,10 @@ elif [ "$1" == "--stable" ]; then
     STABLE=true
     PKG=true
 		# PREVIEW SITE is always the public one for stable, no second argument
+    PREVIEW_SITE="gs://preview-apigcp-nimbella-io"
+    PREVIEW_URL="https://preview-apigcp.nimbella.io"
+elif [ "$1" == "--pre-stable" ]; then
+    PRESTABLE=true
     PREVIEW_SITE="gs://preview-apigcp-nimbella-io"
     PREVIEW_URL="https://preview-apigcp.nimbella.io"
 elif [ "$1" == "--link" ]; then
@@ -147,11 +152,14 @@ if [ -n "$PREVIEW" ]; then
     gsutil setmeta -h "Cache-Control:no-cache" "$PREVIEW_SITE/nimbella-deployer.tgz"
     npm install $PREVIEW_URL/nimbella-deployer.tgz
     # Will dirty package.json; clean up at the end
-elif [ -n "$STABLE" ]; then
+elif [ -n "$STABLE" ] || [ -n "$PRESTABLE" ]; then
     echo gsutil cp deployer/nimbella-deployer*.tgz $PREVIEW_SITE
     gsutil cp deployer/nimbella-deployer*.tgz $PREVIEW_SITE
     echo gsutil setmeta -h "Cache-Control:no-cache" "$PREVIEW_SITE/nimbella-deployer*.tgz"
     gsutil setmeta -h "Cache-Control:no-cache" "$PREVIEW_SITE/nimbella-deployer*.tgz"
+    if [ -n "$PRESTABLE" ]; then
+        exit 0
+    fi
     npm install $PREVIEW_URL/nimbella-deployer-$VERSION.tgz
     # Will dirty package.json; clean up at the end
 else
