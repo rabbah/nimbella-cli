@@ -1,5 +1,19 @@
 # Nimbella CLI (and Workbench) Change History
 
+## Changes in release 1.8
+
+- improvements to `nim logout`
+- improvments to some error messages
+- deploying to github without registered github credentials requires an explicit flag
+- minor style improvements to documentation
+- better separation of credential management when also using the `wsk` binary
+- removing `webSecure` from `project.yml` now causes reversion to the default (as intended by design)
+- fix the parsing of zip file names when determining the runtime
+- fix some bugs in `nim plugins` with no arguments and in using plugins with `nim project create`
+- actions that list openwhisk resources (e.g.) `nim actions list` support a `--count` flag
+- `nim action create` accepts `--native` flag
+- when `--web` is used on `nim action [ create | update ]` the `final` annotation is also set to `true`
+
 ## Changes in release 1.7
 
 - improvements to `nim [web|object] create` and addition of  `nim [web|object] update`
