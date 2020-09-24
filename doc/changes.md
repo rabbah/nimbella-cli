@@ -2,8 +2,6 @@
 
 ## Changes in release 1.8
 
-- improvements to `nim logout`
-- improvments to some error messages
 - deploying to github without registered github credentials requires an explicit flag
 - minor style improvements to documentation
 - better separation of credential management when also using the `wsk` binary
@@ -13,6 +11,9 @@
 - actions that list openwhisk resources (e.g.) `nim actions list` support a `--count` flag
 - `nim action create` accepts `--native` flag
 - when `--web` is used on `nim action [ create | update ]` the `final` annotation is also set to `true`
+- `nim auth export` accepts a `--json` flag
+- further improvements to `nim logout` for multiple logouts
+- improvments to some error messages
 
 ## Changes in release 1.7
 
