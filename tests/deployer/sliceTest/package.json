@@ -1,0 +1,15 @@
+{
+  "name": "sliceTest",
+  "version": "1.0.0",
+  "description": "",
+  "main": "runSlice.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "nimbella-cli": "https://preview-apigcp.nimbella.io/testj/nimbella-cli.tgz"
+  }
+}

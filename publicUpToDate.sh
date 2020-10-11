@@ -50,7 +50,10 @@ HASH=$(git rev-parse HEAD)
 popd > /dev/null
 if [ "$BR" != "master" ]; then
 		echo "public/nimbella-cli is not on the 'master' branch"
-		exit 0
+		if [ -z "$RECORDING" ]; then
+				exit 0
+		fi
+		echo "Recording anyway."
 fi
 
 # Record if requested

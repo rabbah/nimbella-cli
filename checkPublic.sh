@@ -19,11 +19,19 @@
 # from Nimbella Corp.
 #
 
-# Check that the public repo is cloned in the expected place.  If it is not
-# there, clone it.  Then check that its githash matches one stored in public.hash.
-# If we can't get that far, abort.
-# Otherwise, replace 'src' and 'deployer/src' on this repo with public ones.
-# For now, some metadata files (e.g. package.json) are maintained in both places and not copied.
+# Ensure that the public repo is cloned in the expected place and at the right commit.
+# Then replace 'src' and 'deployer/src' on this repo (which are derived folders) with the
+# designated public ones.  The package.json files are not copied (they differ slightly
+# between public and private).
+#
+# If the public repo is not there at all, this script actively clones it.  If the repo
+# is there and at the right commit, it accepts that whether it is dirty or not.
+# If it is there, clean, and at the wrong commit it does a checkout to correct that.
+# If it is there, dirty, and at the wrong commit, it aborts.
+# These behaviors are designed to accommodate (1) Jenkins, which will get a fresh clone
+# (2) most developers, for whom repeated clones are unnecessary but the commit should be
+# automatically adjusted, and (3) Active nimbella-cli developers, who might have changes
+# under test in the public repo but should at least be starting with matched commits.
 
 # Orient
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -31,6 +39,8 @@ PARENT=$(dirname $SELFDIR)
 PUBLIC="$PARENT/public"
 PUBLIC_CLI="$PUBLIC/nimbella-cli"
 cd $SELFDIR
+
+set -e
 
 # Ensure presence of public clone
 if [ ! -d "$PUBLIC_CLI" ]; then
@@ -42,16 +52,26 @@ if [ ! -d "$PUBLIC_CLI" ]; then
 		popd
 fi
 
-# Check whether public repo is at the expected commit unless check is suppressed (for testing)
-if [ -z "$NO_CHECK" ]; then
-		UPTODATE=$(./publicUpToDate.sh)
-		if [ "$UPTODATE" == "false" ]; then
-				echo "Incompatible releases for 'public/nimbella-cli' and 'nimbella-cli'."
-				exit -1
-		elif [ "$UPTODATE" != 'true' ]; then
-				echo $UPTODATE
-				exit -1
-		fi
+# Probe public repo to obtain its githash and whether it's dirty
+pushd "$PUBLIC_CLI" > /dev/null
+HASH=$(git rev-parse HEAD)
+DIRTY=$(git status --porcelain)
+popd > /dev/null
+
+# Obtain the expected commit
+EXPECTED=$(cat public.hash)
+
+# Handle cases where the commit of public is wrong
+if [ "$HASH" != "$EXPECTED" ]; then
+		if [ -n "$DIRTY" ]; then
+				# If dirty, don't mutate and don't proceed
+				echo "The public repo is at the wrong commit and dirty (aborting)"
+				exit 1
+    fi
+		# If clean, assume it's ok to change the checked out commit
+		pushd "$PUBLIC_CLI" > /dev/null
+		git checkout $EXPECTED
+		popd > /dev/null
 fi
 
 # Copy src from public to here

@@ -59,7 +59,7 @@ import { runNimCommand, CaptureLogger } from 'nimbella-cli'
 And you import the deployer API like this.
 
 ```
-import { initializeAPI, Flags, deployProject, ... } from 'nimbella-cli/deployer'
+import { initializeAPI, Flags, deployProject, ... } from 'nimbella-cli/lib/deployer'
 ```
 
 ## The Command Invocation API

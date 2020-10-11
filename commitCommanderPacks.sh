@@ -47,3 +47,7 @@ REF="nimbella/commander-cli#$HASH"
 # Edit package.json so that the correct dependency is declared there
 jq -r '.dependencies."commander" = "'$REF'"' < package.json > tmp.json
 mv tmp.json package.json
+
+# Replay the same edit in the public repo
+jq -r '.dependencies."commander" = "'$REF'"' < ../public/nimbella-cli/package.json > tmp.json
+mv tmp.json ../public/nimbella-cli/package.json

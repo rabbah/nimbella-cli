@@ -91,6 +91,12 @@ const NON_CONFORMING_BUT_LICENSED = {
         verifier: `MIT License\n\nCopyright (c) 2016 Cherry Ng`
     },
 
+    'seq-queue': {
+        license: 'MIT',
+        location: 'LICENSE',
+        verifier: '(The MIT License)\n\nCopyright (c) 2012 Netease, Inc.'
+    },
+
     'speedometer': {
         license: 'MIT',
         location: 'LICENSE',
