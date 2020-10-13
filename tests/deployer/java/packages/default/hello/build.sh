@@ -19,13 +19,6 @@
 # from Nimbella Corp.
 #
 
-# This build will just send source to the actionloop when run locally but will compile to binary and deploy the result if run remotely
-if [ -n "$OW_COMPILER" ]; then
-    $OW_COMPILER Main . .
-    if [ -f exec ]; then
-        echo exec > .include
-    fi
-else
-    echo hello.java > .include
-fi
-
+set -e
+javac Main.java -cp /usr/java/lib/gson-2.8.5.jar
+jar cvf hello.jar Main.class
