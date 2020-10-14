@@ -47,6 +47,12 @@ sleep 5
 touch watched/packages/default/hello2/index.js
 sleep 5
 
+# Make a .git directory, which should not trigger a build
+mkdir watched/.git
+
+# Add a file to the .git directory, which should not trigger a build
+touch watched/.git/somefile
+
 # Add an .include file (third build)
 echo "index.js" > watched/packages/default/hello2/.include
 sleep 5
