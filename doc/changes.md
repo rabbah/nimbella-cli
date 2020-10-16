@@ -1,5 +1,20 @@
 # Nimbella CLI (and Workbench) Change History
 
+## Changes in release 1.9
+
+- a `nim auth refresh` command has been added
+- improvements to error reporting for problems accessing `web` and `object` resources
+- installs using `npm` or `yarn` should now work on windows
+    - note that we still recommend using an installer, not `npm` or `yarn` when installing globally
+- fixed bug: some commands that end in error were setting 0 exit code instead of non-zero
+- fixed bug: there were occasional crashes of `nim project watch` on macos
+- contents of a `.git` folder are now ignored by `nim project watch`
+- some bug fixes in `nim commander`
+- improvements to `nim activation get` and `nim activation logs` (supports ranges)
+- vulnerabilities reported by `npm audit` have been eliminated
+- fixed error in the `swift` template for new actions in the playground
+- when using the `nim` prefix explicitly in the workbench, aliases are now recognized correctly
+
 ## Changes in release 1.8
 
 - deploying to github without registered github credentials requires an explicit flag
@@ -13,7 +28,7 @@
 - when `--web` is used on `nim action [ create | update ]` the `final` annotation is also set to `true`
 - `nim auth export` accepts a `--json` flag
 - further improvements to `nim logout` for multiple logouts
-- improvments to some error messages
+- improvements to some error messages
 
 ## Changes in release 1.7
 
