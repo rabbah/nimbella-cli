@@ -22,7 +22,18 @@
 
 # nimbella-cli
 
-A comprehensive CLI for the Nimbella stack
+A comprehensive CLI for the Nimbella stack.
+
+This is the _private_ `nimbella-cli` repo.  It contains
+
+- all the build scripts and other metadata for building and releasing `nim` as part of the Nimbella stack
+- the documentation source
+
+There is also a _public_ (open source) `nimbella-cli` repo at [https://github.com/nimbella/nimbella-cli](https://github.com/nimbella/nimbella-cli).  It contains
+
+- the TypeScript source code of `nimbella-cli`
+- some documents to support OSS contributions
+- alternate `package.json` files providing a simplified build process
 
 ### Prerequisites
 ##### For Local Builds
@@ -58,10 +69,15 @@ You also need
 ### Co-requisite repositories
 ##### For Local Builds
 
-- **public/nimbella-cli** should be a sibling.
-  * it should be cloned from `nimbella/nimbella-cli`
-  * if it is not present, the build in this repo will clone it for you but once it is present you must keep it up to date
-  * it need not be built
+- **public/nimbella-cli** should be a sibling
+  * the file `public.hash` contains the commit of the public repo that goes with the present commit of this repo
+  * if the public repo is not present, the build in this repo will clone it for you
+  * if the public repo is present and has no local modifications, or if it was just cloned automatically, the build in this repo will check it out to the correct commit
+  * if the public repo is present and already checked out to the correct commit, its contents will be used even if locally modified (to support testing)
+  * if the public repo is at the wrong commit and also locally modified, the build will abort.  This case must be corrected manually.
+  * the public repo need not be built itself
+     - unless you are using an IDE to modify its contents
+     - in which case you might want to build it according to its own procedures to support IDE navigation, compile on save, etc.
 - **main** should be a sibling and should be up-to-date.  It need not be built.
 
 ##### For Stable Builds or when modifying `aio` or `commander-cli` dependencies
