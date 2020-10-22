@@ -1,5 +1,10 @@
 # Nimbella CLI (and Workbench) Change History
 
+## Changes in release 1.9.1
+
+- fix some errors in installation as a dependency
+- some purely internal changes preparatory to the next feature release
+
 ## Changes in release 1.9
 
 - a `nim auth refresh` command has been added
