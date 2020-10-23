@@ -36,8 +36,8 @@ fi
 echo "Deploying using the alternate file 'test.env'"
 nim project deploy environ --env test.env
 RESULT=$(nim action get variable | jq -r .exec.kind)
-if [ "$RESULT" != "nodejs:8" ]; then
-	 echo "Expected 'nodejs:8' but got '$RESULT'"
+if [ "$RESULT" != "nodejs-lambda:10" ]; then
+	 echo "Expected 'nodejs-lambda:10' but got '$RESULT'"
 	 exit 1
 fi
 
