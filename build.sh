@@ -22,7 +22,7 @@
 # Builds the 'nim' CLI
 #
 # By default, it builds the deployer from source and installs it locally, not uploading it, then builds nim and
-#    installs it locally
+#    installs it "globally" on the local machine
 # With --no-install, the result is the same as a default build but no global install is done (primarily for Jenkins)
 # With --link, the result is like the default build except an 'npm link' is done lieu of 'npm install' (allows builds
 #    to be bypassed for subsequent changes until a full install is done)
@@ -31,6 +31,7 @@
 #    The stable version in 'workbench/stable' is updated, but not committed or uploaded.
 # With --pack, most of the work of --stable is done but nothing is uploaded, 'workbench/stable' is not modified and
 #    Apple notarization is skipped.   Results are left in 'dist'.
+# With --channel <name>, it builds a channel release for channel <name>, and stages it for upload.
 # With --pre-stable, just build and upload the deployer (typically just after version is bumped)
 # With --check-stable, there is no building and the mac installer in 'dist' is checked for successful notarization
 
@@ -55,6 +56,12 @@ elif [ "$1" == "--stable" ]; then
 		# PREVIEW SITE is always the public one for stable, no second argument
     PREVIEW_SITE="gs://preview-apigcp-nimbella-io"
     PREVIEW_URL="https://preview-apigcp.nimbella.io"
+elif [ "$1" == "--channel" ]; then
+		if [ -z "$2" ]; then
+				echo "A channel name is required with '--channel'"
+				exit 1
+	  fi
+		CHANNEL=$2
 elif [ "$1" == "--pre-stable" ]; then
     PRESTABLE=true
     PREVIEW_SITE="gs://preview-apigcp-nimbella-io"
@@ -73,6 +80,7 @@ fi
 # Orient
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 STABLEDIR=$SELFDIR/../workbench/stable
+CHANNEL_STAGING_DIR="$SELFDIR/../main/config/nginx-content/downloads/nim"
 cd $SELFDIR
 
 # Synchronize with public source
@@ -90,6 +98,17 @@ DIRTY=$(git status --porcelain)
 if [ -n "$PREVIEW" ] && [ -z "$2" ] && [ -n "$DIRTY" ]; then
     echo "The nimbella-cli repo is not fully committed: a preview cannot be created"
     exit 1
+fi
+
+# Check prereqs for --channel
+if [ -n "$CHANNEL" ]; then
+		if [ -n "$DIRTY" ]; then
+				echo "The nimbella-cli repo is not fully committed: a channel release cannot be created"
+				exit 1
+		fi
+		if ! [ -d "$CHANNEL_STAGING_DIR" ]; then
+				echo "The main repo is not present as a peer or does not contain a content build; a channel release cannot be created"
+		fi
 fi
 
 # Check prereqs for --stable
@@ -213,7 +232,7 @@ fi
 npm pack
 mv nimbella-cli-*.tgz nimbella-cli.tgz
 
-# Unless told not to, do a global install of the result
+# Unless told not to, do a "global" (to this machine) install of the result
 if [ -z "$NOINSTALL" ]; then
     if [ -f saved-package.json ]; then
         echo "Using 'npm link' for AIO testing"
@@ -242,6 +261,32 @@ if [ -n "$PREVIEW" ]; then
     gsutil cp changes.html $PREVIEW_SITE/nim-changes.html
     # Clean up package.json
     git checkout package.json
+fi
+
+# Optionally do a channel release
+if [ -n "$CHANNEL" ]; then
+		# Calculate the altered version.
+		PARTS=( ${VERSION//./ } )
+		if [ ${#PARTS[@]} -ne 3 ]; then
+				echo "Unexpected version string $VERSION"
+				exit 1
+		fi
+		((PARTS[2]++))
+		CHANNEL_VERSION="${PARTS[0]}.${PARTS[1]}.${PARTS[2]}-$CHANNEL"
+		npm --no-git-tag-version version "$CHANNEL_VERSION"
+    # Rename READMEs so the customer gets an appropriate one (not our internal one)
+    mv README.md devREADME.md
+    mv userREADME.md README.md
+    # Clean up old material
+    rm -fr dist/channels tmp
+    # Create the channel release
+    npx oclif-dev pack -t linux-x64,win32-x64,darwin-x64
+		# Copy to the staging area
+		rm -fr $CHANNEL_STAGING_DIR/channels
+		cp -r dist/channels $CHANNEL_STAGING_DIR
+    # Clean up
+    git checkout userREADME.md package.json
+    mv devREADME.md README.md
 fi
 
 # Optionally package
