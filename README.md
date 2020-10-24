@@ -22,8 +22,6 @@
 
 # nimbella-cli
 
-A comprehensive CLI for the Nimbella stack.
-
 This is the _private_ `nimbella-cli` repo.  It contains
 
 - all the build scripts and other metadata for building and releasing `nim` as part of the Nimbella stack
@@ -110,6 +108,55 @@ in this repo, or
 ./build.sh nimcli
 ```
 in `main`.  In either case, the command `nim` should now be in your path.
+
+### Staging to the preview site
+
+We maintain a preview site at [https://preview-apigcp.nimbella.io](https://preview-apigcp.nimbella.io).  This site is primarily for internal use.  It is updated nightly with the latest committed Nimbella CLI code.
+
+After an important change, instead of waiting for the nightly job, you can "publish" that change for internal teams
+
+1.  Make sure that this repo and the public `nimbella-cli` repo are in sync and fully committed.
+2. In the root of this repo, issue
+
+```
+./build.sh --preview
+```
+
+### Publishing to the 'beta' channel of the 'nim' update site
+
+It is sometimes useful to expose customers to upcoming changes or to let a customer test a fix you have just committed.  We used to use the preview site for this, but that is no longer recommended.  Instead, we maintain a `beta` update channel.
+
+#### Posting a new pre-release to the beta channel
+
+You will be unable to do this unless you have at least editor rights to `nimgcp`.  If you do not, request that this be done by someone who is an editor or owner.
+
+1.  Make sure that this repo and the public `nimbella-cli` repo are in sync and fully committed.
+2. In the `main` repo, make sure it is at `master head`.
+3. In the `main` repo, make sure `nimadmin` is built (`./build.sh nimadmin`).
+4. In the `main` repo, make sure the content is staged (`./build.sh content nimgcp`).
+5. In this repo, issue `./build.sh --channel beta`
+6. In the `main` repo, issue
+
+```
+nimadmin project set nimgcp
+nimadmin nginx upload downloads/nim/channels
+```
+
+#### Instructing customers on the use of the beta channel
+
+A customer can switch from the stable update channel to the beta channel using
+
+```
+nim update beta
+```
+
+and back to the stable channel with
+
+```
+nim update stable
+```
+
+If the channel is not specified on `nim update`, the channel currently in use is remembered and the customer stays on that channel.  The channel is visible in the version string shown in `nim --help`, `nim version`, and `nim info`.
 
 ### Building the Adobe I/O dependency for testing
 
