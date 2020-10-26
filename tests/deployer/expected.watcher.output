@@ -3,14 +3,14 @@ Watching 'watched' [use Control-C to terminate]
 Deploying 'watched' due to change in 'watched/packages/default/hello.js'
 Deployment status recorded in 'watched/.nimbella'
 
-Deployed actions:
+Deployed actions ('nim action get <actionName> --url' for URL):
   - hello
 Deployment complete.  Resuming watch.
 
 
 Deploying 'watched' due to change in 'watched/packages/default/hello2/index.js'
 
-Deployed actions:
+Deployed actions ('nim action get <actionName> --url' for URL):
   - hello2
 Skipped 1 unchanged actions
 Deployment complete.  Resuming watch.
