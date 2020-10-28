@@ -1,0 +1,68 @@
+#
+# Nimbella CONFIDENTIAL
+# ---------------------
+#
+#   2018 - present Nimbella Corp
+#   All Rights Reserved.
+#
+# NOTICE:
+#
+# All information contained herein is, and remains the property of
+# Nimbella Corp and its suppliers, if any.  The intellectual and technical
+# concepts contained herein are proprietary to Nimbella Corp and its
+# suppliers and may be covered by U.S. and Foreign Patents, patents
+# in process, and are protected by trade secret or copyright law.
+#
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Nimbella Corp.
+#
+
+# This tests remote builds
+
+SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $SELFDIR
+
+# Deploy a project containing a test action, then invoke that action and verify the answer
+# We support only answers with a simple string in the `body` element.
+function testAction() {
+  local project=$1
+	local action=$2
+	local expected=$3
+  nim namespace clean --force --justwhisk
+  nim project deploy $project --remote-build
+	RESULT=$(nim action invoke $action | jq -r .body)
+	if [ "$RESULT" != "$expected" ]; then
+		 echo "Expected '$expected' but got '$RESULT'"
+		 exit 1
+	fi
+}
+
+# Test that the code of an action is binary.  With some action-loop runtimes
+# (go, swift, java) this is a valid test of whether building occurred and is needed
+# since the action-loop would have given a correct answer even if the unbuilt
+# code was deployed.
+function testBinary() {
+  local action=$1
+  BINARY=$(nim action get $action | jq -r .exec.binary)
+	if [ "$BINARY" != "true" ]; then
+		 echo "Action '$action' should be binary but isn't"
+		 exit 1
+	fi
+}
+
+# Run the tests for simple action-only cases
+set -e
+testAction go hello "Hello, stranger!"
+testBinary hello
+testAction swift hello "To be implemented"
+testBinary hello
+testAction swift-multi hello "Hello stranger!"
+testBinary hello
+testAction java hello "Hello stranger!"
+testBinary hello
+
+# Deploy some of our demos and test for failures
+# TODO
+
+echo "Test succeeded"
