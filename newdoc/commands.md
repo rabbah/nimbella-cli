@@ -46,7 +46,7 @@ If you find a case in which a blank separator doesn't work in nim, please [repor
 
 ### 1 Credential management to access Nimbella namespaces
 
-The `auth` subtree lets you manage Nimbella credentials for Nimbella _namespaces_, as described in the section [Nimbella Namespaces](#nimbella-namespaces).
+The `auth` subtree lets you manage Nimbella credentials for Nimbella _namespaces_, as described in the section [Nimbella Namespaces](namespaces.md).
 
 The `nim auth` subtree has its own set of commands, as follows.
 
@@ -76,7 +76,7 @@ The `nim project` subtree has three commands:
 *   `deploy`
 *   `watch`
 
-These subcommands operate on logical groupings of resources (web content, storage, and APIs) that make up typical applications. Such a grouping is called a _project_ and is described more in [About Nimbella Projects](#overview-of-nimbella-projects-actions-and-deployment).
+These subcommands operate on logical groupings of resources (web content, storage, and APIs) that make up typical applications. Such a grouping is called a _project_ and is described more in [About Nimbella Projects](deployer-overview.md).
 
 The `project:deploy` command controls the Nimbella _deployer_, which operates on projects. Much of the rest of this document concerns itself with projects and the deployer.
 

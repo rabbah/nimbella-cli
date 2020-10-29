@@ -31,7 +31,7 @@ example1/packages/default/hello.js
 example1/web
 ```
 
-We address the purpose of the `web` directory in [Adding static web content](#adding-static-web-content) and the `packages` directory later in this section.
+We address the purpose of the `web` directory in [Adding static web content](web-content.md) and the `packages` directory later in this section.
 
 As a result of `nim project deploy`, the project was deployed to your namespace and the result was an action called `hello`.  To record the status of that deployment, `nim` created
 
@@ -59,7 +59,7 @@ function main(args) { return { msg: 'Hello World' } }
 > mkdir -p example1/packages/demo
 ```
 
-The [project directory structure](#about-projects) sets the name of the project (`example1`), a _packages_ directory, and the package qualifier (`demo`).  There is no `web` directory this time; `web` is not required if you aren't adding web content.
+The [project directory structure](projects.md) sets the name of the project (`example1`), a _packages_ directory, and the package qualifier (`demo`).  There is no `web` directory this time; `web` is not required if you aren't adding web content.
 
 (3) Copy the JavaScript file into the `demo` directory with the following command.
 
@@ -96,13 +96,13 @@ Here’s a diagram of the project structure that was created in this procedure.
 **Notes:**
 
 *   The `project deploy` command activates the deployer, which names the action automatically based on the source code file (`hello`), prepended by the package qualifier (`demo`).
-*   If you want an action to have a simple name (no package qualification), put it in a package directory called _default_. In that case, no package qualifier is prepended. See [Project Directory Structure](#project-directory-structure).  When `nim` generates a sample in `nim project create` it uses this feature.
-*   The correct runtime for the source code file is determined according to the file suffix.  The command `nim info --runtimes` will list the supported runtimes.  At this time, the list does not include file suffixes.  See [Nimbella Deployer Supported Runtimes for Actions](#nimbella-deployer-supported-runtimes-for-actions) for a list that includes suffixes.
-*   Project configuration occurs automatically when it can, but see [Adding Project Configuration](#adding-project-configuration) for complex projects.
+*   If you want an action to have a simple name (no package qualification), put it in a package directory called _default_. In that case, no package qualifier is prepended. See [Project Directory Structure](projects.md).  When `nim` generates a sample in `nim project create` it uses this feature.
+*   The correct runtime for the source code file is determined according to the file suffix.  The command `nim info --runtimes` will list the supported runtimes.  At this time, the list does not include file suffixes.  See [Nimbella Deployer Supported Runtimes for Actions](deployer-features.md#nimbella-deployer-supported-runtimes-for-actions) for a list that includes suffixes.
+*   Project configuration occurs automatically when it can, but see [Adding Project Configuration](configuration.md) for complex projects.
 
 **Next steps:**
 
-*   To add web content to your project, see [Adding static web content](#adding-static-web-content).
-*   If you need to add build steps, see [Incorporating build steps for actions and web content](#incorporating-build-steps-for-actions-and-web-content).
-*   Read more about [deploying projects](#about-the-nimbella-deployer).
+*   To add web content to your project, see [Adding static web content](web-content.md).
+*   If you need to add build steps, see [Incorporating build steps for actions and web content](building.md).
+*   Read more about [deploying projects](deployer-features.md).
 *   Look at a somewhat more complex [example QR code project with both an action and static web content](https://github.com/nimbella/demo-projects/tree/master/qrcode).

@@ -10,4 +10,4 @@ Your Nimbella cloud account gives you the following benefits:
 *   Workflows you can  build and the ability to orchestrate long-running tasks.
 *   CLI and workbench tools to manage Nimbella services, build projects, and deploy your apps.
 
-Once you [create your first Nimbella Cloud namespace](#create-a-nimbella-namespace) you are ready to login and [run CLI commands](#nim-command-overview) and deploy projects to your Nimbella Cloud.
+Once you [create your first Nimbella Cloud namespace](namespaces.md#create-a-nimbella-namespace) you are ready to login and [run CLI commands](commands.md#nim-command-overview) and deploy projects to your Nimbella Cloud.
