@@ -58,9 +58,9 @@ Here’s more information about the table displayed in the response:
 *   The **Current** column displays `yes` for exactly one namespace.
     - The Nimbella deployer will deploy this namespace in the absence of other directives.
     - This entry is also marked by a check mark for added emphasis
-*   The **Storage** column indicates whether the namespace has provision for web content storage as discussed in [Adding static web content](#adding-static-web-content). There is also a second object storage bucket available for general use, not connected to the web.
+*   The **Storage** column indicates whether the namespace has provision for web content storage as discussed in [Adding static web content](web-content.md). There is also a second object storage bucket available for general use, not connected to the web.
 *   The **Redis** column indicates whether the namespace has a Redis key-value storage instance available for use by actions.
-*   The **Production** and **Project** columns become meaningful as you begin to define Nimbella [projects](#about-projects) and wish to [tie namespaces to projects](#tieing-namespaces-to-projects).
+*   The **Production** and **Project** columns become meaningful as you begin to define Nimbella [projects](projects.md) and wish to [tie namespaces to projects](tieing-namespaces-to-projects.md).
 
 ### Create and manage multiple namespaces
 
@@ -109,7 +109,7 @@ targetNamespace:
   production: <namespace2>
 ```
 
-A more complete explanation of how `targetNamespace` affects project deployment is provided in [Tieing namespaces to projects](#tieing-namespaces-to-projects).
+A more complete explanation of how `targetNamespace` affects project deployment is provided in [Tieing namespaces to projects](tieing-namespaces-to-projects.md).
 
 There are more complex development scenarios, in which you would not want to correlate projects and namespaces so strongly.  For those cases, we also provide the `--target` directive of the `project deploy` command:
 
@@ -121,5 +121,5 @@ nim project deploy <projectPath>... --target <namespace>
 
 *   If your project has a _project.yml_ configuration file with a `targetNamespace` directive and also uses the `--target` option in a `project deploy` command, the latter takes precedence.
 
-*   For more information about using _project.yml_ files to configure more complex projects, see [Adding Project Configuration](#adding-project-configuration).
+*   For more information about using _project.yml_ files to configure more complex projects, see [Adding Project Configuration](configuration.md).
 

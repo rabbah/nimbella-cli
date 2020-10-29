@@ -1,6 +1,6 @@
 ## Adding project configuration
 
-A feature that sets nim projects apart from many other deployment tools is that no manifest or configuration file is required in a large number of suitably simple cases. You can simply choose a directory in the file system to represent a project and lay out the content of the project under that directory using a structure that nim will recognize as a project. See [the no-configuration project example](#example-create-and-deploy-a-project-with-a-single-action).
+A feature that sets nim projects apart from many other deployment tools is that no manifest or configuration file is required in a large number of suitably simple cases. You can simply choose a directory in the file system to represent a project and lay out the content of the project under that directory using a structure that nim will recognize as a project. See [the no-configuration project example](single-action-example.md).
 
 However, Nimbella projects can’t always avoid having a configuration file, so this section summarizes how to add a configuration file to guide nim when the file and directory structure doesn’t convey everything it needs to know.
 
@@ -51,7 +51,7 @@ We’ll cover configuration for packages and actions first, then configuration f
 
 ### Project configuration for packages and actions
 
-Let’s suppose that in [the example1 project](#example-create-and-deploy-a-project-with-a-single-action), you don’t want `hello` to be a web action and the deployer cannot determine its main entry point directly from the code. Add a _project.yml_ file such as the following:
+Let’s suppose that in [the example1 project](single-action-example.md), you don’t want `hello` to be a web action and the deployer cannot determine its main entry point directly from the code. Add a _project.yml_ file such as the following:
 
 ```
 packages:
@@ -62,7 +62,7 @@ packages:
         main: myMain
 ```
 
-The following sections contain a list of configuration members for [actions](#action-modifiers-allowed-in-project-yml), [packages](#package-modifiers-allowed-in-project-yml), and [global](#global-modifiers-allowed-in-project-yml). An additional configuration member is `bucket` which is documented in [Adding static web content](#adding-static-web-content).
+The following sections contain a list of configuration members for [actions](#action-modifiers-allowed-in-project-yml), [packages](#package-modifiers-allowed-in-project-yml), and [global](#global-modifiers-allowed-in-project-yml). An additional configuration member is `bucket` which is documented in [Adding static web content](web-content.md).
 
 #### Action modifiers allowed in project.yml
 
@@ -94,7 +94,7 @@ Note that web actions are normally executable by anyone.  Adding the `webSecure`
 
 ##### annotations
 
-A nested map providing annotations to place on the action. See [Deployer Recordkeeping](#deployer-recordkeeping).
+A nested map providing annotations to place on the action.
 
 The keys and values of annotations are up to you to create. The important thing is that both clauses are nested maps in YAML terms and can have as many keys and values as needed. See the example in the [`parameters`](#parameters) description.
 
@@ -173,7 +173,7 @@ May be `false` (default) or `true`. It indicates that the contents of the packag
 
 ##### annotations
 
-A nested map providing annotations to place on the package. See [Deployer Recordkeeping](#deployer-recordkeeping).
+A nested map providing annotations to place on the package.
 
 The keys and values of `annotations` are up to you to create. The important thing is that both clauses are nested maps in YAML terms and can have as many keys and values as needed. See the example in the [`parameters`](#parameters) modifier for actions.
 
@@ -212,7 +212,7 @@ There are also some useful global members of the configuration.
 
 ##### targetNamespace
 
-Establishes project ownership of namespaces for 'test' and 'production' use, as described in [Tieing Namespaces to Projects](#tieing-namespaces-to-projects).  The simpler form
+Establishes project ownership of namespaces for 'test' and 'production' use, as described in [Tieing Namespaces to Projects](tieing-namespaces-to-projects.md).  The simpler form
 
 ```
 targetNamespace: <myNamespace>
@@ -299,7 +299,7 @@ Nimbella places its own _404.html_ at the root of every namespace and preserves 
 
 The `strip` option removes path segments, and in this sense, it is the opposite of `prefixPath`, which adds path segments. The number value specifies the number of paths to strip.
 
-You can use both `strip` and `prefixPath` to remove existing segments and then add new ones. The `strip` option is most useful when you use a tool to generate web content because often the tool puts its output in a specific directory that you might not want in your deployed namespace. For an example, see [Example of a web directory with a tool that generates web content](#configuration-example-for-web-content-generated-by-a-tool)
+You can use both `strip` and `prefixPath` to remove existing segments and then add new ones. The `strip` option is most useful when you use a tool to generate web content because often the tool puts its output in a specific directory that you might not want in your deployed namespace. For an example, see [Example of a web directory with a tool that generates web content](building.md#configuration-example-for-web-content-generated-by-a-tool)
 
 ##### Specifying cache behavior
 

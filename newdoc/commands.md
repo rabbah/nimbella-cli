@@ -120,7 +120,7 @@ OPTIONS
   --help                                     Show help
 ```
 
-See the [Example: Create and deploy a project with a single action](#example-create-and-deploy-a-project-with-a-single-action) for an example of using the project create command.
+See the [Example: Create and deploy a project with a single action](single-action-example.md) for an example of using the project create command.
 
 Help output for the `nim project deploy` command:
 
@@ -152,7 +152,7 @@ OPTIONS
 
 ```
 
-See the [Example: Create and deploy a project with a single action](#example-create-and-deploy-a-project-with-a-single-action) for an example of using the project deploy command.
+See the [Example: Create and deploy a project with a single action](single-action-example.md) for an example of using the project deploy command.
 
 Help output for the `nim project watch` command:
 
@@ -182,13 +182,13 @@ OPTIONS
   --yarn                 Use yarn instead of npm for node builds
 ```
 
-See [Project watching](#project-watching-for-incremental-deployment) for an example of how to use this command for incremental deployment which facilitates faster project development.
+See [Project watching](deployer-features.md#project-watching-for-incremental-deployment) for an example of how to use this command for incremental deployment which facilitates faster project development.
 
 ### 3 Entity management commands
 
 The `action`, `activation`, `key-value`, `namespace`, `objects`, `package`, `route`, `rule`, `trigger`, and `web` commands each manage the corresponding type of entity in your namespace.
 
-If you’re an [Apache OpenWhisk](https://openwhisk.apache.org) developer, see [Entity Management commands in nim vs. wsk](#entity-management-commands-in-nim-vs.-wsk) for a comparison of entity management commands.
+If you’re an [Apache OpenWhisk](https://openwhisk.apache.org) developer, see [Entity Management commands in nim vs. wsk](nim-vs-wsk.md#entity-management-commands-in-nim-vs.-wsk) for a comparison of entity management commands.
 
 
 ### 4 Supporting commands
@@ -201,6 +201,6 @@ The `doc`, `help`, `info`, `update`, and `workbench` commands provide the follow
 *   `update`: Updates to the latest version of nim.
 *   `workbench`: Manages the Nimbella Workbench for you.
 
-The Nimbella Workbench is described in [The Nimbella Workbench](#the-nimbella-workbench)
+The Nimbella Workbench is described in [The Nimbella Workbench](workbench.md)
 
-**Note:** `nim update` works only when nim is installed [using the recommended installation method for use from a shell](#install-nim-for-shell-invocation-globally). It does not work when nim is installed [as a dependency using npm or yarn](#install-nim-as-a-dependency).
+**Note:** `nim update` works only when nim is installed [using the recommended installation method for use from a shell](install.md#install-nim-for-shell-invocation-globally). It does not work when nim is installed [as a dependency using npm or yarn](install.md#install-nim-as-a-dependency).

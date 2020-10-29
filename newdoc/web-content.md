@@ -6,9 +6,9 @@ To add static web content to a project, add a directory called _web_ as a peer o
 
 The _web_ directory can have subdirectories and can be built by website builders or other tools.
 
-Like an action directory, the _web_ directory may contain `.include` or `.ignore` to control what is actually considered web content, as opposed to build support or intermediate results. For more information about `.include` and `.ignore`, see [Multifile actions created with autozip](#multifile-actions-created-with-autozip).
+Like an action directory, the _web_ directory may contain `.include` or `.ignore` to control what is actually considered web content, as opposed to build support or intermediate results. For more information about `.include` and `.ignore`, see [Multifile actions created with autozip](actions.md#multifile-actions-created-with-autozip).
 
-The _web_ directory also supports integrated [building](#incorporating-build-steps-for-actions-and-web-content), just like an action directory.
+The _web_ directory also supports integrated [building](building.md), just like an action directory.
 
 Here’s an example of a project with modest web content, populated by hand. For simplicity, the actions of the project are not shown.
 
@@ -42,6 +42,6 @@ As the output shows, the contents of the web directory were deployed to the web,
 
 **Notes:**
 
-*   For a web deployment to work correctly, the namespace entry in the credential store must include storage. See [View the Credential Store](#view-the-credential-store) to generate the credential store, then check to make sure the `Storage` column of the response says `yes`. The first namespace created for each user includes storage, but it’s possible to create namespaces without it.
-*   You can add [project configuration to change how your static web content is deployed](#project-configuration-for-web-content).
-See [an example of how to configure a project when you generate web content with a tool such as React.](#configuration-example-for-web-content-generated-by-a-tool)
+*   For a web deployment to work correctly, the namespace entry in the credential store must include storage. See [View the Credential Store](namespaces.md#view-the-credential-store) to generate the credential store, then check to make sure the `Storage` column of the response says `yes`. The first namespace created for each user includes storage, but it’s possible to create namespaces without it.
+*   You can add [project configuration to change how your static web content is deployed](configuration.md#project-configuration-for-web-content).
+See [an example of how to configure a project when you generate web content with a tool such as React.](configuration.md#configuration-example-for-web-content-generated-by-a-tool)

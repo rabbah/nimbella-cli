@@ -20,9 +20,9 @@ Instead of deploying your entire project each time you make a change to the file
 
 *   Project structure
 *   Project content
-*   [Project configuration](#adding-project-configuration) (if you have created one)
+*   [Project configuration](configuration.md) (if you have created one)
 
-This is a great time-saver during project development and also helps [facilitate deployment when your project is large](#factors-in-choosing-project-size).
+This is a great time-saver during project development and also helps [facilitate deployment when your project is large](projects.md#factors-in-choosing-project-size).
 
 Consider the following example of an `example4` project. The output from standard deployment is shown here:
 
@@ -54,11 +54,11 @@ Deployed actions:
 Skipped 1 unchanged action
 ```
 
-Changes to actions and web content are tracked by means of digests created by the deployer and described in more detail in [Deployer recordkeeping](#deployer-recordkeeping). The deployer skips the uploads of actions and web content whose digests have not changed. Digests are computed over an action’s contents and also its metadata, so if you use a [project configuration](#adding-project-configuration) file to change the properties of an action, those changes are detected as well.
+Changes to actions and web content are tracked by means of digests created by the deployer and described in more detail in [Deployer recordkeeping](#deployer-recordkeeping). The deployer skips the uploads of actions and web content whose digests have not changed. Digests are computed over an action’s contents and also its metadata, so if you use a [project configuration](configuration.md) file to change the properties of an action, those changes are detected as well.
 
 The `--incremental` option also skips rezipping large multi-file actions whose included contents are older than the last zip file.
 
-The `--incremental` option is accurate in determining what has changed unless you add build steps. After you add build steps, some heuristics come into play, as discussed in [Build States and the Effect of --incremental on Builds](#build-states-and-the-effect-of-incremental-on-builds).
+The `--incremental` option is accurate in determining what has changed unless you add build steps. After you add build steps, some heuristics come into play, as discussed in [Build States and the Effect of --incremental on Builds](building.md#build-states-and-the-effect-of-incremental-on-builds).
 
 
 #### Project watching for incremental deployment
@@ -80,7 +80,7 @@ Deployed actions:
 Deployment complete.  Resuming watch.
 ```
 
-The `project watch` command accepts a list of projects and most of the flags that project `deploy` accepts, as described in [Project-Level Deployment Commands](#project-level-deployment-commands). An exception is `--incremental`, which is assumed.
+The `project watch` command accepts a list of projects and most of the flags that project `deploy` accepts, as described in [Project-Level Deployment Commands](commands.md#project-level-deployment-commands). An exception is `--incremental`, which is assumed.
 
 ### Deploying Portions of Projects Selectively
 
@@ -181,7 +181,7 @@ As shown in the following example, the `action get` command output shows the nam
 
 ##### Typical action get command output
 
-In this example, the `action get` command retrieves the annotation for the `demo/hello` action from [example1](#example-create-and-deploy-a-project-with-a-single-action):
+In this example, the `action get` command retrieves the annotation for the `demo/hello` action from [example1](single-action-example.md):
 
 ```
 > nim action get demo/hello
@@ -279,9 +279,9 @@ If you have also deployed static web content, the `versions.json` file has a `we
 
 #### Comparing versions in your namespace versus local project
 
-The namespace vs. local project recordkeeping is particularly useful for comparing version numbers between the local copy of the project and what’s actually in your namespace. For example, as described in [Factors in choosing project boundaries](#factors-in-choosing-project-boundaries), there can be collisions between different projects trying to install the same resource. If you use the `action get` command and find that the` demo/hello` action in your namespace is at version `0.0.2` while the `.nimbella/versions.json` content tell you that the deployer last deployed version `0.0.1` from your local project, it means that the action was updated in your namespace outside the deployer or by some other project or copy of this project. At that point, you might have to inspect the deployed action further to disambiguate the two versions.
+The namespace vs. local project recordkeeping is particularly useful for comparing version numbers between the local copy of the project and what’s actually in your namespace. For example, as described in [Factors in choosing project boundaries](projects.md#factors-in-choosing-project-boundaries), there can be collisions between different projects trying to install the same resource. If you use the `action get` command and find that the` demo/hello` action in your namespace is at version `0.0.2` while the `.nimbella/versions.json` content tell you that the deployer last deployed version `0.0.1` from your local project, it means that the action was updated in your namespace outside the deployer or by some other project or copy of this project. At that point, you might have to inspect the deployed action further to disambiguate the two versions.
 
 **Notes:**
 
-*   If you have a [project configuration](#adding-project-configuration) that uses one of the options to clean an action, package or namespace prior to deploying, then the version numbering of the cleaned action starts over again at `0.0.1`.
+*   If you have a [project configuration](configuration.md) that uses one of the options to clean an action, package or namespace prior to deploying, then the version numbering of the cleaned action starts over again at `0.0.1`.
 *   If you deploy to different namespaces or API hosts at different times, the array in `versions.json` will have more than one entry, with versions for the last deployment to each distinct API host/namespace target.

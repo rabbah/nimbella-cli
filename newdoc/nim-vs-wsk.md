@@ -15,23 +15,23 @@ If you’re using `wsk` with some other OpenWhisk installation and using `nim` w
 
 ### Credential management commands in nim vs. wsk
 
-The `nim` command doesn’t read or write `~/.wskprops` the way the `wsk` binary does but instead replaces it with a more flexible [credential store](#view-the-credential-store). The `nim` command does maintain the file `~/.nimbella/wskprops` in sync with the credential store. This file has the same format as `~/.wskprops` and applies to the currently selected namespace.
+The `nim` command doesn’t read or write `~/.wskprops` the way the `wsk` binary does but instead replaces it with a more flexible [credential store](namespaces.md#view-the-credential-store). The `nim` command does maintain the file `~/.nimbella/wskprops` in sync with the credential store. This file has the same format as `~/.wskprops` and applies to the currently selected namespace.
 
-See [Credential Management to Access Nimbella Namespaces](#credential-management-to-access-nimbella-namespaces).
+See [Credential Management to Access Nimbella Namespaces](namespaces.md#credential-management-to-access-nimbella-namespaces).
 
 ### Project commands in nim vs. wsk
 
-Note that the `project` command of `nim` is not a replacement for the `wsk` project. See [About Nimbella Projects](#about-nimbella-projects).
+Note that the `project` command of `nim` is not a replacement for the `wsk` project. See [About Nimbella Projects](projects#about-nimbella-projects).
 
 The `project` `deploy and project watch `commands can operate on a logical grouping of OpenWhisk entities as well as other types of resources.
 
-See [Project-Level Deployment Commands](#project-level-deployment-commands).
+See [Project-Level Deployment Commands](commands.md#project-level-deployment-commands).
 
 ### Entity management commands in nim vs. wsk
 
 The `action`, `activation`, `namespace`, `package`, `route`, `rule` and `trigger` commands in nim each manage the corresponding type of entity as defined by Apache OpenWhisk. The syntax for these seven commands approximates that of like-named commands of the `wsk` binary provided by the Apache OpenWhisk project, except that `route` is used in place of api. The implementation of these commands is derived from the Adobe I/O Runtime open source project.
 
-See [Entity Management Commands](#entity-management-commands).
+See [Entity Management Commands](commands.md#entity-management-commands).
 
 ### Using Whisk commands in switching namespaces
 
@@ -55,11 +55,11 @@ The term _action_ is used to denote a serverless function, following [Apache Ope
 
 In Nimbella, as in OpenWhisk, the unit of authorization is called a _[namespace](https://github.com/apache/incubator-openwhisk/blob/master/docs/reference.md#namespaces-and-packages)_. As in all OpenWhisk deployments, a namespace contains [actions](https://github.com/apache/incubator-openwhisk/blob/master/docs/actions.md) that are optionally grouped into _[packages](https://github.com/apache/incubator-openwhisk/blob/master/docs/packages.md)_. (OpenWhisk has additional entities called _[rules](https://github.com/apache/incubator-openwhisk/blob/master/docs/triggers_rules.md)_, _[triggers](https://github.com/apache/incubator-openwhisk/blob/master/docs/triggers_rules.md)_, _[routes](https://github.com/apache/incubator-openwhisk/blob/master/docs/apigateway.md)_ (aka “API gateway”), and _[activations](https://github.com/apache/incubator-openwhisk/blob/master/docs/actions.md)_; the `nim` command supports these individually but not as part of a project.
 
-Going beyond OpenWhisk, a Nimbella namespace contains additional resources, such as object store buckets for web content and database instances, which are managed as part of the namespace. The [Create a Nimbella Namespace](#create-a-nimbella-namespace) section explains how to obtain your first namespace. The [Create and Manage Multiple Namespaces](#create-and-manage-multiple-namespaces) section discusses how to obtain and manage additional namespaces.
+Going beyond OpenWhisk, a Nimbella namespace contains additional resources, such as object store buckets for web content and database instances, which are managed as part of the namespace. The [Create a Nimbella Namespace](namespaces.md#create-a-nimbella-namespace) section explains how to obtain your first namespace. The [Create and Manage Multiple Namespaces](namespaces.md#create-and-manage-multiple-namespaces) section discusses how to obtain and manage additional namespaces.
 
 ### Annotations by the Nimbella deployer
 
-OpenWhisk supports [annotations](https://github.com/apache/incubator-openwhisk/blob/master/docs/annotations.md) on actions and packages. The deployer generates an annotation of its own in each action and package that it deploys. See [Deployer Recordkeeping](#deployer-recordkeeping).
+OpenWhisk supports [annotations](https://github.com/apache/incubator-openwhisk/blob/master/docs/annotations.md) on actions and packages. The deployer generates an annotation of its own in each action and package that it deploys. See [Deployer Recordkeeping](deployer-features.md#deployer-recordkeeping).
 
 ### Project configuration
 
