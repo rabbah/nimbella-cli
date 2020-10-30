@@ -1,4 +1,2 @@
-# Usage
-<!-- usage -->
 # Commands
 <!-- commands -->
