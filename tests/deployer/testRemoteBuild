@@ -27,15 +27,15 @@ cd $SELFDIR
 # We support only answers with a simple string in the `body` element.
 function testAction() {
   local project=$1
-	local action=$2
-	local expected=$3
+  local action=$2
+  local expected=$3
   nim namespace clean --force --justwhisk
   nim project deploy $project --remote-build
-	RESULT=$(nim action invoke $action | jq -r .body)
-	if [ "$RESULT" != "$expected" ]; then
-		 echo "Expected '$expected' but got '$RESULT'"
-		 exit 1
-	fi
+  RESULT=$(nim action invoke $action | jq -r .body)
+  if [ "$RESULT" != "$expected" ]; then
+     echo "Expected '$expected' but got '$RESULT'"
+     exit 1
+  fi
 }
 
 # Test that the code of an action is binary.  With some action-loop runtimes
@@ -45,20 +45,33 @@ function testAction() {
 function testBinary() {
   local action=$1
   BINARY=$(nim action get $action | jq -r .exec.binary)
-	if [ "$BINARY" != "true" ]; then
-		 echo "Action '$action' should be binary but isn't"
-		 exit 1
-	fi
+  if [ "$BINARY" != "true" ]; then
+     echo "Action '$action' should be binary but isn't"
+     exit 1
+  fi
 }
 
 # Run the tests for simple action-only cases
 set -e
+# golang default (1.15)
+rm -f go/project.yml
 testAction go hello "Hello, stranger!"
 testBinary hello
+# golang 1.12
+echo "packages:" > go/project.yml
+echo "  - name: default" >> go/project.yml
+echo "    actions:" >> go/project.yml
+echo "      - name: hello" >> go/project.yml
+echo "        runtime: 'go:1.12'" >> go/project.yml
+testAction go hello "Hello, stranger!"
+testBinary hello
+# swift single source file
 testAction swift hello "To be implemented"
 testBinary hello
+# swift multiple source file setup
 testAction swift-multi hello "Hello stranger!"
 testBinary hello
+# java (not using mvn or gradle ... those cases are tested by qrcode)
 testAction java hello "Hello stranger!"
 testBinary hello
 
