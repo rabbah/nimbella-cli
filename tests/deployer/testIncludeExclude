@@ -94,6 +94,41 @@ fi
 if [[ "$WEB" == *"index.html"* ]]; then
    echo "Error: web content was deployed but should not have been"
    exit 1
-fi  
+fi
+
+# Deploy only printer/notify
+echo "Deploying only printer/notify"
+nim namespace clean --force
+nim project deploy printer --include printer/notify
+OW=$(nim namespace get)
+WEB=$(nim web list)
+if [[ "$OW" == *"admin"* ]]; then
+	 echo "Error: the admin package was deployed but should not have been"
+	 exit 1
+fi
+if [[ "$OW" != *"printer/notify"* ]]; then
+	 echo "Error: the printer/notify action was not deployed but should have been"
+	 exit 1
+fi
+if [[ "$OW" == *"printer/update"* ]]; then
+	 echo "Error: the printer/update action was deployed but should not have been"
+	 exit 1
+fi
+if [[ "$OW" == *"printer/get"* ]]; then
+	 echo "Error: the printer/get action was not deployed but should not have been"
+	 exit 1
+fi
+if [[ "$OW" == *"printer/create"* ]]; then
+	 echo "Error: the printer/create action was deployed but should not have been"
+	 exit 1
+fi
+if [[ "$OW" == *"printer/list"* ]]; then
+	 echo "Error: the printer/list action was deployed but should not have been"
+	 exit 1
+fi
+if [[ "$WEB" == *"index.html"* ]]; then
+   echo "Error: web content was deployed but should not have been"
+   exit 1
+fi
 
 echo "Test succeeded"
