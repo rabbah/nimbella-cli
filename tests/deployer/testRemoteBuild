@@ -21,6 +21,8 @@
 # This tests remote builds
 
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DEMODIR="$SELFDIR/../../../demo-projects"
+MAINDIR="$SELFDIR/../../../main"
 cd $SELFDIR
 
 # Deploy a project containing a test action, then invoke that action and verify the answer
@@ -51,12 +53,24 @@ function testBinary() {
   fi
 }
 
-# Run the tests for simple action-only cases
+# Test that a qr action can be invoked and returns an image
+function testQr() {
+  local action=$1
+  RESULT=$(nim action invoke $action -p text foobar | jq -r .body)
+	if [[ "$RESULT" != *"data:image/png"* ]]; then
+		 echo "Action '$action' did not return an image"
+	fi
+}
+
 set -e
+
+# Run the tests for simple action-only cases
+
 # golang default (1.15)
 rm -f go/project.yml
 testAction go hello "Hello, stranger!"
 testBinary hello
+
 # golang 1.12
 echo "packages:" > go/project.yml
 echo "  - name: default" >> go/project.yml
@@ -65,17 +79,59 @@ echo "      - name: hello" >> go/project.yml
 echo "        runtime: 'go:1.12'" >> go/project.yml
 testAction go hello "Hello, stranger!"
 testBinary hello
+
 # swift single source file
 testAction swift hello "To be implemented"
 testBinary hello
+
 # swift multiple source file setup
 testAction swift-multi hello "Hello stranger!"
 testBinary hello
+
 # java (not using mvn or gradle ... those cases are tested by qrcode)
 testAction java hello "Hello stranger!"
 testBinary hello
 
 # Deploy some of our demos and test for failures
-# TODO
+
+# qrcode, both actions, using mvn for the java one
+nim namespace clean --force --justwhisk
+rm -fr qrcode
+cp -r $DEMODIR/qrcode .
+nim project deploy qrcode --remote-build
+testQr qr
+testBinary qr
+testQr qr-java
+testBinary qr-java
+
+# qrcode, java action only, using gradle this time
+nim namespace clean --force --justwhisk
+rm -fr qrcode
+cp -r $DEMODIR/qrcode .
+THE_BUILD=qrcode/packages/default/qr-java/build.sh
+sed -e 's/BUILD="maven"/BUILD="gradle"/g' <  $THE_BUILD > _build_
+chmod +x _build_
+mv _build_ $THE_BUILD
+nim project deploy qrcode --remote-build --include default/qr-java
+testQr qr-java
+testBinary qr-java
+
+# the chat demo (exercises web builds as well as actions)
+nim namespace clean --force --justwhisk
+rm -fr chat
+cp -r $DEMODIR/chat .
+nim project deploy chat --remote-build
+RESULT=$(nim action invoke chatroom/getMessages | jq -r .returnCode)
+if [ "$RESULT" != "0" ]; then
+	 echo "chatroom/getMessages did not respond as expected"
+	 exit 1
+fi
+RESULT=$(nim web get index.html)
+if [[ "$RESULT" != *"Nimbella Chatroom"* ]]; then
+	 echo "chatroom web content does not appear correct"
+	 exit 1
+fi
+
+# TODO other runtimes (esp. python and php)
 
 echo "Test succeeded"

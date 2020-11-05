@@ -35,5 +35,7 @@ tests/deployer/webCache/project.yml
 tests/deployer/configTypes/project.yml
 tests/deployer/parameters
 tests/deployer/go/project.yml
+tests/deployer/qrcode/
+tests/deployer/chat/
 /oclif.manifest.json
 /bin/nim
