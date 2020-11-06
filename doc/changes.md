@@ -1,5 +1,14 @@
 # Nimbella CLI (and Workbench) Change History
 
+## Changes in release 1.9.2
+
+- `nim action get <name> --url` provides a better answer for use in front-end code
+- an abbreviated namespace name that is ambiguous now prompts instead of terminating the command
+- we fixed a bug that caused `--include` not to work for individual action names
+- on `nim project deploy`, when `--env` names a non-existent file, the deployment terminates earlier with a clearer message
+- when an action, package, rule, or trigger is displayed in the workbench sidecar, the delete button now works correctly
+- when you issue `new <pkg>/<action>` in the workbench and `<pkg>` doesn't exist, you get an immediate informative error instead of an opaque one when deploying
+
 ## Changes in release 1.9.1
 
 - fix some errors in installation as a dependency
