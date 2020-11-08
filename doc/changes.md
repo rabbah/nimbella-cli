@@ -1,5 +1,9 @@
 # Nimbella CLI (and Workbench) Change History
 
+## Changes in release 1.9.3
+
+- Fix bugs in `nim auth refresh` and `nim commander`
+
 ## Changes in release 1.9.2
 
 - `nim action get <name> --url` provides a better answer for use in front-end code
