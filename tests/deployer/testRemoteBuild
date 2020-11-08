@@ -33,7 +33,14 @@ function testAction() {
   local expected=$3
   nim namespace clean --force --justwhisk
   nim project deploy $project --remote-build
-  RESULT=$(nim action invoke $action | jq -r .body)
+  ACTIVATION=$(nim action invoke $action -f)
+	STATUS=$(echo "$ACTIVATION" | jq -r .response.status)
+	if [ "$STATUS" != "success" ]; then
+	   echo "Invocation of '$action' in '$project' failed"
+		 echo "$ACTIVATION"
+		 exit 1
+	fi
+	RESULT=$(echo "$ACTIVATION" | jq -r .response.result.body)
   if [ "$RESULT" != "$expected" ]; then
      echo "Expected '$expected' but got '$RESULT'"
      exit 1
@@ -56,7 +63,14 @@ function testBinary() {
 # Test that a qr action can be invoked and returns an image
 function testQr() {
   local action=$1
-  RESULT=$(nim action invoke $action -p text foobar | jq -r .body)
+  ACTIVATION=$(nim action invoke $action -p text foobar -f)
+	STATUS=$(echo $ACTIVATION | jq -r .response.status)
+	if [ "$STATUS" != "success" ]; then
+	   echo "Invocation of '$action' in 'qrcode' failed"
+		 echo "$ACTIVATION"
+		 exit 1
+	fi
+	RESULT=$(echo $ACTIVATION | jq -r .response.result.body)
 	if [[ "$RESULT" != *"data:image/png"* ]]; then
 		 echo "Action '$action' did not return an image"
 	fi
