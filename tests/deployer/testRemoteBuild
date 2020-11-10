@@ -131,20 +131,29 @@ testQr qr-java
 testBinary qr-java
 
 # the chat demo (exercises web builds as well as actions)
-nim namespace clean --force --justwhisk
-rm -fr chat
-cp -r $DEMODIR/chat .
-nim project deploy chat --remote-build
-RESULT=$(nim action invoke chatroom/getMessages | jq -r .returnCode)
-if [ "$RESULT" != "0" ]; then
-	 echo "chatroom/getMessages did not respond as expected"
-	 exit 1
-fi
-RESULT=$(nim web get index.html)
-if [[ "$RESULT" != *"Nimbella Chatroom"* ]]; then
-	 echo "chatroom web content does not appear correct"
-	 exit 1
-fi
+
+# Disable for the moment: this test sometimes blows the 2 minute limit on execution.
+# An 'npm install' of a basic react configuration takes slightly over a minute on my machine.
+# I suspect it can take longer in a cold node container which has no npm cache.
+# Typical react build times are 15-20 seconds.  Then there is the time to upload the resulting
+# resources which varies somewhat depending on GCS internal state.
+# When it manages to complete in 2 minutes it succeeds.  This happens often but not reliably
+# enough to put in an automated test.
+
+#nim namespace clean --force --justwhisk
+#rm -fr chat
+#cp -r $DEMODIR/chat .
+#nim project deploy chat --remote-build
+#RESULT=$(nim action invoke chatroom/getMessages | jq -r .returnCode)
+#if [ "$RESULT" != "0" ]; then
+#	 echo "chatroom/getMessages did not respond as expected"
+#	 exit 1
+#fi
+#RESULT=$(nim web get index.html)
+#if [[ "$RESULT" != *"Nimbella Chatroom"* ]]; then
+#	 echo "chatroom web content does not appear correct"
+#	 exit 1
+#fi
 
 # TODO other runtimes (esp. python and php)
 
