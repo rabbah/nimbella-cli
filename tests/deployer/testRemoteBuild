@@ -18,11 +18,11 @@
 # from Nimbella Corp.
 #
 
-# This tests remote builds
+# This tests remote builds.  The default behavior is to run all the contained tests except for
+# the chat demo test.  A single optional argument will run a single test, including chat.
 
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 DEMODIR="$SELFDIR/../../../demo-projects"
-MAINDIR="$SELFDIR/../../../main"
 cd $SELFDIR
 
 # Deploy a project containing a test action, then invoke that action and verify the answer
@@ -81,80 +81,103 @@ set -e
 # Run the tests for simple action-only cases
 
 # golang default (1.15)
-rm -f go/project.yml
-testAction go hello "Hello, stranger!"
-testBinary hello
+if [ -z "$1" ] || [ "$1" == "go15" ]; then
+	 echo "golang default (1.15)"
+	 rm -f go/project.yml
+	 testAction go hello "Hello, stranger!"
+	 testBinary hello
+	 echo "test suceeded"
+fi
 
 # golang 1.12
-echo "packages:" > go/project.yml
-echo "  - name: default" >> go/project.yml
-echo "    actions:" >> go/project.yml
-echo "      - name: hello" >> go/project.yml
-echo "        runtime: 'go:1.12'" >> go/project.yml
-testAction go hello "Hello, stranger!"
-testBinary hello
+if [ -z "$1" ] || [ "$1" == "go12" ]; then
+	 echo "golang 1.12"
+	 echo "packages:" > go/project.yml
+	 echo "  - name: default" >> go/project.yml
+	 echo "    actions:" >> go/project.yml
+	 echo "      - name: hello" >> go/project.yml
+	 echo "        runtime: 'go:1.12'" >> go/project.yml
+	 testAction go hello "Hello, stranger!"
+	 testBinary hello
+	 echo "test succeeded"
+fi
 
 # swift single source file
-testAction swift hello "To be implemented"
-testBinary hello
+if [ -z "$1" ] || [ "$1" == "swift" ]; then
+   echo "swift single"
+	 testAction swift hello "To be implemented"
+	 testBinary hello
+	 echo "test succeeded"
+fi
 
 # swift multiple source file setup
-testAction swift-multi hello "Hello stranger!"
-testBinary hello
+if [ -z "$1" ] || [ "$1" == "swift-multi" ]; then
+	 echo "swift multi-file"
+	 testAction swift-multi hello "Hello stranger!"
+	 testBinary hello
+	 echo "test succeeded"
+fi
 
 # java (not using mvn or gradle ... those cases are tested by qrcode)
-testAction java hello "Hello stranger!"
-testBinary hello
+if [ -z "$1" ] || [ "$1" == "java" ]; then
+	 echo "java"
+	 testAction java hello "Hello stranger!"
+	 testBinary hello
+	 echo "test succeeded"
+fi
 
 # Deploy some of our demos and test for failures
 
 # qrcode, both actions, using mvn for the java one
-nim namespace clean --force --justwhisk
-rm -fr qrcode
-cp -r $DEMODIR/qrcode .
-nim project deploy qrcode --remote-build
-testQr qr
-testBinary qr
-testQr qr-java
-testBinary qr-java
+if [ -z "$1" ] || [ "$1" == "qrcode" ]; then
+	 echo "qrcode, all actions, maven"
+	 nim namespace clean --force --justwhisk
+	 rm -fr qrcode
+	 cp -r $DEMODIR/qrcode .
+	 nim project deploy qrcode --remote-build
+	 testQr qr
+	 testBinary qr
+	 testQr qr-java
+	 testBinary qr-java
+	 echo "test succeeded"
+fi
 
 # qrcode, java action only, using gradle this time
-nim namespace clean --force --justwhisk
-rm -fr qrcode
-cp -r $DEMODIR/qrcode .
-THE_BUILD=qrcode/packages/default/qr-java/build.sh
-sed -e 's/BUILD="maven"/BUILD="gradle"/g' <  $THE_BUILD > _build_
-chmod +x _build_
-mv _build_ $THE_BUILD
-nim project deploy qrcode --remote-build --include default/qr-java
-testQr qr-java
-testBinary qr-java
+if [ -z "$1" ] || [ "$1" == "gradle" ]; then
+	 echo "qrcode, Java only, gradle"
+	 nim namespace clean --force --justwhisk
+	 rm -fr qrcode
+	 cp -r $DEMODIR/qrcode .
+	 THE_BUILD=qrcode/packages/default/qr-java/build.sh
+	 sed -e 's/BUILD="maven"/BUILD="gradle"/g' <  $THE_BUILD > _build_
+	 chmod +x _build_
+	 mv _build_ $THE_BUILD
+	 nim project deploy qrcode --remote-build --include default/qr-java
+	 testQr qr-java
+	 testBinary qr-java
+	 echo "test succeeded"
+fi
 
-# the chat demo (exercises web builds as well as actions)
-
-# Disable for the moment: this test sometimes blows the 2 minute limit on execution.
-# An 'npm install' of a basic react configuration takes slightly over a minute on my machine.
-# I suspect it can take longer in a cold node container which has no npm cache.
-# Typical react build times are 15-20 seconds.  Then there is the time to upload the resulting
-# resources which varies somewhat depending on GCS internal state.
-# When it manages to complete in 2 minutes it succeeds.  This happens often but not reliably
-# enough to put in an automated test.
-
-#nim namespace clean --force --justwhisk
-#rm -fr chat
-#cp -r $DEMODIR/chat .
-#nim project deploy chat --remote-build
-#RESULT=$(nim action invoke chatroom/getMessages | jq -r .returnCode)
-#if [ "$RESULT" != "0" ]; then
-#	 echo "chatroom/getMessages did not respond as expected"
-#	 exit 1
-#fi
-#RESULT=$(nim web get index.html)
-#if [[ "$RESULT" != *"Nimbella Chatroom"* ]]; then
-#	 echo "chatroom web content does not appear correct"
-#	 exit 1
-#fi
+# the chat demo (exercises web builds as well as actions).
+# This test is not enabled by default and must be run explicitly.
+if [ "$1" == "chat" ]; then
+	 echo "remote build of chat demo"
+	 nim namespace clean --force --justwhisk
+	 rm -fr chat
+	 cp -r $DEMODIR/chat .
+	 nim project deploy chat --remote-build
+	 RESULT=$(nim action invoke chatroom/getMessages | jq -r .returnCode)
+	 if [ "$RESULT" != "0" ]; then
+	 		echo "chatroom/getMessages did not respond as expected"
+	 		exit 1
+	 fi
+	 RESULT=$(nim web get index.html)
+	 if [[ "$RESULT" != *"Nimbella Chatroom"* ]]; then
+	 		echo "chatroom web content does not appear correct"
+	 		exit 1
+	 fi
+fi
 
 # TODO other runtimes (esp. python and php)
 
-echo "Test succeeded"
+echo "All tests succeeded"
