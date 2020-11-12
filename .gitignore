@@ -37,5 +37,6 @@ tests/deployer/parameters
 tests/deployer/go/project.yml
 tests/deployer/qrcode/
 tests/deployer/chat/
+tests/deployer/calculator/
 /oclif.manifest.json
 /bin/nim
