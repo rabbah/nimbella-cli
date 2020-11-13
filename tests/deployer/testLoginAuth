@@ -23,6 +23,7 @@
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SELFDIR
 
+# The following auth goes with the namespace of user dtest@nimbella.com on nimgcp
 AUTH=43faf37d-7ec4-474f-aada-f0e18f25fa15:HRbKryA5OP16dBT8nAODZOYZqgkCdO9Vtgx8glV6oNlOhYzHkSIv2U6SzTRboOjJ
 if [ -z "$NIMBELLA_DIR" ]; then
 	 WSKPROPS="$HOME/.nimbella/wskprops"
@@ -31,6 +32,7 @@ else
 fi
 
 rm -f "$WSKPROPS"
+nim auth logout dtestnim-i9jmlbfikan
 nim auth login --auth $AUTH
 if [ ! -f "$WSKPROPS" ]; then
 	 echo "The wsk properties file was not properly updated"

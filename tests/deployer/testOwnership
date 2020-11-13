@@ -19,17 +19,12 @@
 #
  
 # Test the feature that allows projects to own namespaces
-
-WBTEST_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJqZWN0Ijoid2J0ZXN0QG5pbWJlbGxhLmNvbSIsIm5hbWVzcGFjZSI6IndidGVzdG5pLWdyaW5qcHNqbnVoIiwidmVyaWZpZXIiOiJjNjg0YzFmZWRlM2JjYTdjMDE0ZTdjODM2YzkzYmM0Yy03YzY3OTU4ODVmNmRjMGRjZjAwMDJkYWY5ZDc1M2Y4YzYxNzUwMDkyNTEzMDFiZTc0Yjk5ODQ3YmUzMGQ4ZjQxIiwiaWF0IjoxNjAwNzgxMTQ5LCJhdWQiOiJuaW1iZWxsYSJ9.7XyL0JPJL2X-nCI3lZNJWmypBO8nhHkpLqbcouEOf_U"
-DTEST_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJqZWN0IjoiZHRlc3RAbmltYmVsbGEuY29tIiwibmFtZXNwYWNlIjoiZHRlc3RuaW0taTlqbWxiZmlrYW4iLCJ2ZXJpZmllciI6IjhlZmFiODhiZDczZTRhZWVjNzE3ZDY4YjQ1Yjg5NTc1LTMyYzIwYTBkZDg1YmZmMzM5M2U1ZWZiOTYyOWM5ODY0MWYyZDQzNzcxMDk1NWViYTY4ZDI1YzFkMWU1ZDM0ODgiLCJpYXQiOjE2MDI2Njc4NDAsImF1ZCI6Im5pbWJlbGxhIn0.nFDX8bA2j528EQyQhFZXcCnRZWDzRr4iopxXRizzqh0"
+# The test employs the namespaces of users wbtest@nimbella.com and dtest@nimbella.com
+# on nimgcp but does not switch the current namespace.
 
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SELFDIR
 set -e
-
-# Ensure access to the needed namespaces
-nim login "$WBTEST_TOKEN"
-nim login "$DTEST_TOKEN"
 
 # Deploy the ownership project twice, once for test, once for production
 nim project deploy ownership

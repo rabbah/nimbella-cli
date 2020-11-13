@@ -18,17 +18,76 @@
 # from Nimbella Corp.
 #
 
-# This runs those tests that are self-verifying.  
-# Currently a single cmdline argument is passed to testMainActions only.  This is undoubtedly temporary
+# This runs those tests that are self-verifying and expected to run routinely under Jenkins.  
+# Not all tests in this directory are run by this script.
+# The SMALLER_TESTS list is run first, followed optionally by the special tests 'Demos' and 'MainActions' which require a test project
+# The MainActions test is not in this directory but is kept in `main/tests/actions`.
+
+# If no argument or an unrecognized argument is given, most tests use the namespace 'test' on the current project, whatever it might be.
+# If the --ongcp argument is given, most tests use the alternate test project wbtest@nimbella.com on nimgcp (it has a web bucket and redis).
+# A few tests run explicitly on wbtest@nimbella.com or on dtest@nimbella.com (which has no web bucket or redis).
+# The --ongcp argument also causes only SMALLER_TESTS to run so that you don't need to have a test project up to run that way.
+
+# The order of tests listed in SMALLER_TESTS is arbitrary and should perhaps be perturbed from time to time to prove that
+# We are temporarily listing RemoteBuild last because that test will only run on a test project until nimgcp is updated.
+declare -a SMALLER_TESTS
+SMALLER_TESTS=(
+    ActionWrapping 
+    Watch
+    MultiSubstitute
+    SplitParams
+    IncludeExclude
+    WebCache
+    SharedBuild
+    Filtering
+    WebInclude
+    Ignoring
+    EmptyReduce
+    Incremental
+    Environment
+    Errors
+    Unweb
+    ValidateRuntime
+    ConfigTypes
+    LoginAuth
+    Ownership
+    EmptyZip
+    RemoteBuild
+)
+
+# These tokens grant access to the two permanent testing namespaces
+WBTEST_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJqZWN0Ijoid2J0ZXN0QG5pbWJlbGxhLmNvbSIsIm5hbWVzcGFjZSI6IndidGVzdG5pLWdyaW5qcHNqbnVoIiwidmVyaWZpZXIiOiJjNjg0YzFmZWRlM2JjYTdjMDE0ZTdjODM2YzkzYmM0Yy03YzY3OTU4ODVmNmRjMGRjZjAwMDJkYWY5ZDc1M2Y4YzYxNzUwMDkyNTEzMDFiZTc0Yjk5ODQ3YmUzMGQ4ZjQxIiwiaWF0IjoxNjAwNzgxMTQ5LCJhdWQiOiJuaW1iZWxsYSJ9.7XyL0JPJL2X-nCI3lZNJWmypBO8nhHkpLqbcouEOf_U"
+DTEST_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJqZWN0IjoiZHRlc3RAbmltYmVsbGEuY29tIiwibmFtZXNwYWNlIjoiZHRlc3RuaW0taTlqbWxiZmlrYW4iLCJ2ZXJpZmllciI6IjhlZmFiODhiZDczZTRhZWVjNzE3ZDY4YjQ1Yjg5NTc1LTMyYzIwYTBkZDg1YmZmMzM5M2U1ZWZiOTYyOWM5ODY0MWYyZDQzNzcxMDk1NWViYTY4ZDI1YzFkMWU1ZDM0ODgiLCJpYXQiOjE2MDI2Njc4NDAsImF1ZCI6Im5pbWJlbGxhIn0.nFDX8bA2j528EQyQhFZXcCnRZWDzRr4iopxXRizzqh0"
 
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 MAINDIR=$SELFDIR/../../../main
 cd $SELFDIR
 
-echo "A failure here is expected sometimes and always harmless:"
-nim auth logout dtestnim-i9jmlbfikan
 set -e
 
+# Preserve current namespace and arrange to restore on exit
+CURRENT_NS=$(nim auth current)
+CURRENT_HOST=$(nim auth current --apihost)
+function restore() {
+    nim auth switch "$CURRENT_NS" --apihost "$CURRENT_HOST"
+}
+trap restore EXIT
+
+# Ensure access to the needed namespaces
+nim login "$WBTEST_TOKEN"
+nim login "$DTEST_TOKEN"
+
+# Set the current namespace for most tests based on the flag
+if [ "$1" == "--ongcp" ]; then
+	 nim auth switch wbtestni-grinjpsjnuh --apihost https://apigcp.nimbella.io
+else
+   pushd $MAINDIR
+   # This will quite properly fail if your current project happens to be nimgcp: it does not have demos test
+   bin/nimadmin user set demos test
+   popd
+fi
+
+# Trivial runner for a test, just adds some bracketing verbiage to make the console log easier to read
 function runTest() {
     echo "------------------------"
     echo "Starting test$1"
@@ -36,28 +95,18 @@ function runTest() {
     echo "test$1 succeeded"
 }
 
-# If no argument or the --postdeploy argument is given, use the namespace 'test' on the current project, whatever it might be.
-# If the --ongcp argument is given, use the alternate test project wbtest@nimbella.com as defined in the local credential store on nimgcp
-# Use of that argument implies that you have this in your credential store.
-# The --postdeploy flag is passed to the main tests regardless.  To run them otherwise, run them individually.
-
-if [ "$1" == "--ongcp" ]; then
-	 nim auth switch wbtestni-grinjpsjnuh --apihost https://apigcp.nimbella.io
-else
-   pushd $MAINDIR
-   bin/nimadmin user set demos test
-	 popd
-fi
-
-# Ownership should come after LoginAuth so that the credential entry it needs exists
-for i in ActionWrapping RemoteBuild Watch MultiSubstitute SplitParams IncludeExclude WebCache SharedBuild Filtering WebInclude Ignoring EmptyReduce Incremental Environment Errors Unweb ValidateRuntime ConfigTypes LoginAuth Ownership EmptyZip; do
+# Run the tests that don't require a test project
+for i in ${SMALLER_TESTS[*]}; do
    runTest $i
 done
 if [ "$1" == "--ongcp" ]; then
 	 echo "Running on 'nimgcp' so skipping actions and demos tests"
 	 exit 0
 fi
+
+# Optionally run the tests that do require a test project 
 runTest Demos --postdeploy
+
 echo "------------------------"
 echo "Starting testMainActions"
 $MAINDIR/tests/actions/testMainActions --postdeploy

@@ -18,14 +18,19 @@
 # from Nimbella Corp.
 #
 
-# This tests actionWrapping
-# the chat demo test.  A single optional argument will run a single test, including chat.
+# This tests actionWrapping.  This test runs explicitly on the namespace
+# of user dtest@nimbella.com, which has no bucket.
 
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 DEMODIR="$SELFDIR/../../../demo-projects"
 cd $SELFDIR
 
 set -e
+# Save current NS so that tests that come after this one are not perturbed.
+# The top level driver will restore the original NS on failure or at the end of the test run
+CURRENT_NS=$(nim auth current)
+CURRENT_HOST=$(nim auth current --apihost)
+nim auth switch dtestnim-
 nim namespace clean --force
 rm -fr calculator
 cp -r $DEMODIR/calculator .
@@ -37,4 +42,6 @@ LOGO_URL=$(nim action get logo.png --url)
 curl -s $LOGO_URL > calculator/compare_logo.png
 diff -q calculator/web/index.html calculator/compare_index.html
 diff -q calculator/web/logo.png calculator/compare_logo.png
+# Restore the general testing namespace
+nim auth switch "$CURRENT_NS" --apihost "$CURRENT_HOST"
 echo "All tests succeeded"
