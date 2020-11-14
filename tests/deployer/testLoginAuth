@@ -20,6 +20,10 @@
 
 # Test whether login with --auth sets .wskprops as it should
 
+# login will change current namespace, so preserve former one
+CURRENT_NS=$(nim auth current)
+CURRENT_HOST=$(nim auth current --apihost)
+
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SELFDIR
 
@@ -43,4 +47,6 @@ if [[ "$WSKPROPS" != *"A5OP16dBT8nAODZO"* ]]; then
 	 echo "The wsk properties file does not contain the correct auth"
 	 exit 1
 fi
+# restore current namespace
+nim auth switch "$CURRENT_NS" --apihost "$CURRENT_HOST"
 echo "login auth test succeeded"
