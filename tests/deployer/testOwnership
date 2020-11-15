@@ -32,15 +32,15 @@ nim project deploy ownership --production
 
 # Test that an attempt to deploy the violator project fails
 set +e
-RESULT=$(nim project deploy violator 2>&1)
+RESULT=$(nim project deploy violator --target wbtestni-grinjpsjnuh 2>&1)
 if [[ "$RESULT" != *"must be from project"* ]]; then
-	 echo "Violating deployment should have failed but didn't"
+	 echo "Violating deployment should have failed, but it either didn't fail or failed for the wrong reason"
 	 exit 1
 fi
 set -e
 
 # Clear the ownership from the two projects in question and retest violator to see that it succeeds
 nim ns free wb- dt-
-nim project deploy violator
+nim project deploy violator --target wbtestni-grinjpsjnuh
 
 echo "Test succeeded"
