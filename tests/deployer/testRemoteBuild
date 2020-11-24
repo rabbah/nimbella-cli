@@ -133,7 +133,7 @@ if [ -z "$1" ] || [ "$1" == "qrcode" ]; then
 	 echo "qrcode, all actions, maven"
 	 nim namespace clean --force --justwhisk
 	 rm -fr qrcode
-	 cp -r $DEMODIR/qrcode .
+	 cp -r $DEMODIR/qrcode-multi-lang qrcode
 	 nim project deploy qrcode --remote-build
 	 testQr qr
 	 testBinary qr
@@ -147,7 +147,7 @@ if [ -z "$1" ] || [ "$1" == "gradle" ]; then
 	 echo "qrcode, Java only, gradle"
 	 nim namespace clean --force --justwhisk
 	 rm -fr qrcode
-	 cp -r $DEMODIR/qrcode .
+	 cp -r $DEMODIR/qrcode-multi-lang qrcode
 	 THE_BUILD=qrcode/packages/default/qr-java/build.sh
 	 sed -e 's/BUILD="maven"/BUILD="gradle"/g' <  $THE_BUILD > _build_
 	 chmod +x _build_
