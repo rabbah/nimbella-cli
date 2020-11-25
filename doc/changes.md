@@ -1,5 +1,20 @@
 # Nimbella CLI (and Workbench) Change History
 
+## Changes in release 1.10
+
+- added `--web` flag to `nim action invoke`
+    - requires the action to be a web action
+    - "invokes" the action by visiting its URL
+    - in the CLI this is done using the system default browser
+    - in the workbench, content displays initially in the sidecar, with a URL hotlink that optionally switches to a separate browser tab.  The sidecar display is for inspection and is not interactive
+- added `--save-env` flag
+- fixed unfriendly exception response for `edit` of non-existent action in the workbench
+- eliminated confusing behavior in `nim auth refresh` when API host is specified with current namespace
+- the `[action|package|...]` list commands in the workbench now use the same sorting as in the CLI
+- prompting when using an abbreviated namespace now includes the API host
+- improvements to the (undocumented) action wrapping capability
+- fixed a bug in the feature that allows projects to own namespaces
+
 ## Changes in release 1.9.3
 
 - Fix bugs in `nim auth refresh` and `nim commander`
