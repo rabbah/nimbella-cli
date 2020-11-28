@@ -10,19 +10,20 @@ URL=
 # Download and unpack the tarball
 set -e
 echo Downloading the standalone 'nim' distribution for Linux from $URL
-curl $URL > /tmp/nim-install.tgz
-echo Unpacking the distribution
-pushd /tmp
+NIM_TMP="$(mktemp --directory)"
+cd $NIM_TMP
+curl -o nim-install.tgz $URL
 tar xzf nim-install.tgz
-popd
 
 # Swap in the new version
 echo Removing old installation, if any, and swapping in the new
 rm -fr /usr/local/lib/nimbella-cli
-mv /tmp/nim /usr/local/lib/nimbella-cli
+mv nim /usr/local/lib/nimbella-cli
 
 # Swap in the new symlink
 echo Removing old symlink, if any, from /usr/local/bin and establishing the new
 rm -f /usr/local/bin/nim
-ln -s /usr/local/lib/nimbella-cli/bin/nim /usr/local/bin
+ln -s /usr/local/lib/nimbella-cli/bin/nim /usr/local/bin/
+
+rm -r $NIM_TMP
 echo Installation complete
