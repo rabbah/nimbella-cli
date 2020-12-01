@@ -19,7 +19,7 @@
 # from Nimbella Corp.
 #
 
-# This script checks (or records) the HEAD githash of the aio-cli-plugin-runtime repo (branch 'dev')
+# This script checks (or records) the latest tag of the aio-cli-plugin-runtime repo (normally branch 'dev')
 # and can be used to detect whether it was changed since it was last recorded
 # Syntax:
 #   ./aioUpToDate
@@ -30,6 +30,10 @@
 #   'false' if all sanity checks pass, a check was requested, and it failed
 #   something other than 'true' or 'false' (explanatory message) if a sanity check fails
 #   no output if 'record' was requested
+
+# When checking, aio-cli-plugin-runtime must be on branch dev.
+# When recording, this check is omitted so that the commitAioPacks.sh script
+# can be used for testing.
 
 # Command line
 if [ "$1" == "record" ]; then
@@ -46,11 +50,14 @@ if [ ! -d ../aio-cli-plugin-runtime ]; then
 fi
 pushd ../aio-cli-plugin-runtime > /dev/null
 BR=$(git symbolic-ref HEAD --short)
-HASH=$(git rev-parse HEAD)
+HASH=$(git tag --list 'v*-*-*-*' --merged head | head -n1)
 popd > /dev/null
 if [ "$BR" != "dev" ]; then
 		echo "aio-cli-plugin-runtime is not on the 'dev' branch"
-		exit 0
+		if [ -z "$RECORDING" ]; then
+				exit 0
+		fi
+		echo "Recording anyway."
 fi
 
 # Record if requested

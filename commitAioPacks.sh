@@ -19,24 +19,35 @@
 # from Nimbella Corp.
 #
 #
-# This script updates package.json and aio.hash to reflect the latest commit in aio
+# This script updates package.json and aio.hash to reflect the latest tag in aio that is reachable from
+# its current head.  Normally, that must be the head of 'dev' but with the 'asis' argument that condition
+# is not checked.
 
 set -e
 SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SELFDIR
 
-# Check that aio-cli-plugin-runtime is on the dev branch with no uncommitted changes.
-pushd ../aio-cli-plugin-runtime
-DIRTY=$(git status --porcelain)
-BR=$(git symbolic-ref HEAD --short)
-popd
-if [ -n "$DIRTY" ]; then
-		echo "aio-cli-plugin-runtime has uncommitted changes"
+if [ "$1" == "asis" ]; then
+		ASIS=true
+elif [ -n "$1" ]; then
+		echo "Unexpected argument"
 		exit 1
 fi
-if [ "$BR" != "dev" ]; then
-		echo "aio-cli-plugin-runtime is not on the 'dev' branch"
-		exit 1
+
+# Except for the 'asis' case, check that aio-cli-plugin-runtime is on the dev branch with no uncommitted changes.
+if [ -z "$ASIS" ]; then
+		pushd ../aio-cli-plugin-runtime
+		DIRTY=$(git status --porcelain)
+		BR=$(git symbolic-ref HEAD --short)
+		popd
+		if [ -n "$DIRTY" ]; then
+				echo "aio-cli-plugin-runtime has uncommitted changes"
+				exit 1
+		fi
+		if [ "$BR" != "dev" ]; then
+				echo "aio-cli-plugin-runtime is not on the 'dev' branch"
+				exit 1
+		fi
 fi
 
 # Record, then retrieve, the aio hash
