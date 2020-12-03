@@ -1,5 +1,10 @@
 # Nimbella CLI (and Workbench) Change History
 
+## Changes in release 1.10.1
+
+- security improvement to Linux installer
+- rebuild with latest runtime repertoire (includes the .net runtime)
+
 ## Changes in release 1.10
 
 - added `--web` flag to `nim action invoke`
@@ -7,7 +12,7 @@
     - "invokes" the action by visiting its URL
     - in the CLI this is done using the system default browser
     - in the workbench, content displays initially in the sidecar, with a URL hotlink that optionally switches to a separate browser tab.  The sidecar display is for inspection and is not interactive
-- added `--save-env` flag
+- added `--save-env` flag to `nim action get`
 - fixed unfriendly exception response for `edit` of non-existent action in the workbench
 - eliminated confusing behavior in `nim auth refresh` when API host is specified with current namespace
 - the `[action|package|...]` list commands in the workbench now use the same sorting as in the CLI
