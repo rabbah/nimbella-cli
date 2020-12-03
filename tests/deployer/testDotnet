@@ -1,0 +1,50 @@
+#
+# Nimbella CONFIDENTIAL
+# ---------------------
+#
+#   2018 - present Nimbella Corp
+#   All Rights Reserved.
+#
+# NOTICE:
+#
+# All information contained herein is, and remains the property of
+# Nimbella Corp and its suppliers, if any.  The intellectual and technical
+# concepts contained herein are proprietary to Nimbella Corp and its
+# suppliers and may be covered by U.S. and Foreign Patents, patents
+# in process, and are protected by trade secret or copyright law.
+#
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Nimbella Corp.
+#
+
+# This tests support for the dotnet runtime
+
+SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $SELFDIR
+
+# Deploy a project containing a test action, then invoke that action and verify the answer
+# Adapted from similar but not identical code in testRemoteBuild
+function testAction() {
+  local project=$1
+  local action=$2
+  local expected=$3
+  nim namespace clean --force --justwhisk
+  nim project deploy $project
+  ACTIVATION=$(nim action invoke $action -f)
+	STATUS=$(echo "$ACTIVATION" | jq -r .response.status)
+	if [ "$STATUS" != "success" ]; then
+	   echo "Invocation of '$action' in '$project' failed"
+		 echo "$ACTIVATION"
+		 exit 1
+	fi
+	RESULT=$(echo "$ACTIVATION" | jq -r .response.result.greeting)
+  if [ "$RESULT" != "$expected" ]; then
+     echo "Expected '$expected' but got '$RESULT'"
+     exit 1
+  fi
+}
+
+set -e
+testAction dotnet hello "Hello, stranger!"
+echo "Test succeeded."
