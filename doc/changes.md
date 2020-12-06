@@ -1,5 +1,9 @@
 # Nimbella CLI (and Workbench) Change History
 
+## Changes in release 1.10.2
+
+- fixed bug that sometimes interfered with using `nimbella-cli` as a dependency in `package.json`
+
 ## Changes in release 1.10.1
 
 - security improvement to Linux installer
