@@ -50,7 +50,7 @@ if [ ! -d ../aio-cli-plugin-runtime ]; then
 fi
 pushd ../aio-cli-plugin-runtime > /dev/null
 BR=$(git symbolic-ref HEAD --short)
-HASH=$(git tag --list 'v*-*-*-*' --merged head | head -n1)
+HASH=$(git tag --list 'v*-*-*-*' --merged head | sort -r | head -n1)
 popd > /dev/null
 if [ "$BR" != "dev" ]; then
 		echo "aio-cli-plugin-runtime is not on the 'dev' branch"
