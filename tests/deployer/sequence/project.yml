@@ -1,0 +1,7 @@
+packages:
+  - name: default
+    actions:
+    - name: mySequence
+      sequence:
+        - split
+        - sort
