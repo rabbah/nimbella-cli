@@ -3,5 +3,5 @@ packages:
     actions:
     - name: mySequence
       sequence:
-        - split
-        - sort
+        - utils/split
+        - utils/sort

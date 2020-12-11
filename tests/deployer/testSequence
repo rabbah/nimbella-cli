@@ -1,0 +1,50 @@
+#
+# Nimbella CONFIDENTIAL
+# ---------------------
+#
+#   2018 - present Nimbella Corp
+#   All Rights Reserved.
+#
+# NOTICE:
+#
+# All information contained herein is, and remains the property of
+# Nimbella Corp and its suppliers, if any.  The intellectual and technical
+# concepts contained herein are proprietary to Nimbella Corp and its
+# suppliers and may be covered by U.S. and Foreign Patents, patents
+# in process, and are protected by trade secret or copyright law.
+#
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Nimbella Corp.
+#
+
+# This tests the deployment of sequences as declared in project.yml.  Based on the Apache OW example.
+
+SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+cd $SELFDIR
+
+set -e
+nim project deploy sequence
+RESULT=$(nim action invoke mySequence --param payload '"Over-ripe sushi,\nThe Master\nIs full of regret."')
+LENGTH=$(echo $RESULT | jq -r .length)
+LINE1=$(echo $RESULT | jq -r .lines[0])
+LINE2=$(echo $RESULT | jq -r .lines[1])
+LINE3=$(echo $RESULT | jq -r .lines[2])
+if [ $LENGTH -ne 3 ]; then
+	 echo "Length is wrong"
+	 exit 1
+elif [ "$LINE1" != "Is full of regret." ]; then
+	 echo "Line 1 is wrong"
+	 echo $LINE1
+	 exit 1
+elif [ "$LINE2" != "Over-ripe sushi," ]; then
+	 echo "Line 2 is wrong"
+	 echo $LINE2
+	 exit 1
+elif [ "$LINE3" != "The Master" ]; then
+	 echo "Line 3 is wrong"
+	 echo $LINE3
+	 exit 1
+fi
+echo "Test succeeded"
