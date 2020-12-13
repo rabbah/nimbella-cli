@@ -25,6 +25,7 @@ SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SELFDIR
 
 set -e
+nim namespace clean --force
 nim project deploy sequence
 RESULT=$(nim action invoke mySequence --param payload '"Over-ripe sushi,\nThe Master\nIs full of regret."')
 LENGTH=$(echo $RESULT | jq -r .length)
