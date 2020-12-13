@@ -36,7 +36,7 @@ fi
 
 # Test that a misspelled package in project.yml is reported in a useful way rather than an obscure one
 RESULT=$(nim project deploy errors2 2>&1)
-if [[ "$RESULT" != *"does not exist in the project"* ]]; then
+if [[ "$RESULT" != *"config but does not exist"* ]]; then
     echo "Package misspelling error not reported in the expected way"
 		echo "$RESULT"
 		exit 1
