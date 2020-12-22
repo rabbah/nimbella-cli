@@ -1,0 +1,7 @@
+packages:
+  - name: creds
+    shared: true
+    actions:
+      - name: test
+        annotations:
+          provide-api-key: true

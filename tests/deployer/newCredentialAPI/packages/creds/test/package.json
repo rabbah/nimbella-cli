@@ -1,0 +1,9 @@
+{
+  "name": "creds",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "nimbella-deployer": "https://preview-apigcp.nimbella.io/nimbella-deployer.tgz"
+  }
+}
