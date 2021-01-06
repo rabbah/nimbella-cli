@@ -302,7 +302,7 @@ workbench run
 
 Those few commands are either inappropriate for the workbench or require filesystem access, which is unavailable in a browser.
 
-When running in the workbench, the `project deploy` command can only deploy from GitHub, not from the local file system.  It also cannot deploy projects that require building (forking a process and using the local file system).  A remote building option is planned for the future.
+When running in the workbench, the `project deploy` command can only deploy from GitHub, not from the local file system.  If the project requires building as part of deployment, that build will be run remotely if possible (see [Remote Builds](#remote-builds)).  If the project configuration requires a _local_ build, then the project cannot be deployed from the workbench.
 
 The prefix `nim` is optional in front of workbench commands.
 
@@ -310,7 +310,7 @@ To transfer your credentials to the workbench running in a browser that is not t
 
 ## Nimbella namespaces
 
-You must have permission to use a specific namespace on the Nimbella platform In order to deploy a nim project and use many other nim capabilities.  A Nimbella namespace comes with storage resources which are managed as part of the namespace.
+You must have permission to use a specific namespace on the Nimbella platform in order to deploy a nim project and use many other nim capabilities.  A Nimbella namespace comes with storage resources which are managed as part of the namespace.
 
 This section contains information about how to create a Nimbella namespace, view the credential store, and perform other tasks involving namespaces.
 
@@ -684,13 +684,16 @@ You cannot have both a `.include` and `.ignore` in the same action directory.
 *   Only one file is left after applying the rules in `.ignore`.
 
 
-#### Using an action source file from elsewhere in the filesystem
+#### Using an action source file from elsewhere in the project
 
 If you use an `.include` file, it can contain entries that denote files or directories outside the action directory. Entries can be either absolute paths or paths that are relative to the action directory using standard `../` notation.
 
-**Note:** Although paths in `.include` can terminate outside the project, it becomes harder to relocate the project. It’s better practice to include files within the project. If they are directories that you want the deployer to ignore, you can put them in the root directory, as described in [About projects](#about-projects).
+**Notes:**
 
-Entries in `.include` are interpreted differently if they are absolute or relative. If the path is relative, the resulting entries in the zip file start with the last segment of the listed path. Here are two examples:
+- Although paths in `.include` are currently _permitted_ to terminate outside the project entirely, this practice is deprecated because it makes it hard to relocate the project.  It’s better practice to include all files within the project. If they are directories shared by many actions and you want the deployer to otherwise ignore them, you can put them in the root directory, as described in [About projects](#about-projects).
+- If you wish your build to execute remotely as described in [Remote Builds](remote-builds), you may not include material from outside the directory.
+
+Entries in `.include` are interpreted differently if they are absolute or contain `../` notation. If the path is relative, the resulting entries in the zip file start with the last segment of the listed path. Here are two examples:
 
 *   If you have `../../../lib/node_modules`, the contents of the node_modules directory are zipped but files inside the directory have the form `node_modules/<path>`.
 *   If you have `../../../lib/helpers.js` the file becomes just `helpers.js`.
@@ -898,7 +901,7 @@ If you do not have any GitHub account registered then `nim project deploy` will 
 nim project github:nimbella/demo-projects/visits --anon-github
 ```
 
-However, GitHub imposes severe rate limitations on anonymous access.  Many projects that you will want to deploy will be large enough that you will hit this limit routinely.  Also, you will be unable to deploy from private repos.  So, this option is really for exploring the capability only.   To really use the capability in serious development, you must have a GitHub account.  If you have one (or once you have one) you can add it to your Nimbella credentials using
+However, GitHub imposes severe rate limitations on anonymous access.  Many projects that you will want to deploy will be large enough that you will hit this limit routinely.  Also, you will be unable to deploy from private repos.  So, this option is just for exploring the capability.   To really use deployment from github in serious development, you must have a GitHub account.  If you have one (or once you have one) you can add it to your Nimbella credentials using
 
 ```
 nim auth github --initial
@@ -1150,9 +1153,56 @@ In the script case, the convention of using a `.built` marker to suppress subseq
 
 If you have problems with an incremental build, you always have the remedy of running a full deploy.
 
-**Note:** The use of this convention of using the `.built` marker is optional. If the script does not create a `.built` marker, it always runs, which is fine if the script does dependency analysis and rebuilds only what it needs to.
+**Note:** The use of the `.built` marker is optional. If the script does not create a `.built` marker, it always runs, which is fine if the script does dependency analysis and rebuilds only what it needs to.
 
 The _package.json_ case also employs a heuristic and we can't guarantee perfect accuracy. However, it works well in simple cases. Again, you always have the fallback of running a full deploy.
+
+### Remote Builds
+
+By default, building is a _local_ operation.  However, by specifying `--remote-build` on `nim project deploy` command you can cause the build to be performed in a runtime container.
+
+- For actions, the runtime will be the same as the one that will be used to run the action.
+- For web content, the remote build will always run in the `nodejs:default` runtime.
+
+**Note:**  Our runtime containers are Linux systems.  Thus, build scripts for remote building should be `build.sh` and not `build.cmd`.
+
+Possible reasons why you may want to do this are
+
+- the action compiles to native binary and running the build locally might produce the wrong result
+    - this is currently an issue with the `go` and `swift` runtimes and may extend to others over time
+- the build may incorporate native binaries through dependencies
+    - this is potentially true even of interpretive languages
+- you are initiating the build from the workbench where local storage is not available to run the build
+    - in fact, in the workbench, `--remote-build` is on by default
+
+The question of whether a build is local or remote is also affected by flags that can be added to the project configuration.  See [localBuild](#localbuild), [remoteBuild](#remotebuild), [Forcing local build behavior](#forcing-local-build-behavior) and [Forcing remote build behavior](#forcing-remote-build-behavior).
+
+#### Current Restriction
+
+A build will not work remotely if the `.include` directive denotes any files or directories outside the directory being built.  If there is already an `.include` directive that violates this rule when you issue `nim project deploy --remote-build`, you will get an early diagnostic.  If the build itself generates or modifies the `.include`, after which it violates this rule, the remote build will fail with a (possibly less helpful) diagnostic.
+
+It is an objective to liberalize this restriction in the future, to allow resources located elsewhere _in the project_.  There is no plan to support remote builds including resources that lie outside the project entirely.
+
+#### Switching between local and remote builds
+
+Often a build produces a lot of artifacts.  Some may be included in the deployed action.  Some are temporary.  None are needed to run the next build.   On a remote build, everything in the action or web directory must be uploaded to the cloud where the runtime container resides.  If you have built an action or the web directory locally, you should clean it before initiating a remote build that will affect the same directory.  The deployer may abort with a message to this effect if it detects that it is being asked to do a suspicious large upload.
+
+#### Default remote builds
+
+Certain runtimes have "default remote builds" which will occur if you specify `--remote-build` but do not have a `build.sh` for the action or web content in question.   Currently, those runtimes are `go:default` and `swift:default`.   They will be made available for all runtimes that require a native binary as the final artifact for the action.
+
+The default build will do what the runtime would do if you submitted a source file (or a zip containing source files organized appropriately for the language) directly, except that
+
+- when you submit source files directly, they are stored as the code of the action and compiled each time the action is invoked
+- if you do the default remote build, the compilation will be run at build time and what is stored for the action is the binary code.
+
+The latter is, obviously, more performant.
+
+If you specify a `build.sh` for a remote build, even in languages that have default remote builds, it _replaces_ rather than augmenting the default remote build.  This can make the `build.sh` hard to craft because details encapsulated in the default remote build can be non-obvious without knowledge of OpenWhisk runtime internals.  You can have the best of both worlds by invoking the default remote build explicitly as a step (usually the final step) of your `build.sh`.   The syntax is
+
+```
+/bin/defaultBuild
+```
 
 ---
 
@@ -1351,6 +1401,13 @@ packages:
 
 You need not specify all limits if you only wish to specify one or two.  All three of these limits must be numbers and within the range permitted by the Nimbella cloud (use `nim info --limits` to see the allowed range).  When not specified, Nimbella Cloud defaults are assumed.
 
+##### localBuild
+
+If `true`, specifies that any build done for this action must be local (even if `--remote-build` is specified).  A request to build remotely will be ignored for this action.  A project containing such an action cannot be deployed from the workbench unless the action is excluded through use of the `--exclude` or `--include` flags.  It is illegal to set both this flag and the `remoteBuild` flag to `true`.
+
+##### remoteBuild
+
+If `true`, specifies that any build done for this action must be remote (regardless of whether `--remote-build` is specified).  It is good to specify this for actions whose build will be incorrect unless done in the environment of the runtime container.  It is illegal to set both this flag and the `localBuild` flag to `true`.
 
 #### Package modifiers allowed in project.yml
 
@@ -1447,6 +1504,8 @@ bucket:
   notFoundPage: "error.html"
   strip: 1
   useCache: true
+  localBuild: true
+  remoteBuild: false
 ```
 
 The following sections have a description of the `bucket` options shown in this example.
@@ -1491,6 +1550,15 @@ You can use both `strip` and `prefixPath` to remove existing segments and then a
 ##### Specifying cache behavior
 
 The `useCache` option, if set to `true` turns on CDN cacheing and other cacheing for the deployed web content.  When the value is false (the default), web content will be served with a `Cache-Control` header that suppresses cacheing.
+
+##### Forcing local build behavior
+
+Use `localBuild` to force the web build (if any) to be local.  This flag is similar to the [localBuild](#localBuild) option for actions, except that it applies to the web build.
+
+##### Forcing remote build behavior
+
+Use `remoteBuild` to force the web build (if any) to be remote.  This flag is similar to the [remoteBuild](#remoteBuild) option for actions, except that it applies to the web build.   Remote builds for web content are always run in the `nodejs:default` container.  There is no current mechanism to select a different runtime container.
+
 
 #### Configuration example for web content generated by a tool
 
