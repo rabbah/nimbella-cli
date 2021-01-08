@@ -1,0 +1,9 @@
+packages:
+  - name: data-bucket
+    actions:
+      - name: testOld
+        limits:
+          timeout: 10000
+      - name: testNew
+        limits:
+          timeout: 10000

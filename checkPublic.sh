@@ -70,7 +70,12 @@ if [ "$HASH" != "$EXPECTED" ]; then
     fi
 		# If clean, assume it's ok to change the checked out commit
 		pushd "$PUBLIC_CLI" > /dev/null
+		set +e
 		git checkout $EXPECTED
+		if [ $? -ne 0 ]; then
+				echo "Your repo at public/nimbella-cli does not contain a needed commit ... it probably needs to be brought up to date"
+				exit 1
+		fi
 		popd > /dev/null
 fi
 
