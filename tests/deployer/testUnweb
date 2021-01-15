@@ -69,8 +69,8 @@ fi
 rm unweb/project.yml
 nim project deploy unweb
 RESULT=$(nim action get printer/notify | jq -r '.annotations[] | select(.key=="require-whisk-auth") | .value')
-if [ -n "$RESULT" ]; then
-	 echo "Unweb test failed: require-whisk-auth should be missing but isn't"
+if [ "$RESULT" != "false" ]; then
+	 echo "Unweb test failed: require-whisk-auth should be false but isn't"
    exit 1
 fi
 
