@@ -1,0 +1,41 @@
+#
+# Nimbella CONFIDENTIAL
+# ---------------------
+#
+#   2018 - present Nimbella Corp
+#   All Rights Reserved.
+#
+# NOTICE:
+#
+# All information contained herein is, and remains the property of
+# Nimbella Corp and its suppliers, if any.  The intellectual and technical
+# concepts contained herein are proprietary to Nimbella Corp and its
+# suppliers and may be covered by U.S. and Foreign Patents, patents
+# in process, and are protected by trade secret or copyright law.
+#
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Nimbella Corp.
+#
+
+# This test looks for bleedover from one action to another when YAML '&' and '<<' syntax is used to share material
+# This convention causes aliases in the parsed structure.  The deployer has to be careful not to directly mutate those aliased subobjects
+
+SELFDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+cd $SELFDIR
+
+nim ns clean --force
+nim project deploy yamlAlias
+GATEWAY=$(nim action get portal/gateway | jq -r '.annotations[] | select(.key=="require-whisk-auth") | .value')
+CLI_GATEWAY=$(nim action get portal/cli-gateway | jq -r '.annotations[] | select(.key=="require-whisk-auth") | .value')
+if [ "$GATEWAY" != "false" ]; then
+    echo "gateway action should have require-whisk-auth=false but does not"
+		exit 1
+fi
+if [ "$CLI_GATEWAY" != "true" ]; then
+    echo "cli-gateway action should have require-whisk-auth=true but does not"
+		exit 1
+fi
+
+echo "YAML alias test succeeded"

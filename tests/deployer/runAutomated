@@ -40,6 +40,8 @@ SMALLER_TESTS=(
     WebCache
     SharedBuild
     Filtering
+		Dotnet
+		Sequence
     WebInclude
     Ignoring
     EmptyReduce
@@ -47,6 +49,7 @@ SMALLER_TESTS=(
     Environment
     Errors
     Unweb
+		YamlAlias
     ValidateRuntime
     ConfigTypes
     LoginAuth
