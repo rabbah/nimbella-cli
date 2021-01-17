@@ -1,5 +1,27 @@
 # Nimbella CLI (and Workbench) Change History
 
+## Changes in release 1.11
+
+- `nim doc` now directs you to the Nimbella documentation site
+- `nim project create` now accepts full language names (`python`) as well as abbreviations (`py`)
+- `nim project deploy` with `--remote-build` will run builds in the cloud and `project deploy` in the workbench will do that by default
+    - there are limitations on running time (2 minutes) and memory (768mb)
+    - a few runtimes (`deno` and `dotnet`) are not supported
+- `nim key-value get` pretty-prints a JSON result when parsable JSON is detected
+- `nim key-value del` is now an alias for `nim key-value delete`
+- the `--namespace` flag is now accepted on all `nim object` and `nim web` commands, not just `list`
+    - the optional argument to specify a namespace other than current is now hidden and deprecated in favor of the flag
+- sequences are supported in `nim project deploy`
+    - documentation to appear shortly in `docs.nimbella.com`
+- Adobe I/O Runtime version 3.0 was adopted, replacing 1.7.3, bringing many fixes and improvements
+    - also some minor syntax changes.  See the `nim` command summary on `docs.nimbella.com`.
+- fixed a bug in project create with existing empty directory
+- fixed a bug where deploying large amounts of web content could overwhelm the storage server and cause socket hangups
+- eliminated some vulnerabilities reported by `npm audit`
+- fixed a workbench bug where `nim object --help` did not work though `object --help` worked fine
+- fixed a bug causing annotations of one action to also appear on others when certain syntactic features of YAML were used in `project.yml`
+- fixed a bug causing a runaway cascade of "still building" messages for long-running and verbose builds
+
 ## Changes in release 1.10.2
 
 - fixed bug that sometimes interfered with using `nimbella-cli` as a dependency in `package.json`
