@@ -1,5 +1,10 @@
 # Nimbella CLI (and Workbench) Change History
 
+## Changes in release 1.11.1
+
+- fix internal bug
+    - asymptomatic now but could surface the next time the runtimes are rebuilt
+
 ## Changes in release 1.11
 
 - `nim doc` now directs you to the Nimbella documentation site
