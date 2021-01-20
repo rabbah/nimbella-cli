@@ -250,7 +250,7 @@ if [ -n "$PREVIEW" ]; then
     git checkout userREADME.md
     mv devREADME.md README.md
     # Upload the result
-    gsutil -m cp nimbella-cli.tgz doc/*.html doc/*.svg doc/*.css $PREVIEW_SITE
+    gsutil -m cp nimbella-cli.tgz doc/*.html doc/*.css $PREVIEW_SITE
     echo "$FULLVERSION" | gsutil cp - $PREVIEW_SITE/nim-version.txt
     gsutil cp changes.html $PREVIEW_SITE/nim-changes.html
     # Clean up package.json
